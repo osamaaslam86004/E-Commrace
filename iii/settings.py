@@ -136,8 +136,17 @@ WSGI_APPLICATION = "iii.wsgi.application"
 # Database
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_NAME"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
+        "HOST": config("POSTGRES_HOST"),
+        "PORT": config("POSTGRES_PORT"),
+        "OPTIONS": {
+            "sslmode": "require",  # This ensures SSL is used
+        },
+        # Optional: For using Prisma or connection pooling, you can use the URL directly:
+        # 'CONN_MAX_AGE': 600,  # Optional: Use connection pooling with a timeout (in seconds)
     }
 }
 
