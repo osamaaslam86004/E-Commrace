@@ -1,0 +1,71 @@
+/* Styles specific to elements within .multi-carousel-container */
+
+.multi-carousel-container .multi-carousel {
+    position: relative;
+  }
+  
+  .multi-carousel-container .multi-carousel-inner {
+    display: flex;
+    flex-wrap: nowrap; /* Ensure items are in a row */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    scroll-behavior: smooth; /* Smooth scrolling */
+    /* Hide scrollbar for WebKit-based browsers */
+    scrollbar-width: none; /* Firefox scrollbar control */
+    -ms-overflow-style: none; /* IE scrollbar control */
+  }
+  
+  .multi-carousel-container .multi-carousel-inner::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for WebKit-based browsers */
+  }
+  
+  .multi-carousel-container .multi-carousel-item {
+    flex: 0 0 auto; /* Allow items to shrink and grow */
+    width: 150px; /* Ensure each item occupies fixed width */
+    margin-right: 15px; /* Adjust spacing between items */
+  }
+  
+  .multi-carousel-container .multi-carousel-item img {
+    margin-left: 90px;
+    display: block; /* Ensure images are displayed as blocks */
+    width: 100%; /* Set image width to fill its container */
+    height: auto; /* Maintain aspect ratio */
+    border-radius: 5px; /* Add some border-radius if desired */
+  }
+  
+  /* Control buttons */
+  .multi-carousel-container .carousel-control-prev,
+  .multi-carousel-container .carousel-control-next {
+
+    position: absolute;
+    top: 25%;
+    transform: translateY(-40%);
+    background: black;
+    border: black;
+    height: fit-content;
+    margin-left: 15px;
+    margin-right: 15px;
+    cursor: pointer;
+    width: fit-content;
+}
+
+  
+  .multi-carousel-container .carousel-control-prev {
+    left: 0;
+  }
+  
+  .multi-carousel-container .carousel-control-next {
+    right: 0;
+  }
+  
+  .multi-carousel-container .carousel-control-prev-icon,
+  .multi-carousel-container .carousel-control-next-icon {
+    width: 30px; /* Adjust size as needed */
+    height: 30px; /* Adjust size as needed */
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  /* Additional styles for carousel indicators or other elements can be added here */
+  

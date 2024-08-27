@@ -1,0 +1,75 @@
+{% load static %}
+
+<!DOCTYPE>
+<html>
+
+<head>
+    {# Load the tag library #}
+    {% load django_bootstrap5 %}
+    {% load crispy_forms_tags %}
+    {# Load CSS and JavaScript #}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% bootstrap_messages %}
+    {# Display a form #}
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="Home-container">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
+                    </li>
+                </ul>
+            </div>
+
+
+            <div class="blog-post-create-container">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
+                    </li>
+                </ul>
+            </div>
+
+
+
+
+        </div>
+    </nav>
+
+
+    <div>
+        {% if form.errors %}
+        <div>
+            {% for error in errors %}
+            {{error}}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <div style="margin-top: 21px; margin-bottom:91px; width: 500px; margin-left:150px;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+
+
+            {% bootstrap_button type="submit" content="Submit" style="width:500px;" %}
+
+        </form>
+    </div>
+
+</body>
+
+</html>
