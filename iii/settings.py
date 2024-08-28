@@ -87,8 +87,8 @@ INSTALLED_APPS = [
     "axes",
     "phonenumber_field",
     "django_countries",
-    "allauth",
-    "allauth.account",
+    # "allauth",
+    # "allauth.account",
     # # Optional -- requires install using `django-allauth[socialaccount]`.
     # "allauth.socialaccount",
     # "allauth.socialaccount.providers.google",
