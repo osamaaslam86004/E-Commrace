@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -90,8 +90,8 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     # # Optional -- requires install using `django-allauth[socialaccount]`.
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
+    # "allauth.socialaccount",
+    # "allauth.socialaccount.providers.google",
 ]
 
 SITE_ID = 1
@@ -104,7 +104,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     # Add the account middleware:
-    "allauth.account.middleware.AccountMiddleware",
+    # "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
 ]
@@ -200,9 +200,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# Define the directory where media files will be uploaded and stored
-# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -269,7 +266,7 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     # `allauth` specific authentication methods, such as login by email
-    "allauth.account.auth_backends.AuthenticationBackend",
+    # "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 ###################------------------- Google api-client library settings----------------############
