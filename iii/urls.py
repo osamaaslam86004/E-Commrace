@@ -29,8 +29,6 @@ urlpatterns = [
     path("", include(("cv_api.urls", "cv_api"))),
     path("", include(("Homepage.urls", "Homepage"))),
     path("", include(("i.urls", "i"))),
-    # Django Allauth URL's
-    path("accounts/", include("allauth.urls")),
     path("admin/", admin.site.urls),
 ]
 if settings.DEBUG:
