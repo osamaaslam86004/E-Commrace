@@ -87,11 +87,6 @@ INSTALLED_APPS = [
     "axes",
     "phonenumber_field",
     "django_countries",
-    # "allauth",
-    # "allauth.account",
-    # # Optional -- requires install using `django-allauth[socialaccount]`.
-    # "allauth.socialaccount",
-    # "allauth.socialaccount.providers.google",
 ]
 
 SITE_ID = 1
@@ -103,8 +98,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # Add the account middleware:
-    # "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
 ]
@@ -116,7 +109,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "templates"],
-        # "DIRS": [os.path.join(BASE_DIR, "template_dir")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -124,7 +116,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # # `allauth` needs this from django
                 "django.template.context_processors.request",
             ],
         },
@@ -265,8 +256,6 @@ AXES_COOLOFF_TIME = 0.001
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by email
-    # "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 ###################------------------- Google api-client library settings----------------############
