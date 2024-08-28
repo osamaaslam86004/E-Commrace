@@ -125,8 +125,8 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
                 return self.form_invalid(form)
         else:
             # Print form errors
-            # print("Author form errors:", book_author_name_form.errors)
-            # print("Format form errors:", book_format_form.errors)
+            print("Author form errors:", book_author_name_form.errors)
+            print("Format form errors:", book_format_form.errors)
             messages.error(self.request, "Form not valid")
             return self.form_invalid(form)
 

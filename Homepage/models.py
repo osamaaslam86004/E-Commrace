@@ -244,7 +244,7 @@ class AdministratorProfile(models.Model):
         name="admin_profile",
     )
     bio = models.TextField(blank=True, max_length=500)
-    experience_years = models.PositiveIntegerField(blank=False)
+    experience_years = models.PositiveIntegerField(blank=False, default=1)
 
     def clean(self):
         super().clean()

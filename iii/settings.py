@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -141,19 +141,18 @@ DATABASES = {
     }
 }
 
+
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("POSTGRES_NAME"),
+#         "NAME": config("POSTGRES_DATABASE"),
 #         "USER": config("POSTGRES_USER"),
 #         "PASSWORD": config("POSTGRES_PASSWORD"),
 #         "HOST": config("POSTGRES_HOST"),
-#         "PORT": config("POSTGRES_PORT"),
+#         "PORT": "5432",
 #         "OPTIONS": {
-#             "sslmode": "require",  # This ensures SSL is used
+#             "sslmode": "require",
 #         },
-#         # Optional: For using Prisma or connection pooling, you can use the URL directly:
-#         # 'CONN_MAX_AGE': 600,  # Optional: Use connection pooling with a timeout (in seconds)
 #     }
 # }
 

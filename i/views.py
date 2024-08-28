@@ -489,7 +489,8 @@ class Update_Monitor_Product(View):
         if form.is_valid():
             monitor = form.save(commit=False)
             # Same logic as before for Cloudinary upload and processing
-            selected_features_names = form.cleaned_data.get("special_features")
+            selected_features_names = form.cleaned_data.get("choose_special_features")
+            print(selected_features_names)
 
             uploaded_images = {
                 "image_1": self.request.FILES.get("image_1"),
@@ -497,7 +498,7 @@ class Update_Monitor_Product(View):
                 "image_3": self.request.FILES.get("image_3"),
             }
             # Clear all existing special features associated with the monitor
-            monitor.special_features.clear()
+            # print(monitor.special_features.clear())
 
             if self.all_images_uploaded_by_user(uploaded_images):
                 transformation_options = {
