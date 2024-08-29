@@ -26,17 +26,6 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView
 from i.browsing_history import add_product_to_browsing_history, your_browsing_history
-
-
-import cloudinary
-
-cloudinary.config(
-    cloud_name="dh8vfw5u0",
-    api_key="667912285456865",
-    api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
-    api_proxy="http://proxy.server:3128",
-)
-import cloudinary.uploader
 from cloudinary.uploader import upload
 
 

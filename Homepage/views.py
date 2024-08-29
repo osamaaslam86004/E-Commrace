@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from Homepage.forms import (
     SignUpForm,
     LogInForm,
@@ -58,27 +59,11 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from i.browsing_history import your_browsing_history
 from axes.decorators import axes_dispatch
 from checkout.models import Payment
+import cloudinary
+from cloudinary.uploader import upload
 import logging
 
 logger = logging.getLogger(__name__)
-
-import cloudinary
-
-if not settings.DEBUG:
-    cloudinary.config(
-        cloud_name="dh8vfw5u0",
-        api_key="667912285456865",
-        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
-        api_proxy="http://proxy.server:3128",
-    )
-else:
-    cloudinary.config(
-        cloud_name="dh8vfw5u0",
-        api_key="667912285456865",
-        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
-    )
-import cloudinary.uploader
-from cloudinary.uploader import upload
 
 
 class HomePageView(TemplateView):

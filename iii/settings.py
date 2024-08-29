@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -79,7 +79,6 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "django_bootstrap5",
-    "cloudinary_storage",
     "cloudinary",
     "ckeditor",
     "book_",
@@ -188,7 +187,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URLS = "/media/"
+# MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
@@ -211,32 +210,24 @@ SESSION_COOKIE_HTTPONLY = True
 
 
 ###############################Cloudinary Settings For Image Storage###########################
-import cloudinary
-
 if DEBUG:
-    cloudinary.config(
-        cloud_name="dh8vfw5u0",
-        api_key="667912285456865",
-        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
-        # api_proxy = "http://proxy.server:3128"
-    )
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": config("CLOUDINARY_API_KEY"),
+        "API_SECRET": config("CLOUDINARY_API_SECRET"),
+        # "API_PROXY": "http://proxy.server:3128",
+    }
 else:
-    cloudinary.config(
-        cloud_name="dh8vfw5u0",
-        api_key="667912285456865",
-        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
-        api_proxy="http://proxy.server:3128",
-    )
-import cloudinary.uploader
-import cloudinary.api
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": config("CLOUDINARY_API_KEY"),
+        "API_SECRET": config("CLOUDINARY_API_SECRET"),
+        "API_PROXY": "http://proxy.server:3128",
+    }
 
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": "dh8vfw5u0",
-    "API_KEY": "667912285456865",
-    "API_SECRET": "QaF0OnEY-W1v2GufFKdOjo3KQm8",
-}
 MEDIA_URL = "/media/"
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
 
 ###########################----------Security Related Settings-----------########################################
 

@@ -14,8 +14,6 @@ django_countries==7.5.1
 
 django-crispy-forms==2.3
 
-django-cloudinary-storage==0.3.0
-
 django-filter==24.3
 
 django-extensions==3.2.3
