@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "django_bootstrap5",
     "cloudinary",
+    "cloudinary_storage",
     "ckeditor",
     "book_",
     "django_twilio",
