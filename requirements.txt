@@ -20,7 +20,7 @@ django-extensions==3.2.3
 
 django_phonenumber_field==7.3.0
 
-django-compressor==4.5.1
+django-sendgrid-v5==1.2.3
 
 google_api_python_client==2.111.0
 
