@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -67,7 +67,6 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "cloudinary_storage",
     "django.contrib.staticfiles",
     "i",
     "Homepage",
@@ -80,6 +79,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "django_bootstrap5",
+    "cloudinary_storage",
     "cloudinary",
     "ckeditor",
     "book_",
@@ -211,6 +211,8 @@ SESSION_COOKIE_HTTPONLY = True
 
 
 ###############################Cloudinary Settings For Image Storage###########################
+
+# For cloudinary_storage library only
 if DEBUG:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
@@ -226,6 +228,25 @@ else:
         "API_PROXY": "http://proxy.server:3128",
     }
 
+# For cloudinary python SDK
+import cloudinary
+
+CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
+if DEBUG:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+    )
+else:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        api_proxy="http://proxy.server:3128",
+    )
 MEDIA_URL = "/media/"
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
