@@ -1,24 +1,15 @@
+import random
+from datetime import datetime, timedelta
+from random import choice
+
 import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
+
+from cv_api.models import (Education, Job, JobAccomplishment, Overview,
+                           PersonalInfo, ProgrammingArea, Projects,
+                           Publication, SkillAndSkillLevel, TokensForUser)
 from Homepage.models import CustomUser
-from cv_api.models import PersonalInfo, TokensForUser
-from faker import Faker
-from cv_api.models import (
-    PersonalInfo,
-    Overview,
-    Education,
-    Job,
-    SkillAndSkillLevel,
-    ProgrammingArea,
-    Projects,
-    Publication,
-    JobAccomplishment,
-)
-from random import choice
-from datetime import datetime
-from datetime import datetime, timedelta
-import random
 
 
 class CustomUserOnlyFactory(DjangoModelFactory):

@@ -1,6 +1,8 @@
 
 from django.core.management.base import BaseCommand
+
 from i.models import Special_Features
+
 
 class Command(BaseCommand):
     help = 'Populate Special_Features model with predefined choices'

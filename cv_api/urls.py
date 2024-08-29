@@ -1,14 +1,9 @@
 from django.urls import path
-from cv_api import views
-from cv_api.views import (
-    CVApiPostRequest,
-    CVApiSubmitForm,
-    RetrieveCVDataToUpdate,
-    WebHookEvent,
-    ListOfCVForUser,
-    DeleteCVForUser,
-)
 
+from cv_api import views
+from cv_api.views import (CVApiPostRequest, CVApiSubmitForm, DeleteCVForUser,
+                          ListOfCVForUser, RetrieveCVDataToUpdate,
+                          WebHookEvent)
 
 urlpatterns = [
     path(

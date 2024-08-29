@@ -1,7 +1,9 @@
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
-from Homepage.models import CustomUser
 from ckeditor.fields import RichTextField
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
+from django.db import models
+
+from Homepage.models import CustomUser
 
 
 class ProductCategory(models.Model):

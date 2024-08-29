@@ -2,9 +2,10 @@
 import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
-from tests.i.factory_classes import ProductCategoryFactory
+
+from book_.models import BookAuthorName, BookFormat, Rating, Review
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from book_.models import BookAuthorName, BookFormat, Review, Rating
+from tests.i.factory_classes import ProductCategoryFactory
 
 fake = Faker()
 

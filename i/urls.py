@@ -1,16 +1,13 @@
-from i import views
 from django.urls import path
-from i.views import (
-    List_Of_Products_Category,
-    List_Of_Books_For_User,
-    Create_Monitors_Product,
-    Update_Monitor_Product,
-    Delete_Monitors_Product,
-    List_Of_Monitors_For_User,
-    Monitor_Detail_View_Add_Review_Form,
-    Monitor_Detail_View_Update_Review_Form,
-    Monitor_Detail_View_Delete_Review_Form,
-)
+
+from i import views
+from i.views import (Create_Monitors_Product, Delete_Monitors_Product,
+                     List_Of_Books_For_User, List_Of_Monitors_For_User,
+                     List_Of_Products_Category,
+                     Monitor_Detail_View_Add_Review_Form,
+                     Monitor_Detail_View_Delete_Review_Form,
+                     Monitor_Detail_View_Update_Review_Form,
+                     Update_Monitor_Product)
 
 urlpatterns = [
     # create a product of any category

@@ -1,67 +1,45 @@
 # from typing import Any
 # from django.db.models.query import QuerySet
-from i.models import Review
 from typing import Any
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from i.forms import (
-    ProductCategoryForm,
-    ComputerSubCategoryForm,
-    ElectronicsForm,
-    ComputerAndTabletsForm,
-    ServersForm,
-    MonitorsForm,
-    LaptopAccessoriesForm,
-    LineConditionersForm,
-    IsolatedTransformersForm,
-    PDUsForm,
-    AdaptorsForm,
-    PowerAccessoriesForm,
-    LaptopsForm,
-    DesktopForm,
-    TabletsForm,
-    ChargersAndadaptorsForm,
-    LaptopBattryForm,
-    LaptopBagsForm,
-    ScreenFiltersForm,
-    ScreenProtectorForm,
-    TabletsReplacementPartsForm,
-    FlexCablesForm,
-    LcdDisplayReplacementPartsForm,
-    BagPacksForm,
-    HardShellCasesForm,
-    MessengerAndShoulderBagForm,
-    BriefCasesForm,
-    LaptopBagSleevesForm,
-    ReviewForm,
-    Special_Features,
-    SpecialFeaturesForm,
-)
-from i.models import ProductCategory, ComputerSubCategory, Monitors
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from i.decorators import (
-    user_add_product_permission_required,
-    user_comment_permission_required,
-)
-from i.utils import RatingCalculator, Calculate_Ratings
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from i.filters import MonitorsFilter
-from django.http import JsonResponse
-from django.http import HttpResponseBadRequest
-from django.contrib import messages
-from django.views.generic import TemplateView, ListView
-from django.db.models import Avg, Count
-from book_.models import BookFormat
+
 from cloudinary.uploader import upload
-from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
-from django.http import HttpResponseRedirect
-from book_.forms import CustomBookFormatFilterForm
-from django.db.models import Q
-from i.browsing_history import add_product_to_browsing_history, your_browsing_history
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Avg, Count, Q
+from django.http import (HttpResponseBadRequest, HttpResponseRedirect,
+                         JsonResponse)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.generic import ListView, TemplateView
+from django.views.generic.edit import CreateView
+
+from book_.forms import CustomBookFormatFilterForm
+from book_.models import BookFormat
+from i.browsing_history import (add_product_to_browsing_history,
+                                your_browsing_history)
+from i.decorators import (user_add_product_permission_required,
+                          user_comment_permission_required)
+from i.filters import MonitorsFilter
+from i.forms import (AdaptorsForm, BagPacksForm, BriefCasesForm,
+                     ChargersAndadaptorsForm, ComputerAndTabletsForm,
+                     ComputerSubCategoryForm, DesktopForm, ElectronicsForm,
+                     FlexCablesForm, HardShellCasesForm,
+                     IsolatedTransformersForm, LaptopAccessoriesForm,
+                     LaptopBagsForm, LaptopBagSleevesForm, LaptopBattryForm,
+                     LaptopsForm, LcdDisplayReplacementPartsForm,
+                     LineConditionersForm, MessengerAndShoulderBagForm,
+                     MonitorsForm, PDUsForm, PowerAccessoriesForm,
+                     ProductCategoryForm, ReviewForm, ScreenFiltersForm,
+                     ScreenProtectorForm, ServersForm, Special_Features,
+                     SpecialFeaturesForm, TabletsForm,
+                     TabletsReplacementPartsForm)
+from i.models import ComputerSubCategory, Monitors, ProductCategory, Review
+from i.utils import Calculate_Ratings, RatingCalculator
 
 
 def success_page(request):

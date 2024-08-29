@@ -1,7 +1,7 @@
-from django.db import models
-from Homepage.models import CustomUser
 from ckeditor.fields import RichTextField
+from django.db import models
 
+from Homepage.models import CustomUser
 
 STATUS = ((0, "Draft"), (1, "Publish"))
 

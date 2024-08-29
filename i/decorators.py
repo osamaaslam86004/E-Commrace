@@ -1,6 +1,8 @@
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from functools import wraps
+
+from django.contrib import messages
+from django.shortcuts import redirect, render
+
 from book_.models import Review
 
 

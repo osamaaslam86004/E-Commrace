@@ -5,8 +5,9 @@
 # Monitors model has foreign key/ManyToMany key to Homepage model. Otherwise use 
 # python manage.py rest_db 
 
-from django.core.management.base import BaseCommand
 from django.apps import apps
+from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
     help = 'Deletes specified models from the app'

@@ -1,7 +1,10 @@
 
 
 from django.core.management.base import BaseCommand
-from i.monitors import populate_monitors  # Import your function from monitors.py
+
+from i.monitors import \
+    populate_monitors  # Import your function from monitors.py
+
 
 class Command(BaseCommand):
     help = 'Populates Monitors table with initial data'

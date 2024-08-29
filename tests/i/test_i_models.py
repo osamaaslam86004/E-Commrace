@@ -1,27 +1,20 @@
 # test_models.py
-import pytest
-from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.contrib.auth import get_user_model
-from i.models import (
-    ProductCategory,
-    ComputerSubCategory,
-    Special_Features,
-    Monitors,
-    Review,
-)
-from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from tests.i.factory_classes import (
-    SpecialFeaturesFactory,
-    MonitorsFactory,
-    ComputerSubCategoryFactory,
-    ProductCategoryFactory,
-    ReviewFactory,
-)
-import random
-from faker import Faker
 import logging
+import random
+
+import pytest
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.utils import IntegrityError
+from faker import Faker
+
+from i.models import (ComputerSubCategory, Monitors, ProductCategory, Review,
+                      Special_Features)
+from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
+from tests.i.factory_classes import (ComputerSubCategoryFactory,
+                                     MonitorsFactory, ProductCategoryFactory,
+                                     ReviewFactory, SpecialFeaturesFactory)
 
 faker = Faker()
 # Disable Faker DEBUG logging

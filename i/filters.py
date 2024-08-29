@@ -1,8 +1,9 @@
 import django_filters
-from i.models import Monitors, Special_Features
-from i.forms import MonitorsForm
-from django.db.models import Q
 from django import forms
+from django.db.models import Q
+
+from i.forms import MonitorsForm
+from i.models import Monitors, Special_Features
 
 
 class MonitorsFilter(django_filters.FilterSet):

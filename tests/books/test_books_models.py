@@ -1,17 +1,15 @@
 # tests/test_models.py
-import pytest
 import logging
+
+import pytest
 from django.contrib.auth import get_user_model
+
+from book_.models import BookAuthorName, BookFormat, Rating, Review
+from tests.books.books_factory_classes import (BookAuthorNameFactory,
+                                               BookFormatFactory,
+                                               RatingFactory, ReviewFactory)
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 from tests.i.factory_classes import ProductCategoryFactory
-from book_.models import BookAuthorName, BookFormat, Review, Rating
-from tests.books.books_factory_classes import (
-    BookAuthorNameFactory,
-    BookFormatFactory,
-    ReviewFactory,
-    RatingFactory,
-)
-
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")

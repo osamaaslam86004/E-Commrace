@@ -1,6 +1,7 @@
 import factory
 from faker import Faker
-from blog.models import Post, Comment
+
+from blog.models import Comment, Post
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 
 fake = Faker()

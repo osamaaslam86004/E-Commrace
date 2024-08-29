@@ -1,7 +1,8 @@
-from blog.models import Comment, Post
-from django import forms
-from ckeditor.widgets import CKEditorWidget
 from ckeditor.fields import RichTextField
+from ckeditor.widgets import CKEditorWidget
+from django import forms
+
+from blog.models import Comment, Post
 
 
 class PostForm(forms.ModelForm):

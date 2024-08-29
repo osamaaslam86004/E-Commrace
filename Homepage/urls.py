@@ -1,18 +1,12 @@
-from django.urls import path
-from Homepage import views
-from Homepage.views import (
-    CustomLogoutView,
-    CustomLoginView,
-    SignupView,
-    CustomerProfilePageView,
-    SellerProfilePageView,
-    HomePageView,
-    CSRProfilePageView,
-    ManagerProfilePageView,
-    AdminProfilePageView,
-    Delete_User_Account,
-)
 from django.contrib.auth import views as auth_views
+from django.urls import path
+
+from Homepage import views
+from Homepage.views import (AdminProfilePageView, CSRProfilePageView,
+                            CustomerProfilePageView, CustomLoginView,
+                            CustomLogoutView, Delete_User_Account,
+                            HomePageView, ManagerProfilePageView,
+                            SellerProfilePageView, SignupView)
 
 # from axes.decorators import axes_dispatch
 

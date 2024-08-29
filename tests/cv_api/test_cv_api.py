@@ -1,41 +1,30 @@
-import pytest
-import logging
-import requests
 import json
-from django.http.response import JsonResponse
-from django.urls import reverse
-from django.contrib.messages import get_messages
-from django.test import Client
-from unittest.mock import patch, Mock
-from cv_api.models import TokensForUser, PersonalInfo
-from Homepage.models import UserProfile
-from tests.cv_api.cv_api_factory import (
-    CustomUserOnlyFactory,
-    PersonalInfoFactory,
-    TokensForUserFactory,
-    OverviewFactory,
-    JobAccomplishmentFactory,
-    JobFactory,
-    EducationFactory,
-    SkillAndSkillLevelFactory,
-    ProgrammingAreaFactory,
-    ProjectsFactory,
-    PublicationFactory,
-)
-from cv_api.forms import (
-    PersonalInfoForm,
-    OverviewForm,
-    EducationfoForm,
-    JobfoForm,
-    JobAccomplishmentfoForm,
-    ProjectsForm,
-    ProgrammingAreaForm,
-    SkillAndSkillLevelForm,
-    PublicationForm,
-)
-from django_mock_queries.query import MockSet
-from django_mock_queries.mocks import mocked_relations
+import logging
+from unittest.mock import Mock, patch
 
+import pytest
+import requests
+from django.contrib.messages import get_messages
+from django.http.response import JsonResponse
+from django.test import Client
+from django.urls import reverse
+from django_mock_queries.mocks import mocked_relations
+from django_mock_queries.query import MockSet
+
+from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
+                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
+                          ProjectsForm, PublicationForm,
+                          SkillAndSkillLevelForm)
+from cv_api.models import PersonalInfo, TokensForUser
+from Homepage.models import UserProfile
+from tests.cv_api.cv_api_factory import (CustomUserOnlyFactory,
+                                         EducationFactory,
+                                         JobAccomplishmentFactory, JobFactory,
+                                         OverviewFactory, PersonalInfoFactory,
+                                         ProgrammingAreaFactory,
+                                         ProjectsFactory, PublicationFactory,
+                                         SkillAndSkillLevelFactory,
+                                         TokensForUserFactory)
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")

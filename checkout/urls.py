@@ -1,7 +1,7 @@
 from django.urls import path
-from checkout import views
-from checkout.views import CheckOutView, View_Orders, Charge_Refund
 
+from checkout import views
+from checkout.views import Charge_Refund, CheckOutView, View_Orders
 
 urlpatterns = [
     path(

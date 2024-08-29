@@ -1,7 +1,9 @@
 # utils/rating_utils.py
 
 from django.db.models import Avg, Count
+
 from book_.models import Rating
+
 
 class RatingCalculator:
     @staticmethod

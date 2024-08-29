@@ -1,17 +1,20 @@
-import pytest
 import io
-from PIL import Image
-from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
+
+import pytest
+from cloudinary.uploader import upload
+from django.contrib.messages import get_messages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 from django.urls import reverse
-from django.contrib.messages import get_messages
-from cloudinary.uploader import upload
-from book_.models import BookFormat, BookAuthorName
-from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from tests.books.books_factory_classes import BookAuthorNameFactory, BookFormatFactory
-from tests.i.factory_classes import ProductCategoryFactory
+from PIL import Image
+
 from book_.forms import BookAuthorNameForm, BookFormatForm
+from book_.models import BookAuthorName, BookFormat
+from tests.books.books_factory_classes import (BookAuthorNameFactory,
+                                               BookFormatFactory)
+from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
+from tests.i.factory_classes import ProductCategoryFactory
 
 
 @pytest.fixture

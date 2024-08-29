@@ -1,67 +1,71 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
+import json
+import logging
+import random
+from urllib.parse import urlencode
+
+import cloudinary
+import requests
+import stripe
+from axes.decorators import axes_dispatch
+from cloudinary.uploader import upload
 from django.conf import settings
-from Homepage.forms import (
-    SignUpForm,
-    LogInForm,
-    UserProfileForm,
-    SellerProfileForm,
-    CustomerProfileForm,
-    CustomerServiceProfileForm,
-    ManagerProfileForm,
-    AdministratorProfileForm,
-    OTPForm,
-    CustomPasswordResetForm,
-    CustomUserImageForm,
-    E_MailForm_For_Password_Reset,
-)
-from Homepage.models import (
-    CustomUser,
-    UserProfile,
-    SellerProfile,
-    CustomerProfile,
-    CustomerServiceProfile,
-    ManagerProfile,
-    AdministratorProfile,
-    CustomSocialAccount,
-)
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Permission
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import (
+    HttpResponse,
     HttpResponseForbidden,
     HttpResponseNotFound,
-    HttpResponse,
     HttpResponseRedirect,
     JsonResponse,
 )
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
-from django.utils.safestring import mark_safe
-import json, random, stripe, requests
-from django.conf import settings
-from urllib.parse import urlencode
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.safestring import mark_safe
+from django.views import View
+from django.views.generic import TemplateView
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from twilio.rest import Client
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.views import View
-from django.views.generic import TemplateView
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from django.utils.decorators import method_decorator
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
-from i.browsing_history import your_browsing_history
-from axes.decorators import axes_dispatch
+from twilio.rest import Client
+
 from checkout.models import Payment
-import cloudinary
-from cloudinary.uploader import upload
-import logging
+from Homepage.forms import (
+    AdministratorProfileForm,
+    CustomerProfileForm,
+    CustomerServiceProfileForm,
+    CustomPasswordResetForm,
+    CustomUserImageForm,
+    E_MailForm_For_Password_Reset,
+    LogInForm,
+    ManagerProfileForm,
+    OTPForm,
+    SellerProfileForm,
+    SignUpForm,
+    UserProfileForm,
+)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomSocialAccount,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
+from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +143,7 @@ class SignupView(View):
 
 
 class CustomLoginView(View):
+    "Custom Login-View"
     template_name = "login.html"
     form_class = LogInForm
 
@@ -147,14 +152,14 @@ class CustomLoginView(View):
         return super().dispatch(*args, **kwargs)
 
     def start_cookie_session(self, request):
-        # Start a cookie-based session by setting a value in the cookie
+        "Start a cookie-based session by setting a value in the cookie"
         self.request.session["user_id"] = self.request.user.id
         logger.info("start cookie session: %s", self.request.session["user_id"])
         # You don't need to manually set the cookie here; Django handles it internally
         # The session data will be stored in the HTTP-only cookie based on the settings
 
     def check_existing_cookie_session(self, request):
-        # Check if the cookie-based session exists for the logged-in user
+        "Check if the cookie-based session exists for the logged-in user"
         user_id_exists = "user_id" in self.request.session
         logger.info("check existing cookie session: %s", user_id_exists)
         return user_id_exists
@@ -385,22 +390,22 @@ def your_callback_view(request):
                     social_account.refresh_token = refresh_token
                     social_account.save()
 
-                except CustomSocialAccount.DoesNotExist:
+                except social_account.DoesNotExist:
                     # Create the social account if it doesn't exist
-                    CustomSocialAccount.objects.create(
+                    CustomSocialAccount(
                         user=user,
                         access_token=access_token,
                         user_info=user_info,
                         refresh_token=refresh_token,
                         code=user_info,
                     )
-            except CustomUser.DoesNotExist:
+            except social_account.DoesNotExist:
                 # Create a new user if it doesn't exist
                 user = CustomUser.objects.create(
                     email=email, username=email, user_type="SELLER"
                 )
                 # Create the social account for the new user
-                social_account = CustomSocialAccount.objects.create(
+                social_account = CustomSocialAccount(
                     user=user,
                     access_token=access_token,
                     user_info=user_info,
@@ -1539,7 +1544,7 @@ def helper_function(generated_otp, phone_number):
     #     return False
 
 
-class Delete_User_Account(View):
+class DeleteUserAccount(View):
     def delete_user_stripe_account(self):
         user_id = self.request.session["user_id"]
         payment = Payment.objects.filter(user__id=user_id)

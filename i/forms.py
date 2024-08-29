@@ -1,40 +1,17 @@
 from django import forms
-from i.models import Review
 from django.core.exceptions import ValidationError
 
-from i.models import (
-    ProductCategory,
-    ComputerSubCategory,
-    Electronics,
-    ComputerAndTablets,
-    ComputerAndTabletsBaseClass,
-    Laptops,
-    Tablets,
-    Desktop,
-    PowerAccessories,
-    Adaptors,
-    IsolatedTransformers,
-    LineConditioners,
-    PDUS,
-    Servers,
-    Monitors,
-    LaptopAccessories,
-    LaptopBattry,
-    ScreenFilters,
-    ScreenProtector,
-    ChargersAndadaptors,
-    LaptopBagsTypes,
-    LaptopBags,
-    LaptopBagSleeves,
-    BagPacks,
-    BriefCases,
-    HardShellCases,
-    MessengerAndShoulderBag,
-    TabletsReplacementParts,
-    FlexCables,
-    LcdDisplayReplacementParts,
-    Special_Features,
-)
+from i.models import (PDUS, Adaptors, BagPacks, BriefCases,
+                      ChargersAndadaptors, ComputerAndTablets,
+                      ComputerAndTabletsBaseClass, ComputerSubCategory,
+                      Desktop, Electronics, FlexCables, HardShellCases,
+                      IsolatedTransformers, LaptopAccessories, LaptopBags,
+                      LaptopBagSleeves, LaptopBagsTypes, LaptopBattry, Laptops,
+                      LcdDisplayReplacementParts, LineConditioners,
+                      MessengerAndShoulderBag, Monitors, PowerAccessories,
+                      ProductCategory, Review, ScreenFilters, ScreenProtector,
+                      Servers, Special_Features, Tablets,
+                      TabletsReplacementParts)
 
 
 class ProductCategoryForm(forms.ModelForm):

@@ -1,21 +1,20 @@
-import pytest
 import io
-from PIL import Image
-from django.core.files.uploadedfile import SimpleUploadedFile
-from tests.books.books_factory_classes import (
-    BookAuthorNameFactory,
-    BookFormatFactory,
-    ReviewFactory,
-    RatingFactory,
-)
-from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from tests.i.factory_classes import ProductCategoryFactory
-from book_.forms import BookAuthorNameForm, BookFormatForm, ReviewForm, RatingForm
-from django.core.exceptions import ValidationError
-from faker import Faker
 import logging
 from datetime import date
 
+import pytest
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
+from faker import Faker
+from PIL import Image
+
+from book_.forms import (BookAuthorNameForm, BookFormatForm, RatingForm,
+                         ReviewForm)
+from tests.books.books_factory_classes import (BookAuthorNameFactory,
+                                               BookFormatFactory,
+                                               RatingFactory, ReviewFactory)
+from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
+from tests.i.factory_classes import ProductCategoryFactory
 
 fake = Faker()
 # Disable Faker DEBUG logging

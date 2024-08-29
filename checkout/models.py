@@ -1,7 +1,7 @@
 from django.db import models
-from Homepage.models import CustomUser
-from cart.models import Cart, CartItem
 
+from cart.models import Cart, CartItem
+from Homepage.models import CustomUser
 
 #     Many      -  To     -   One
 

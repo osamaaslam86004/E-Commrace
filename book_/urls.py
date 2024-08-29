@@ -1,16 +1,11 @@
 from django.urls import path
-from book_ import views
-from book_.views import (
-    FilteredBooksView,
-    Book_Detail_View,
-    Book_Detail_View_Add_Review_Form,
-    Book_Detail_View_Update_Review_Form,
-    Custom_Delete_Comment,
-    Create_Book_Formats_View,
-    Update_Book_Formats_View,
-    Delete_Book_Format_View,
-)
 
+from book_ import views
+from book_.views import (Book_Detail_View, Book_Detail_View_Add_Review_Form,
+                         Book_Detail_View_Update_Review_Form,
+                         Create_Book_Formats_View, Custom_Delete_Comment,
+                         Delete_Book_Format_View, FilteredBooksView,
+                         Update_Book_Formats_View)
 
 urlpatterns = [
     # seller can create a book

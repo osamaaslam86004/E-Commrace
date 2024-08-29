@@ -1,6 +1,6 @@
+from django.apps import apps
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.apps import apps
 
 
 def initialize_groups_permissions(sender, **kwargs):

@@ -1,9 +1,10 @@
-from django.http import JsonResponse
-from django.conf import settings
-import requests
 import json
-from Homepage.models import CustomUser
 
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+
+from Homepage.models import CustomUser
 
 # Question: difference between class method and instance method in python
 

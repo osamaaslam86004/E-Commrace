@@ -1,11 +1,13 @@
-from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import render, redirect, get_object_or_404
-from cart.models import Cart, CartItem
-from cart.cart_items import add_product_to_cart_history, your_cart_items
 from collections import Counter
-from django.http import JsonResponse
 from decimal import Decimal
+
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
+from cart.cart_items import add_product_to_cart_history, your_cart_items
+from cart.models import Cart, CartItem
 from checkout.models import Payment
 
 

@@ -1,6 +1,8 @@
 
 from django.core.management.base import BaseCommand
+
 from i.models import ProductCategory
+
 
 class Command(BaseCommand):
     help = 'Creates initial ProductCategory entries'

@@ -1,15 +1,17 @@
 from typing import Any
-from blog.models import Post, Comment
-from blog.forms import CommentForm, PostForm
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+
 from django.contrib import messages
-from blog.decorators import create_update_delete_blogpost_permission_required
-from i.decorators import user_comment_permission_required
-from django.views.generic import TemplateView, ListView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic import ListView, TemplateView
+
+from blog.decorators import create_update_delete_blogpost_permission_required
+from blog.forms import CommentForm, PostForm
+from blog.models import Comment, Post
+from i.decorators import user_comment_permission_required
 
 
 def PostListView(request):

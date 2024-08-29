@@ -1,35 +1,24 @@
-from django.shortcuts import render, redirect
-from django.views import View
-from django.http import (
-    HttpResponseRedirect,
-    response,
-    JsonResponse,
-    HttpResponse,
-    HttpResponsePermanentRedirect,
-)
-import requests, json
-from cv_api.models import PersonalInfo, TokensForUser
-from cv_api.forms import (
-    PersonalInfoForm,
-    OverviewForm,
-    EducationfoForm,
-    JobfoForm,
-    JobAccomplishmentfoForm,
-    ProjectsForm,
-    ProgrammingAreaForm,
-    SkillAndSkillLevelForm,
-    PublicationForm,
-)
-from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
-from datetime import date
-from django.utils.decorators import method_decorator
-from django.views.generic import TemplateView
-from Homepage.models import CustomUser
-from cv_api.create_read_update_delete_user import TokenUtils
-from django.contrib import messages
-from django.contrib import messages
+import json
+from datetime import date, datetime
+
+import requests
 from django.conf import settings
+from django.contrib import messages
+from django.http import (HttpResponse, HttpResponsePermanentRedirect,
+                         HttpResponseRedirect, JsonResponse, response)
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView
+
+from cv_api.create_read_update_delete_user import TokenUtils
+from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
+                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
+                          ProjectsForm, PublicationForm,
+                          SkillAndSkillLevelForm)
+from cv_api.models import PersonalInfo, TokensForUser
+from Homepage.models import CustomUser
 
 
 class DateTimeEncoder(json.JSONEncoder):

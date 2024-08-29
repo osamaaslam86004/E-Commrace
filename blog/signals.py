@@ -1,7 +1,10 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from slugify import slugify  # Importing slugify from the python-slugify library
+from slugify import \
+    slugify  # Importing slugify from the python-slugify library
+
 from blog.models import Post
+
 
 @receiver(pre_save, sender=Post)
 def create_post_slug(sender, instance, *args, **kwargs):

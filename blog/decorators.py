@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import user_passes_test
-from Homepage.models import CustomUser
 from django.shortcuts import render
+
+from Homepage.models import CustomUser
 
 
 def can_update_blogpost(user):

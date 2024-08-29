@@ -1,10 +1,10 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.contrib.auth.base_user import BaseUserManager
-from phonenumber_field.modelfields import PhoneNumberField
 from django.conf import settings
-from django_countries.fields import CountryField
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.db import models
+from django_countries.fields import CountryField
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class CustomUserManager(BaseUserManager):

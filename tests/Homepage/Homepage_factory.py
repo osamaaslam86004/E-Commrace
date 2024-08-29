@@ -1,28 +1,20 @@
 import factory
-from factory.django import DjangoModelFactory
 import factory.faker
-from faker import Faker
-from Homepage.models import (
-    CustomUser,
-    UserProfile,
-    CustomerProfile,
-    SellerProfile,
-    CustomerServiceProfile,
-    ManagerProfile,
-    AdministratorProfile,
-    CustomSocialAccount,
-)
-from django.contrib.auth.models import Permission, Group
-from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
-from tests.Homepage.Custom_Permissions import (
-    CUSTOMER_CUSTOM_PERMISSIONS,
-    CSR_CUSTOM_PERMISSIONS,
-    ADMIN_CUSTOM_PERMISSIONS,
-    SELLER_CUSTOM_PERMISSIONS,
-    MANAGER_CUSTOM_PERMISSIONS,
-)
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from factory.django import DjangoModelFactory
+from faker import Faker
 
+from Homepage.models import (AdministratorProfile, CustomerProfile,
+                             CustomerServiceProfile, CustomSocialAccount,
+                             CustomUser, ManagerProfile, SellerProfile,
+                             UserProfile)
+from tests.Homepage.Custom_Permissions import (ADMIN_CUSTOM_PERMISSIONS,
+                                               CSR_CUSTOM_PERMISSIONS,
+                                               CUSTOMER_CUSTOM_PERMISSIONS,
+                                               MANAGER_CUSTOM_PERMISSIONS,
+                                               SELLER_CUSTOM_PERMISSIONS)
 
 fake = Faker()
 

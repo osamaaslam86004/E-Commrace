@@ -1,17 +1,19 @@
-import pytest
-from django.urls import reverse
-from django_mock_queries.query import MockSet, MockModel
-from django.test import Client
-from unittest.mock import patch, Mock
-from blog.models import Post, Comment
-from blog.forms import PostForm, CommentForm
-from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from tests.blog.test_blog_factory import PostFactory, CommentFactory
-from faker import Faker
 import logging
-from django.utils.text import slugify
+from unittest.mock import Mock, patch
+
+import pytest
 from django.contrib import messages
+from django.test import Client
+from django.urls import reverse
+from django.utils.text import slugify
+from django_mock_queries.query import MockModel, MockSet
+from faker import Faker
+
+from blog.forms import CommentForm, PostForm
+from blog.models import Comment, Post
+from tests.blog.test_blog_factory import CommentFactory, PostFactory
 from tests.blog.utilts import Custom_MockSet
+from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 
 fake = Faker()
 # Disable Faker DEBUG logging

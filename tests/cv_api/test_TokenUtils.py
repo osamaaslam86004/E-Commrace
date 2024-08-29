@@ -1,10 +1,11 @@
+import logging
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import patch, Mock
+
 from cv_api.create_read_update_delete_user import TokenUtils
 from Homepage.models import UserProfile
 from tests.cv_api.cv_api_factory import CustomUserOnlyFactory
-import logging
-
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")

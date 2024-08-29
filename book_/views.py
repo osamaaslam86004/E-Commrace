@@ -1,32 +1,27 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from book_.models import BookAuthorName, BookFormat, Review, Rating
-from i.models import ProductCategory
-from book_.forms import (
-    BookAuthorNameForm,
-    BookFormatForm,
-    ReviewForm,
-    CustomBookFormatFilterForm,
-)
-from django.contrib.contenttypes.models import ContentType
+from cloudinary.uploader import upload
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Avg, Count
-from django.db.models import Q
-from django.views.generic import ListView, DetailView, View
-from i.decorators import (
-    user_add_product_permission_required,
-    user_comment_permission_required,
-    check_user_linked_to_comment,
-)
-from book_.utils import RatingCalculator
-from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.core.paginator import Paginator
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.paginator import Paginator
+from django.db.models import Avg, Count, Q
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.edit import CreateView, UpdateView
-from i.browsing_history import add_product_to_browsing_history, your_browsing_history
-from cloudinary.uploader import upload
+
+from book_.forms import (BookAuthorNameForm, BookFormatForm,
+                         CustomBookFormatFilterForm, ReviewForm)
+from book_.models import BookAuthorName, BookFormat, Rating, Review
+from book_.utils import RatingCalculator
+from i.browsing_history import (add_product_to_browsing_history,
+                                your_browsing_history)
+from i.decorators import (check_user_linked_to_comment,
+                          user_add_product_permission_required,
+                          user_comment_permission_required)
+from i.models import ProductCategory
 
 
 class Create_Book_Formats_View(SuccessMessageMixin, CreateView):

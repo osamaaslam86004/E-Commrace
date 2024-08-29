@@ -1,52 +1,37 @@
-import pytest
-from unittest.mock import patch, Mock
-from django.urls import reverse
-from django.test import RequestFactory, Client
-from tests.Homepage.Homepage_factory import CustomUserFactory, CustomUserOnlyFactory
-from Homepage.models import (
-    CustomUser,
-    UserProfile,
-    CustomSocialAccount,
-    CustomerProfile,
-    CustomerServiceProfile,
-)
-from Homepage.forms import (
-    SignUpForm,
-    LogInForm,
-    CustomerProfileForm,
-    UserProfileForm,
-    CustomerProfileForm,
-    CustomUserImageForm,
-)
-from Homepage.views import (
-    HomePageView,
-    CustomLoginView,
-    Payment,
-    CustomPasswordResetConfirmView,
-    CustomerProfilePageView,
-)
-from django.test import Client
-import logging
-from django.contrib.messages import get_messages
-import requests_mock
-from urllib.parse import urlencode
-from django.core import mail
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_bytes
-from base64 import urlsafe_b64encode
-from django.template.response import TemplateResponse
-from tests.Homepage.Custom_Permissions import (
-    CUSTOMER_CUSTOM_PERMISSIONS,
-    CSR_CUSTOM_PERMISSIONS,
-    ADMIN_CUSTOM_PERMISSIONS,
-    SELLER_CUSTOM_PERMISSIONS,
-    MANAGER_CUSTOM_PERMISSIONS,
-)
 import io
-from PIL import Image
-from django.core.files.uploadedfile import SimpleUploadedFile
 import json
+import logging
+from base64 import urlsafe_b64encode
+from unittest.mock import Mock, patch
+from urllib.parse import urlencode
+
+import pytest
+import requests_mock
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.messages import get_messages
+from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.template.response import TemplateResponse
+from django.test import Client, RequestFactory
+from django.urls import reverse
+from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from PIL import Image
+
+from Homepage.forms import (CustomerProfileForm, CustomUserImageForm,
+                            LogInForm, SignUpForm, UserProfileForm)
+from Homepage.models import (CustomerProfile, CustomerServiceProfile,
+                             CustomSocialAccount, CustomUser, UserProfile)
+from Homepage.views import (CustomerProfilePageView, CustomLoginView,
+                            CustomPasswordResetConfirmView, HomePageView,
+                            Payment)
+from tests.Homepage.Custom_Permissions import (ADMIN_CUSTOM_PERMISSIONS,
+                                               CSR_CUSTOM_PERMISSIONS,
+                                               CUSTOMER_CUSTOM_PERMISSIONS,
+                                               MANAGER_CUSTOM_PERMISSIONS,
+                                               SELLER_CUSTOM_PERMISSIONS)
+from tests.Homepage.Homepage_factory import (CustomUserFactory,
+                                             CustomUserOnlyFactory)
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")

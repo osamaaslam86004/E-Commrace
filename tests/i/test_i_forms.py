@@ -1,23 +1,19 @@
+import io
+
 import pytest
 from django import forms
-import io
-from PIL import Image
-from django.core.files.uploadedfile import SimpleUploadedFile
-from i.models import ProductCategory, ComputerSubCategory, Monitors, Special_Features
-from i.forms import (
-    ProductCategoryForm,
-    ComputerSubCategoryForm,
-    MonitorsForm,
-    ReviewForm,
-)
-from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
-from tests.i.factory_classes import (
-    MonitorsFactory,
-    ReviewFactory,
-    ProductCategoryFactory,
-    ComputerSubCategoryFactory,
-)
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+
+from i.forms import (ComputerSubCategoryForm, MonitorsForm,
+                     ProductCategoryForm, ReviewForm)
+from i.models import (ComputerSubCategory, Monitors, ProductCategory,
+                      Special_Features)
+from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
+from tests.i.factory_classes import (ComputerSubCategoryFactory,
+                                     MonitorsFactory, ProductCategoryFactory,
+                                     ReviewFactory)
 
 CustomUser = get_user_model()
 
