@@ -183,7 +183,7 @@ class CVApiSubmitForm(View):
 
         try:
 
-            if settings.DEBUG:
+            if not settings.DEBUG:
                 return HttpResponseRedirect(
                     f"https://diverse-intense-whippet.ngrok-free.app/resume/?user_id={api_user_id}"
                 )
@@ -220,7 +220,7 @@ class ListOfCVForUser(TemplateView):
             else:
                 return super().get(request, **kwargs)
 
-            if settings.DEBUG:
+            if not settings.DEBUG:
                 url = f"https://diverse-intense-whippet.ngrok-free.app/resume/get-personal-info-data-for-user/?user_id={api_user_id}"
             else:
                 url = f"https://osamaaslam.pythonanywhere.com/resume/get-personal-info-data-for-user/?user_id={api_user_id}"
@@ -277,7 +277,7 @@ class RetrieveCVDataToUpdate(View):
 
             personal_info_id = kwargs["personal_info_id"]
 
-            if settings.DEBUG:
+            if not settings.DEBUG:
                 url = f"https://diverse-intense-whippet.ngrok-free.app/resume/api/get-personal-info-data/{personal_info_id}/"
             else:
                 url = f"https://osamaaslam.pythonanywhere.com/resume/api/get-personal-info-data/{personal_info_id}/"
@@ -290,7 +290,7 @@ class RetrieveCVDataToUpdate(View):
             return redirect("Homepage:Home")
 
         # verify = Flase, is used to bypass SSL or ask the API endpoint not to validate the request
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, verify=False)
         if response.status_code == 200:
             # convert the json to '{}' or dictionary
             json_to_dic = response.json()
@@ -637,28 +637,28 @@ class RetrieveCVDataToUpdate(View):
                         {f"access token for user id {user_id} not found in datbase"},
                         status=500,
                     )
-                if settings.DEBUG:
-                    url = f"https://diverse-intense-whippet.ngrok-free.app/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=True"
+                if not settings.DEBUG:
+                    url = f"https://diverse-intense-whippet.ngrok-free.app/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=False"
                 else:
-                    url = f"https://osamaaslam.pythonanywhere.com/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=True"
+                    url = f"https://osamaaslam.pythonanywhere.com/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=False"
 
                 headers = {
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {access_token}",
                 }
 
-
                 try:
                     json_data = json.dumps(personal_info, cls=DateTimeEncoder)
+                    print(json_data)
 
                 except Exception as e:
                     messages.info(request, "fail to serialize the data")
                     return HttpResponsePermanentRedirect("/")
 
                 try:
-                    response = requests.patch(url, headers=headers,
-                    data=json_data,
-                    verify=False, timeout=5)
+                    response = requests.patch(
+                        url, headers=headers, data=json_data, verify=False, timeout=5
+                    )
                     response.raise_for_status()
 
                 except requests.exceptions.Timeout:
@@ -732,7 +732,7 @@ class DeleteCVForUser(View):
 
         personal_info_id = kwargs.get("personal_info_id")
 
-        if settings.DEBUG:
+        if not settings.DEBUG:
             url = f"https://diverse-intense-whippet.ngrok-free.app/resume/api/get-personal-info-data/{personal_info_id}/"
         else:
             url = f"https://osamaaslam.pythonanywhere.com/resume/api/get-personal-info-data/{personal_info_id}/"
@@ -740,6 +740,7 @@ class DeleteCVForUser(View):
         try:
             response = requests.delete(url, headers=headers, verify=False)
             # response.raise_for_status()
+            print(f"response.json() delte ------ {response.json()}")
 
             if response.status_code == 204 or response.status_code == 200:
                 # Get all PersonalInfo instances for current user
@@ -747,24 +748,24 @@ class DeleteCVForUser(View):
                     "user_id_for_personal_info"
                 )
 
-                if response.json()["status"] == "DELETED":
+                if response.json()["data"]["status"] == "DELETED":
                     # Get the required instance
                     required_instance = instances_of_current_user.filter(
-                        api_id_of_cv=response.json()["id"],
-                        api_user_id_for_cv=response.json()["user_id"],
+                        api_id_of_cv=response.json()["data"]["id"],
+                        api_user_id_for_cv=response.json()["data"]["user_id"],
                     ).first()
 
                     # if exist, because Webhhook Fails!
                     if required_instance:
                         print("-S T A T U S    D E L E T E D    M A N U A L L  Y-")
                         required_instance.delete()
-                        messages.success(request, "Cv DELETED successfully!")
+                    messages.success(request, "Cv DELETED successfully!")
                 else:
                     messages.info(request, "Fail to Delete Cv, Try Again!")
                     # get the required instance
                     required_instance = instances_of_current_user.filter(
-                        api_id_of_cv=response.json()["id"],
-                        api_user_id_for_cv=response.json()["user_id"],
+                        api_id_of_cv=response.json()["data"]["id"],
+                        api_user_id_for_cv=response.json()["data"]["user_id"],
                     ).first()
                     required_instance.status = "FAILED"
 

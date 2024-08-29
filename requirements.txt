@@ -6,8 +6,6 @@ Django==4.2.8
 
 django_axes==6.3.0
 
-django-allauth==64.1.0
-
 django-bootstrap5==24.2
 
 django-ckeditor==6.7.1
@@ -17,6 +15,8 @@ django_countries==7.5.1
 django-crispy-forms==2.3
 
 django-cloudinary-storage==0.3.0
+
+django-filter==24.3
 
 django-extensions==3.2.3
 
@@ -35,8 +35,6 @@ python-slugify==8.0.3
 pytest==8.3.2
 
 pytest-django==4.8.0
-
-pymemcache 4.0.0
 
 Requests==2.31.0
 

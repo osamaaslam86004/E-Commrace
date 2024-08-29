@@ -21,7 +21,7 @@ class TokenUtils:
     @staticmethod
     def register_user(user):
         # Define the URL of the API endpoint for user registration
-        if settings.DEBUG:
+        if not settings.DEBUG:
             api_url = (
                 "https://diverse-intense-whippet.ngrok-free.app/api/auth/crud-user/"
             )
@@ -52,17 +52,15 @@ class TokenUtils:
                 # Parse the JSON response to extract the access and refresh tokens
                 json_response = response.json()
                 print(f"response_register___________{json_response}")
-                return json_response
-            else:
-                return None
+                return json_response if "id" in response.json() else None
 
         except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"Request failed: {e}"}, status=500)
+            return None
 
     @staticmethod  # It can be called either on the class (e.g. C.f()) or on an instance (e.g. C().f()).
     def get_user(user):
 
-        if settings.DEBUG:
+        if not settings.DEBUG:
             api_url = "https://diverse-intense-whippet.ngrok-free.app/api/auth/get-api-user-id-for-user/"
         else:
             api_url = "https://osamaaslam.pythonanywhere.com/api/auth/get-api-user-id-for-user/"
@@ -109,7 +107,7 @@ class TokenUtils:
     @staticmethod  # It can be called either on the class (e.g. C.f()) or on an instance (e.g. C().f()).
     def get_tokens_for_user(user_id):
 
-        if settings.DEBUG:
+        if not settings.DEBUG:
             api_url = "https://diverse-intense-whippet.ngrok-free.app/api/auth/token/"
         else:
             api_url = "https://osamaaslam.pythonanywhere.com/api/auth/token/"
@@ -140,19 +138,17 @@ class TokenUtils:
             if response.status_code == 200:
                 tokens = response.json()
                 print(f"tokens________________{tokens}")
-                return tokens
-            else:
-                return JsonResponse({"status": response.json()})
+                return tokens if "refresh" in response.json() else None
 
         except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"Request failed: {e}"}, status=500)
+            return None
 
     @staticmethod  # It can be called either on the class (e.g. C.f()) or on an instance (e.g. C().f()).
     def get_new_access_token_for_user(refresh_token):
         # Define the URL of the API endpoint for acquiring fresh access token using refresh token
 
         # Caution :RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set
-        if settings.DEBUG:
+        if not settings.DEBUG:
             api_url = (
                 "https://diverse-intense-whippet.ngrok-free.app/api/auth/token/refresh/"
             )
@@ -189,7 +185,7 @@ class TokenUtils:
     def verify_access_token_for_user(access_token):
 
         # Caution :RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set
-        if settings.DEBUG:
+        if not settings.DEBUG:
             api_url = (
                 "https://diverse-intense-whippet.ngrok-free.app/api/auth/token/verify/"
             )
