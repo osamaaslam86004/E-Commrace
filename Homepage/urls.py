@@ -2,11 +2,18 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from Homepage import views
-from Homepage.views import (AdminProfilePageView, CSRProfilePageView,
-                            CustomerProfilePageView, CustomLoginView,
-                            CustomLogoutView, Delete_User_Account,
-                            HomePageView, ManagerProfilePageView,
-                            SellerProfilePageView, SignupView)
+from Homepage.views import (
+    AdminProfilePageView,
+    CSRProfilePageView,
+    CustomerProfilePageView,
+    CustomLoginView,
+    CustomLogoutView,
+    DeleteUserAccount,
+    HomePageView,
+    ManagerProfilePageView,
+    SellerProfilePageView,
+    SignupView,
+)
 
 # from axes.decorators import axes_dispatch
 
@@ -16,7 +23,7 @@ urlpatterns = [
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", CustomLogoutView.as_view(), name="logout"),
-    path("delete-account/", Delete_User_Account.as_view(), name="delete"),
+    path("delete-account/", DeleteUserAccount.as_view(), name="delete"),
     path(
         "customer_profile_page/",
         CustomerProfilePageView.as_view(),

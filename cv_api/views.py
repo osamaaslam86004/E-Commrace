@@ -1,11 +1,17 @@
 import json
+from typing import Dict, Any, Literal
 from datetime import date, datetime
 
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.http import (HttpResponse, HttpResponsePermanentRedirect,
-                         HttpResponseRedirect, JsonResponse, response)
+from django.http import (
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+    response,
+)
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -13,25 +19,32 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from cv_api.create_read_update_delete_user import TokenUtils
-from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
-                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
-                          ProjectsForm, PublicationForm,
-                          SkillAndSkillLevelForm)
+from cv_api.forms import (
+    EducationfoForm,
+    JobAccomplishmentfoForm,
+    JobfoForm,
+    OverviewForm,
+    PersonalInfoForm,
+    ProgrammingAreaForm,
+    ProjectsForm,
+    PublicationForm,
+    SkillAndSkillLevelForm,
+)
 from cv_api.models import PersonalInfo, TokensForUser
 from Homepage.models import CustomUser
 
 
 class DateTimeEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o) -> str | Any:
         if isinstance(o, (datetime, date)):
             return o.isoformat()
-        return json.JSONEncoder.default(self, o)
+        return super().default(o)
 
 
 class CVApiPostRequest(TemplateView):
     template_name = "cv.html"
 
-    def get_or_create_api_user(self, user_id):
+    def get_or_create_api_user(self, user_id) -> Any | None | JsonResponse:
         user = CustomUser.objects.filter(id=user_id).first()
 
         json_response = TokenUtils.get_user(user)
@@ -39,11 +52,11 @@ class CVApiPostRequest(TemplateView):
             json_response = TokenUtils.register_user(user)
         return json_response
 
-    def get_tokens_for_user(self, user_id):
+    def get_tokens_for_user(self, user_id) -> Any | None:
         tokens = TokenUtils.get_tokens_for_user(user_id)
         return tokens
 
-    def verify_token_for_user(self, token_instance):
+    def verify_token_for_user(self, token_instance) -> bool:
 
         access_token = token_instance.access_token
         if TokenUtils.verify_access_token_for_user(access_token):
@@ -51,7 +64,9 @@ class CVApiPostRequest(TemplateView):
         else:
             return False
 
-    def get_new_access_token_for_user(self, token_instance):
+    def get_new_access_token_for_user(
+        self, token_instance
+    ) -> Any | dict[str, Any] | JsonResponse | None:
 
         access_token = TokenUtils.get_new_access_token_for_user(
             token_instance.refresh_token
@@ -61,15 +76,23 @@ class CVApiPostRequest(TemplateView):
         else:
             return None
 
-    def create_token_instance_for_user(self, user_id):
+    def create_token_instance_for_user(self, user_id) -> TokensForUser | None:
+        token_instance_created_for_user = None
+
         user = CustomUser.objects.filter(id=user_id)
         if user:
             user = user[0]
             token_instance_created_for_user = TokensForUser.objects.create(user=user)
-            print("____________token_instance_created_for_user")
         return token_instance_created_for_user or None
 
-    def get(self, request, **kwargs):
+    def get(
+        self, request, **kwargs
+    ) -> (
+        JsonResponse
+        | HttpResponseRedirect
+        | HttpResponsePermanentRedirect
+        | HttpResponse
+    ):
         access_token = None
         if "user_id" in self.request.session and self.request.user.is_authenticated:
             user_id = self.request.session["user_id"]
@@ -121,7 +144,7 @@ class CVApiPostRequest(TemplateView):
 
 class CVApiSubmitForm(View):
 
-    def get_api_user_id(self, user_id):
+    def get_api_user_id(self, user_id)
         try:
             personal_info_instance = PersonalInfo.objects.filter(
                 user_id_for_personal_info__id=user_id

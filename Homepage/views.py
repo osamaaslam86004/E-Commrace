@@ -1,3 +1,4 @@
+from typing import Dict, Any, Literal
 import json
 import logging
 import random
@@ -21,6 +22,7 @@ from django.http import (
     HttpResponse,
     HttpResponseForbidden,
     HttpResponseNotFound,
+    HttpResponsePermanentRedirect,
     HttpResponseRedirect,
     JsonResponse,
 )
@@ -73,7 +75,7 @@ logger = logging.getLogger(__name__)
 class HomePageView(TemplateView):
     template_name = "store.html"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         obj_list = None  # Initialize obj_list with a default value
         images = [
@@ -109,11 +111,13 @@ class SignupView(View):
     template_name = "signup.html"
     form_class = SignUpForm
 
-    def get(self, request):
+    def get(self, request) -> HttpResponse:
         form = self.form_class()
         return render(request, self.template_name, {"form": form})
 
-    def post(self, request):
+    def post(
+        self, request
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
         email = request.POST.get(
             "email"
         )  # Assuming the email comes from the form POST data
@@ -148,23 +152,25 @@ class CustomLoginView(View):
     form_class = LogInForm
 
     @method_decorator(axes_dispatch)
-    def dispatch(self, *args, **kwargs):
+    def dispatch(self, *args, **kwargs) -> HttpResponse:
         return super().dispatch(*args, **kwargs)
 
-    def start_cookie_session(self, request):
+    def start_cookie_session(self, request) -> None:
         "Start a cookie-based session by setting a value in the cookie"
         self.request.session["user_id"] = self.request.user.id
         logger.info("start cookie session: %s", self.request.session["user_id"])
         # You don't need to manually set the cookie here; Django handles it internally
         # The session data will be stored in the HTTP-only cookie based on the settings
 
-    def check_existing_cookie_session(self, request):
+    def check_existing_cookie_session(self, request) -> bool:
         "Check if the cookie-based session exists for the logged-in user"
         user_id_exists = "user_id" in self.request.session
         logger.info("check existing cookie session: %s", user_id_exists)
         return user_id_exists
 
-    def get(self, request):
+    def get(
+        self, request
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
         if request.user.is_authenticated:
             messages.info(request, "You are already logged in.")
             return redirect(request.GET.get("next", "/"))
@@ -190,7 +196,9 @@ class CustomLoginView(View):
                 messages.info(self.request, "Please fill this form to Login-in!")
                 return render(request, self.template_name, {"form": form})
 
-    def post(self, request):
+    def post(
+        self, request
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
         form = self.form_class(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
@@ -215,7 +223,9 @@ class CustomLoginView(View):
         return render(request, self.template_name, {"form": form})
 
 
-def custom_password_reset(request):
+def custom_password_reset(
+    request,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | JsonResponse | HttpResponse:
     if request.method == "POST":
         email = request.POST.get("email")
 
@@ -244,8 +254,8 @@ def custom_password_reset(request):
 
                 # Send the email
                 response = sg.client.mail.send.post(request_body=mail_json)
-                logger.info(f"Email send response status: {response.status_code}")
-                logger.debug(f"Email send response headers: {response.headers}")
+                logger.info("Email send response status: %d", response.status_code)
+                logger.debug("Email send response headers: %s", response.headers)
 
                 # Check the response status and return appropriate message
                 if response.status_code == 202:
@@ -269,7 +279,9 @@ def custom_password_reset(request):
 class CustomPasswordResetConfirmView(View):
     template_name = "password_reset_confirm.html"
 
-    def post(self, request, **kwargs):
+    def post(
+        self, request, **kwargs
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
         form = CustomPasswordResetForm(request.POST)
         if form.is_valid():
             password1 = form.cleaned_data["new_password1"]
@@ -298,7 +310,9 @@ class CustomPasswordResetConfirmView(View):
         else:
             return render(request, self.template_name, {"form": form})
 
-    def get(self, request, **kwargs):
+    def get(
+        self, request, **kwargs
+    ) -> HttpResponse | HttpResponseRedirect | HttpResponsePermanentRedirect:
         form = CustomPasswordResetForm()
         uidb64 = kwargs["uidb64"]
         token = kwargs["token"]
@@ -321,7 +335,7 @@ class CustomPasswordResetConfirmView(View):
             return redirect("Homepage:signup")
 
 
-def google_login(request):
+def google_login(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
     client_id = settings.GOOGLE_OAUTH_CLIENT_ID
     redirect_uri = settings.GOOGLE_OAUTH_REDIRECT_URI
 
@@ -337,7 +351,9 @@ def google_login(request):
     return redirect(url)
 
 
-def your_callback_view(request):
+def your_callback_view(
+    request,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
     # Get the authorization code from the query parameters
     code = request.GET.get("code")
 
@@ -378,6 +394,10 @@ def your_callback_view(request):
             user_info = user_info_response.json()
             email = user_info.get("email")
 
+            # Initialize social_account to None
+            social_account = None
+            user = None
+
             try:
                 # Check if the user already exists
                 user = CustomUser.objects.get(email=email)
@@ -390,7 +410,7 @@ def your_callback_view(request):
                     social_account.refresh_token = refresh_token
                     social_account.save()
 
-                except social_account.DoesNotExist:
+                except CustomSocialAccount.DoesNotExist:
                     # Create the social account if it doesn't exist
                     CustomSocialAccount(
                         user=user,
@@ -399,7 +419,7 @@ def your_callback_view(request):
                         refresh_token=refresh_token,
                         code=user_info,
                     )
-            except social_account.DoesNotExist:
+            except CustomSocialAccount.DoesNotExist:
                 # Create a new user if it doesn't exist
                 user = CustomUser.objects.create(
                     email=email, username=email, user_type="SELLER"
@@ -431,7 +451,7 @@ def your_callback_view(request):
     return HttpResponseNotFound("<h1>Sorry, an error occurred!</h1>")
 
 
-def read_user_document(request):
+def read_user_document(request) -> HttpResponse:
     SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
     # Retrieve the stored access token and refresh token for the user from your database
 
@@ -459,6 +479,8 @@ def read_user_document(request):
         response = drive_service.files().list().execute()
 
         file_names = []
+        # Initialize file info
+        files_info = None
         # Process the response
         files = response.get("files", [])
         if files:
@@ -478,7 +500,7 @@ def read_user_document(request):
 class CustomLogoutView(View, SuccessMessageMixin):
     success_message = "You have been logged out successfully"
 
-    def get(self, request):
+    def get(self, request) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
         try:
             if request.user.is_authenticated:
                 if "user_id" in request.session:
@@ -530,15 +552,15 @@ class CustomLogoutView(View, SuccessMessageMixin):
             return False
 
 
-def custom_csrf_failure(request, reason=""):
-    # Your custom logic for handling CSRF failures
-    # Mark the reason as safe to render HTML
-    reason_message = mark_safe(reason)
-    context = {
-        "reason": reason_message
-    }  # Pass any additional context data needed for the template
-    template = loader.get_template("custom_csrf_failure.html")
-    return HttpResponseForbidden(template.render(context, request))
+# def custom_csrf_failure(request, reason="") -> HttpResponseForbidden:
+#     # Your custom logic for handling CSRF failures
+#     # Mark the reason as safe to render HTML
+#     reason_message = mark_safe(reason)
+#     context = {
+#         "reason": reason_message
+#     }  # Pass any additional context data needed for the template
+#     template = loader.get_template("custom_csrf_failure.html")
+#     return HttpResponseForbidden(template.render(context, request))
 
 
 @method_decorator(login_required, name="dispatch")
@@ -553,7 +575,7 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
     template_name = "customer_profile_page.html"
 
     # inherited from PermissionRequiredMixin
-    def handle_no_permission(self):
+    def handle_no_permission(self) -> HttpResponse:
         user_email = (
             self.request.user.email if self.request.user.is_authenticated else "unknown"
         )
@@ -568,7 +590,9 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
         messages.error(request, "Your are not Logged-in, Please Log-in!")
         return redirect("/login/")
 
-    def display_customer_user_type_permissions(self, request):
+    def display_customer_user_type_permissions(
+        self, request
+    ) -> set[str | Any] | set[Any]:
         social_id = request.session.get("social_id")
 
         # Check if user is not logged in via google account
@@ -605,7 +629,9 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
                 messages.error(request, "Social user does not exist")
                 return {}
 
-    def get(self, request, *args, **kwargs):
+    def get(
+        self, request, *args, **kwargs
+    ) -> HttpResponse | HttpResponseRedirect | HttpResponsePermanentRedirect:
         if request.user.is_authenticated:
             logger.info(
                 "check if user is authenticated %s", request.user.is_authenticated
@@ -615,7 +641,9 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
         else:
             return self.redirect_to_login(request)
 
-    def post(self, request):
+    def post(
+        self, request
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
         if not request.user.is_authenticated:
             return self.redirect_to_login(request)
 
@@ -680,7 +708,7 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
         )
 
     # Method to prepare context data for the template
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
         image = self.request.user.image
@@ -1342,7 +1370,7 @@ class AdminProfilePageView(LoginRequiredMixin, PermissionRequiredMixin, Template
         )
 
 
-def send_email(request):
+def send_email(request) -> JsonResponse:
     # Your dynamic data to be passed to the template
     dynamic_data = {
         "customerName": "John Doe",
@@ -1378,12 +1406,14 @@ def send_email(request):
         return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
 
 
-def generate_otp():
+def generate_otp() -> str:
     # Generate a 6-digit OTP
     return str(random.randint(100000, 999999))
 
 
-def send_sms(request):
+def send_sms(
+    request,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse | JsonResponse:
     if request.method == "POST":
         otp_form = OTPForm(request.POST)
         form = E_MailForm_For_Password_Reset(request.POST)
@@ -1500,7 +1530,7 @@ def send_sms(request):
             return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
 
 
-def helper_function(generated_otp, phone_number):
+def helper_function(generated_otp, phone_number) -> bool:
     import requests
 
     # Twilio API endpoint
@@ -1545,7 +1575,7 @@ def helper_function(generated_otp, phone_number):
 
 
 class DeleteUserAccount(View):
-    def delete_user_stripe_account(self):
+    def delete_user_stripe_account(self) -> Any | JsonResponse | Literal[False]:
         user_id = self.request.session["user_id"]
         payment = Payment.objects.filter(user__id=user_id)
         if payment:
@@ -1558,7 +1588,7 @@ class DeleteUserAccount(View):
         else:
             return False
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
         if "user_id" in self.request.session:
             user_id = self.request.session["user_id"]
             user = CustomUser.objects.filter(id=user_id)
