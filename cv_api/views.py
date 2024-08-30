@@ -1,17 +1,12 @@
 import json
-from typing import Any
 from datetime import date, datetime
+from typing import Any
 
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.http import (
-    HttpResponse,
-    HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
-    JsonResponse,
-    response,
-)
+from django.http import (HttpResponse, HttpResponsePermanentRedirect,
+                         HttpResponseRedirect, JsonResponse, response)
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -19,17 +14,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from cv_api.create_read_update_delete_user import TokenUtils
-from cv_api.forms import (
-    EducationfoForm,
-    JobAccomplishmentfoForm,
-    JobfoForm,
-    OverviewForm,
-    PersonalInfoForm,
-    ProgrammingAreaForm,
-    ProjectsForm,
-    PublicationForm,
-    SkillAndSkillLevelForm,
-)
+from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
+                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
+                          ProjectsForm, PublicationForm,
+                          SkillAndSkillLevelForm)
 from cv_api.models import PersonalInfo, TokensForUser
 from Homepage.models import CustomUser
 

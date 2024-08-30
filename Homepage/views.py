@@ -1,7 +1,7 @@
-from typing import Dict, Any, Literal
 import json
 import logging
 import random
+from typing import Any, Dict, Literal
 from urllib.parse import urlencode
 
 import cloudinary
@@ -13,19 +13,15 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.mixins import (LoginRequiredMixin,
+                                        PermissionRequiredMixin)
 from django.contrib.auth.models import Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import (
-    HttpResponse,
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
-    JsonResponse,
-)
+from django.http import (HttpResponse, HttpResponseForbidden,
+                         HttpResponseNotFound, HttpResponsePermanentRedirect,
+                         HttpResponseRedirect, JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import reverse
@@ -43,30 +39,16 @@ from sendgrid.helpers.mail import Mail
 from twilio.rest import Client
 
 from checkout.models import Payment
-from Homepage.forms import (
-    AdministratorProfileForm,
-    CustomerProfileForm,
-    CustomerServiceProfileForm,
-    CustomPasswordResetForm,
-    CustomUserImageForm,
-    E_MailForm_For_Password_Reset,
-    LogInForm,
-    ManagerProfileForm,
-    OTPForm,
-    SellerProfileForm,
-    SignUpForm,
-    UserProfileForm,
-)
-from Homepage.models import (
-    AdministratorProfile,
-    CustomerProfile,
-    CustomerServiceProfile,
-    CustomSocialAccount,
-    CustomUser,
-    ManagerProfile,
-    SellerProfile,
-    UserProfile,
-)
+from Homepage.forms import (AdministratorProfileForm, CustomerProfileForm,
+                            CustomerServiceProfileForm,
+                            CustomPasswordResetForm, CustomUserImageForm,
+                            E_MailForm_For_Password_Reset, LogInForm,
+                            ManagerProfileForm, OTPForm, SellerProfileForm,
+                            SignUpForm, UserProfileForm)
+from Homepage.models import (AdministratorProfile, CustomerProfile,
+                             CustomerServiceProfile, CustomSocialAccount,
+                             CustomUser, ManagerProfile, SellerProfile,
+                             UserProfile)
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
