@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, Literal
+from typing import Any
 from datetime import date, datetime
 
 import requests
@@ -144,7 +144,7 @@ class CVApiPostRequest(TemplateView):
 
 class CVApiSubmitForm(View):
 
-    def get_api_user_id(self, user_id)
+    def get_api_user_id(self, user_id):
         try:
             personal_info_instance = PersonalInfo.objects.filter(
                 user_id_for_personal_info__id=user_id
