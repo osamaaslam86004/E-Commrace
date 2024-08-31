@@ -6,6 +6,8 @@ from blog.models import Comment, Post
 
 
 class PostForm(forms.ModelForm):
+    content = forms.CharField(widget=CKEditorWidget())
+
     class Meta:
         model = Post
         fields = [

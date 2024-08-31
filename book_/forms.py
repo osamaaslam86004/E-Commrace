@@ -265,6 +265,7 @@ class RatingForm(forms.ModelForm):
 
 class ReviewForm(forms.ModelForm):
     rating = RatingForm()
+    content = forms.CharField(widget=CKEditorWidget())
 
     class Meta:
         model = Review
