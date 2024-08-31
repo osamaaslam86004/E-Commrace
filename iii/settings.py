@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+from re import T
 
 from decouple import config
 
@@ -49,7 +50,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -186,7 +187,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "/static/"
+# STATICFILES_DIRS is for directories where Django will search for additional static files
+# that aren't tied to any specific app. These files can be served during development.
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 
 # MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
