@@ -189,8 +189,8 @@ USE_TZ = True
 STATIC_URL = "/static/"
 # STATICFILES_DIRS is for directories where Django will search for additional static files
 # that aren't tied to any specific app. These files can be served during development.
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")]
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
 # MEDIA_URLS = "/media/"
