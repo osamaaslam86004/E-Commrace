@@ -1,0 +1,58 @@
+{% if item_list %}
+<div class="card-container row row-cols-1 row-cols-md-3" style="margin-top: 21px;">
+    {% for monitor, rating in item_ratings.items %}
+    <div class="col mb-4">
+        <div class="card">
+            <div class="image-container" style="height: 150px; width: 150px;">
+                <img class="card-img-top" src="{{ monitor.image_2 }}" alt="Card image cap">
+            </div>
+            <div class="card-body">
+                <div>
+                    <h5 class="card-title">Name: {{ monitor.name }}</h5>
+                    <p class="card-text"><b>Price</b>: {{ monitor.price }}</p>
+                    <p class="card-text"><b>Mounting Type</b>: {{ monitor.mounting_type }}</p>
+                </div>
+
+                <div class="average-rating">
+                    {% if rating == 0 or rating == "N/A" %}
+                    <i data-star="0"></i>
+                    {% else %}
+                    <i data-star="{{rating}}"></i>
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}" class="stretched-link">View</a>
+            </div>
+        </div>
+    </div>
+
+    {% endfor %}
+</div>
+
+<!-- pagination here -->
+<div class="pagination" style="margin-top: 101px; margin-bottom:101px; margin-left:201px;">
+    <strong>
+        <div>
+            {% if item_list.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ item_list.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span> Page {{ item_list.number }} of {{ item_list.paginator.num_pages }}. </span>
+
+            {% if item_list.has_next %}
+            <a href="?page={{ item_list.next_page_number }}">Next</a>
+            <a href="?page={{ item_list.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    </strong>
+</div>
+
+{% else %}
+
+<div style="font-size: large; margin-top:300px; margin-left:101px;">
+    <span style="font-size: 50px;"><strong>No product found</strong></span>
+
+</div>
+
+{% endif %}
