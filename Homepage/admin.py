@@ -1,9 +1,8 @@
-from django import forms
 from django.contrib import admin
+from django import forms
+from Homepage.models import (UserProfile, CustomerProfile, CustomerServiceProfile, ManagerProfile, SellerProfile,
+                             AdministratorProfile, CustomUser)
 
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomUser,
-                             ManagerProfile, SellerProfile, UserProfile)
 
 
 class CustomUserAdmin(admin.ModelAdmin):

@@ -1,9 +1,8 @@
-from ckeditor.fields import RichTextField
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
 from Homepage.models import CustomUser
 from i.models import ProductCategory
+from django.core.validators import MinValueValidator, MaxValueValidator
+from ckeditor.fields import RichTextField
 
 
 class BookAuthorName(models.Model):

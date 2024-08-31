@@ -1,25 +1,35 @@
-import logging
-import random
-
 import pytest
-from django.contrib.auth.models import Group
+import logging
+from faker import Faker
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from faker import Faker
-
-from Homepage.models import (  # CustomerServiceProfile,; ManagerProfile,; AdministratorProfile,
-    CustomerProfile, CustomUser, SellerProfile, UserProfile)
-from tests.Homepage.Custom_Permissions import (ADMIN_CUSTOM_PERMISSIONS,
-                                               CSR_CUSTOM_PERMISSIONS,
-                                               CUSTOMER_CUSTOM_PERMISSIONS,
-                                               MANAGER_CUSTOM_PERMISSIONS,
-                                               SELLER_CUSTOM_PERMISSIONS)
-from tests.Homepage.Homepage_factory import (  # UserProfileOnlyFactory,
-    AdministratorProfileFactory, CustomerProfileFactory,
-    CustomerServiceProfileFactory, CustomSocialAccountFactory,
+from Homepage.models import (
+    CustomUser,
+    UserProfile,
+    SellerProfile,
+    CustomerProfile,
+)
+from tests.Homepage.Homepage_factory import (
+    CustomUserOnlyFactory,
+    CustomUserOnlyFactory,
     CustomUserFactory_Without_UserProfile_PostGeneration,
-    CustomUserOnlyFactory, ManagerProfileFactory, SellerProfileFactory,
-    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration)
+    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration,
+    CustomerProfileFactory,
+    SellerProfileFactory,
+    CustomerServiceProfileFactory,
+    ManagerProfileFactory,
+    AdministratorProfileFactory,
+    CustomSocialAccountFactory,
+)
+from django.contrib.auth.models import Group
+from tests.Homepage.Custom_Permissions import (
+    CUSTOMER_CUSTOM_PERMISSIONS,
+    CSR_CUSTOM_PERMISSIONS,
+    ADMIN_CUSTOM_PERMISSIONS,
+    SELLER_CUSTOM_PERMISSIONS,
+    MANAGER_CUSTOM_PERMISSIONS,
+)
+
 
 faker = Faker()
 # Disable Faker DEBUG logging

@@ -10,11 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import os
 from pathlib import Path
-from re import T
-
+import os
 from decouple import config
+
 
 # Twilio API
 TEMPLATES_ID = config("template_id")
@@ -83,11 +82,17 @@ INSTALLED_APPS = [
     "cloudinary_storage",
     "cloudinary",
     "ckeditor",
+    "compressor",
     "book_",
     "django_twilio",
     "axes",
     "phonenumber_field",
     "django_countries",
+    "allauth",
+    "allauth.account",
+    # # Optional -- requires install using `django-allauth[socialaccount]`.
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 SITE_ID = 1
@@ -99,6 +104,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    # Add the account middleware:
+    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
 ]
@@ -117,6 +124,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # # `allauth` needs this from django
                 "django.template.context_processors.request",
             ],
         },
@@ -125,28 +133,34 @@ TEMPLATES = [
 WSGI_APPLICATION = "iii.wsgi.application"
 
 
-# Database
-DATABASES = {
+# Cache
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
+#         "LOCATION": f"{config('RAILWAY_TCP_PROXY_DOMAIN', default='localhost')}:{config('RAILWAY_TCP_PROXY_PORT', default='11211')}",
+#     },
+# }
+
+CACHES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("POSTGRES_DATABASE"),
-#         "USER": config("POSTGRES_USER"),
-#         "PASSWORD": config("POSTGRES_PASSWORD"),
-#         "HOST": config("POSTGRES_HOST"),
-#         "PORT": "5432",
-#         "OPTIONS": {
-#             "sslmode": "require",
-#         },
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("POSTGRES_DATABASE"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
+        "HOST": config("POSTGRES_HOST"),
+        "PORT": "5432",
+        "OPTIONS": {
+            "sslmode": "require",
+        },
+    }
+}
 
 
 # Password validation
@@ -187,14 +201,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "/static/"
-# STATICFILES_DIRS is for directories where Django will search for additional static files
-# that aren't tied to any specific app. These files can be served during development.
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 
-# MEDIA_URLS = "/media/"
+MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Define the directory where media files will be uploaded and stored
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 # Default primary key field type
@@ -216,45 +230,32 @@ SESSION_COOKIE_HTTPONLY = True
 
 
 ###############################Cloudinary Settings For Image Storage###########################
-
-# For cloudinary_storage library only
-if DEBUG:
-    CLOUDINARY_STORAGE = {
-        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
-        "API_KEY": config("CLOUDINARY_API_KEY"),
-        "API_SECRET": config("CLOUDINARY_API_SECRET"),
-        # "API_PROXY": "http://proxy.server:3128",
-    }
-else:
-    CLOUDINARY_STORAGE = {
-        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
-        "API_KEY": config("CLOUDINARY_API_KEY"),
-        "API_SECRET": config("CLOUDINARY_API_SECRET"),
-        "API_PROXY": "http://proxy.server:3128",
-    }
-
-# For cloudinary python SDK
 import cloudinary
 
-CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
-CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
-CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
 if DEBUG:
     cloudinary.config(
-        cloud_name=CLOUDINARY_CLOUD_NAME,
-        api_key=CLOUDINARY_API_KEY,
-        api_secret=CLOUDINARY_API_SECRET,
+        cloud_name="dh8vfw5u0",
+        api_key="667912285456865",
+        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
+        # api_proxy = "http://proxy.server:3128"
     )
 else:
     cloudinary.config(
-        cloud_name=CLOUDINARY_CLOUD_NAME,
-        api_key=CLOUDINARY_API_KEY,
-        api_secret=CLOUDINARY_API_SECRET,
+        cloud_name="dh8vfw5u0",
+        api_key="667912285456865",
+        api_secret="QaF0OnEY-W1v2GufFKdOjo3KQm8",
         api_proxy="http://proxy.server:3128",
     )
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "dh8vfw5u0",
+    "API_KEY": "667912285456865",
+    "API_SECRET": "QaF0OnEY-W1v2GufFKdOjo3KQm8",
+}
 MEDIA_URL = "/media/"
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
 
 ###########################----------Security Related Settings-----------########################################
 
@@ -274,6 +275,8 @@ AXES_COOLOFF_TIME = 0.001
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by email
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 ###################------------------- Google api-client library settings----------------############

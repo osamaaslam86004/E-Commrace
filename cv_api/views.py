@@ -1,38 +1,48 @@
-import json
-from datetime import date, datetime
-from typing import Any
-
-import requests
-from django.conf import settings
-from django.contrib import messages
-from django.http import (HttpResponse, HttpResponsePermanentRedirect,
-                         HttpResponseRedirect, JsonResponse, response)
-from django.shortcuts import redirect, render
-from django.utils.decorators import method_decorator
+from django.shortcuts import render, redirect
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView
-
-from cv_api.create_read_update_delete_user import TokenUtils
-from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
-                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
-                          ProjectsForm, PublicationForm,
-                          SkillAndSkillLevelForm)
+from django.http import (
+    HttpResponseRedirect,
+    response,
+    JsonResponse,
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+)
+import requests, json
 from cv_api.models import PersonalInfo, TokensForUser
+from cv_api.forms import (
+    PersonalInfoForm,
+    OverviewForm,
+    EducationfoForm,
+    JobfoForm,
+    JobAccomplishmentfoForm,
+    ProjectsForm,
+    ProgrammingAreaForm,
+    SkillAndSkillLevelForm,
+    PublicationForm,
+)
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
+from datetime import date
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
 from Homepage.models import CustomUser
+from cv_api.create_read_update_delete_user import TokenUtils
+from django.contrib import messages
+from django.contrib import messages
+from django.conf import settings
 
 
 class DateTimeEncoder(json.JSONEncoder):
-    def default(self, o) -> str | Any:
+    def default(self, o):
         if isinstance(o, (datetime, date)):
             return o.isoformat()
-        return super().default(o)
+        return json.JSONEncoder.default(self, o)
 
 
 class CVApiPostRequest(TemplateView):
     template_name = "cv.html"
 
-    def get_or_create_api_user(self, user_id) -> Any | None | JsonResponse:
+    def get_or_create_api_user(self, user_id):
         user = CustomUser.objects.filter(id=user_id).first()
 
         json_response = TokenUtils.get_user(user)
@@ -40,11 +50,11 @@ class CVApiPostRequest(TemplateView):
             json_response = TokenUtils.register_user(user)
         return json_response
 
-    def get_tokens_for_user(self, user_id) -> Any | None:
+    def get_tokens_for_user(self, user_id):
         tokens = TokenUtils.get_tokens_for_user(user_id)
         return tokens
 
-    def verify_token_for_user(self, token_instance) -> bool:
+    def verify_token_for_user(self, token_instance):
 
         access_token = token_instance.access_token
         if TokenUtils.verify_access_token_for_user(access_token):
@@ -52,9 +62,7 @@ class CVApiPostRequest(TemplateView):
         else:
             return False
 
-    def get_new_access_token_for_user(
-        self, token_instance
-    ) -> Any | dict[str, Any] | JsonResponse | None:
+    def get_new_access_token_for_user(self, token_instance):
 
         access_token = TokenUtils.get_new_access_token_for_user(
             token_instance.refresh_token
@@ -64,23 +72,15 @@ class CVApiPostRequest(TemplateView):
         else:
             return None
 
-    def create_token_instance_for_user(self, user_id) -> TokensForUser | None:
-        token_instance_created_for_user = None
-
+    def create_token_instance_for_user(self, user_id):
         user = CustomUser.objects.filter(id=user_id)
         if user:
             user = user[0]
             token_instance_created_for_user = TokensForUser.objects.create(user=user)
+            print("____________token_instance_created_for_user")
         return token_instance_created_for_user or None
 
-    def get(
-        self, request, **kwargs
-    ) -> (
-        JsonResponse
-        | HttpResponseRedirect
-        | HttpResponsePermanentRedirect
-        | HttpResponse
-    ):
+    def get(self, request, **kwargs):
         access_token = None
         if "user_id" in self.request.session and self.request.user.is_authenticated:
             user_id = self.request.session["user_id"]
@@ -290,7 +290,7 @@ class RetrieveCVDataToUpdate(View):
             return redirect("Homepage:Home")
 
         # verify = Flase, is used to bypass SSL or ask the API endpoint not to validate the request
-        response = requests.get(url, headers=headers, verify=False)
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             # convert the json to '{}' or dictionary
             json_to_dic = response.json()
@@ -638,27 +638,33 @@ class RetrieveCVDataToUpdate(View):
                         status=500,
                     )
                 if settings.DEBUG:
-                    url = f"https://diverse-intense-whippet.ngrok-free.app/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=False"
+                    url = f"https://diverse-intense-whippet.ngrok-free.app/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=True"
                 else:
-                    url = f"https://osamaaslam.pythonanywhere.com/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=False"
+                    url = f"https://osamaaslam.pythonanywhere.com/resume/patch-put-personal-info-data-for-user/?id={personal_info_id}&user_id={api_user_id}&partial=True"
 
                 headers = {
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {access_token}",
                 }
 
+
                 try:
                     json_data = json.dumps(personal_info, cls=DateTimeEncoder)
-                    print(json_data)
 
                 except Exception as e:
                     messages.info(request, "fail to serialize the data")
                     return HttpResponsePermanentRedirect("/")
 
                 try:
+<<<<<<< HEAD
+                    response = requests.patch(url, headers=headers,
+                    data=json_data,
+                    verify=False, timeout=5)
+=======
                     response = requests.patch(
                         url, headers=headers, data=json_data, verify=False, timeout=5
                     )
+>>>>>>> b9049e094dfd2fc67bb9ce1742c36a86a1afb024
                     response.raise_for_status()
 
                 except requests.exceptions.Timeout:
@@ -738,39 +744,11 @@ class DeleteCVForUser(View):
             url = f"https://osamaaslam.pythonanywhere.com/resume/api/get-personal-info-data/{personal_info_id}/"
 
         try:
-            response = requests.delete(url, headers=headers, verify=False)
-            # response.raise_for_status()
-            print(f"response.json() delte ------ {response.json()}")
+            response = requests.delete(url, headers=headers, verify=False, timeout=5)
+            response.raise_for_status()
 
-            if response.status_code == 204 or response.status_code == 200:
-                # Get all PersonalInfo instances for current user
-                instances_of_current_user = PersonalInfo.objects.select_related(
-                    "user_id_for_personal_info"
-                )
-
-                if response.json()["data"]["status"] == "DELETED":
-                    # Get the required instance
-                    required_instance = instances_of_current_user.filter(
-                        api_id_of_cv=response.json()["data"]["id"],
-                        api_user_id_for_cv=response.json()["data"]["user_id"],
-                    ).first()
-
-                    # if exist, because Webhhook Fails!
-                    if required_instance:
-                        print("-S T A T U S    D E L E T E D    M A N U A L L  Y-")
-                        required_instance.delete()
-                    messages.success(request, "Cv DELETED successfully!")
-                else:
-                    messages.info(request, "Fail to Delete Cv, Try Again!")
-                    # get the required instance
-                    required_instance = instances_of_current_user.filter(
-                        api_id_of_cv=response.json()["data"]["id"],
-                        api_user_id_for_cv=response.json()["data"]["user_id"],
-                    ).first()
-                    required_instance.status = "FAILED"
-
-                    required_instance.save()
-
+        except requests.exceptions.Timeout:
+            messages.success(request, "CV deleted successfully!")
             return HttpResponsePermanentRedirect("/")
 
         except requests.RequestException as e:
@@ -780,6 +758,37 @@ class DeleteCVForUser(View):
             )
 
             return HttpResponsePermanentRedirect("/")
+
+        if response.status_code == 204 or response.status_code == 200:
+            # Get all PersonalInfo instances for current user
+            instances_of_current_user = PersonalInfo.objects.select_related(
+                "user_id_for_personal_info"
+            )
+
+            if response.json()["status"] == "DELETED":
+                # Get the required instance
+                required_instance = instances_of_current_user.filter(
+                    api_id_of_cv=response.json()["id"],
+                    api_user_id_for_cv=response.json()["user_id"],
+                ).first()
+
+                # if exist, because Webhhook Fails!
+                if required_instance:
+                    print("-S T A T U S    D E L E T E D    M A N U A L L  Y-")
+                    required_instance.delete()
+                    messages.success(request, "Cv DELETED successfully!")
+            else:
+                messages.info(request, "Fail to Delete Cv, Try Again!")
+                # get the required instance
+                required_instance = instances_of_current_user.filter(
+                    api_id_of_cv=response.json()["id"],
+                    api_user_id_for_cv=response.json()["user_id"],
+                ).first()
+                required_instance.status = "FAILED"
+
+                required_instance.save()
+
+        return HttpResponsePermanentRedirect("/")
 
 
 @method_decorator(csrf_exempt, name="dispatch")

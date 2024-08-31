@@ -1,11 +1,9 @@
 import json
 from decimal import Decimal  # Import Decimal module
-
-from django.db.models.fields.files import \
-    ImageFieldFile  # Import ImageFieldFile
-
+from django.db.models.fields.files import ImageFieldFile  # Import ImageFieldFile
 from cart.models import CartItem
 from checkout.models import Payment
+
 
 MAX_HISTORY_ITEMS = 7  # Maximum number of items to store in the browsing history
 MAX_COOKIE_SIZE = 4000  # Maximum size of the cookie data in bytes (4KB)

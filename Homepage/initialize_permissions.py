@@ -1,9 +1,9 @@
-from django.apps import apps
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
 
 
-def initialize_groups_permissions(sender=None, **kwargs) -> None:
+def initialize_groups_permissions(sender, **kwargs):
     custom_user_content_type = ContentType.objects.get_for_model(
         apps.get_model("Homepage", "CustomUser")
     )

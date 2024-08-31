@@ -1,10 +1,8 @@
 import pytest
-from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
-
-from blog.models import Comment, Post
-from tests.blog.test_blog_factory import CommentFactory, PostFactory
+from tests.blog.test_blog_factory import PostFactory, CommentFactory
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
+from blog.models import Post, Comment
+from django.contrib.auth import get_user_model
 
 CustomUser = get_user_model()
 

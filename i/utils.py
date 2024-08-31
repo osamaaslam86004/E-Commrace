@@ -1,9 +1,8 @@
 # utils/rating_utils.py
 
 from django.db.models import Avg
-
-from book_.models import Rating
 from i.models import Review
+from book_.models import Rating
 
 
 class RatingCalculator:

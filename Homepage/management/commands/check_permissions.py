@@ -7,14 +7,13 @@
 # Permission.objects.filter(Q(group__in=user.groups.all()) | Q(user=user)).distinct()
 
 
-from django.apps import apps
-from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.management.base import BaseCommand
-from django.db.models import Q
-
+from django.apps import apps
+from django.contrib.auth import get_user_model
 from Homepage.models import AdministratorProfile, SellerProfile, UserProfile
+from django.db.models import Q
 
 CustomUser = get_user_model()
 
@@ -39,7 +38,7 @@ class Command(BaseCommand):
                 email="newadmin23@gmail.com",
             ).first()
 
-        userprofile_for_admin = UserProfile.objects.get(user=admin_user)
+        userprofile_for_admin = UserProfile.objects.filter(user=admin_user).first()
         admin_profile_instance = AdministratorProfile.objects.get_or_create(
             user=admin_user, admin_profile=userprofile_for_admin, experience_years=25
         )

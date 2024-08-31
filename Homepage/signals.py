@@ -1,10 +1,8 @@
-from random import randint
-
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from Homepage.models import CustomSocialAccount, CustomUser
+from Homepage.models import CustomUser, CustomSocialAccount
+from random import randint
 
 
 @receiver(post_save, sender=CustomUser)

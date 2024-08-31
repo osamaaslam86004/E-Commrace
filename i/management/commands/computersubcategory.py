@@ -1,7 +1,7 @@
 
 from django.core.management.base import BaseCommand
-
-from i.models import ComputerSubCategory, ProductCategory
+from i.models import  ComputerSubCategory, ProductCategory
+ 
 
 
 class Command(BaseCommand):

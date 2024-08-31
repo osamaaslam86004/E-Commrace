@@ -1,15 +1,19 @@
-import re
-
+from Homepage.models import (
+    CustomUser,
+    UserProfile,
+    CustomerProfile,
+    SellerProfile,
+    CustomerServiceProfile,
+    ManagerProfile,
+    AdministratorProfile,
+)
+from phonenumber_field.formfields import PhoneNumberField
+from phonenumber_field.widgets import PhoneNumberPrefixWidget
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+import re
 from django_countries.widgets import CountrySelectWidget
-from phonenumber_field.formfields import PhoneNumberField
-from phonenumber_field.widgets import PhoneNumberPrefixWidget
-
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomUser,
-                             ManagerProfile, SellerProfile, UserProfile)
 
 
 class SignUpForm(UserCreationForm):

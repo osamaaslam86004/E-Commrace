@@ -1,10 +1,10 @@
-from django.conf import settings
-from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
-from django_countries.fields import CountryField
+from django.contrib.auth.base_user import BaseUserManager
 from phonenumber_field.modelfields import PhoneNumberField
+from django.conf import settings
+from django_countries.fields import CountryField
+from django.core.exceptions import ValidationError
 
 
 class CustomUserManager(BaseUserManager):
@@ -244,7 +244,7 @@ class AdministratorProfile(models.Model):
         name="admin_profile",
     )
     bio = models.TextField(blank=True, max_length=500)
-    experience_years = models.PositiveIntegerField(blank=False, default=1)
+    experience_years = models.PositiveIntegerField(blank=False)
 
     def clean(self):
         super().clean()

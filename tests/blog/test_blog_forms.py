@@ -1,10 +1,9 @@
 import pytest
 from django.utils.text import slugify
-
-from blog.forms import CommentForm, PostForm
-from blog.models import Comment, Post
-from tests.blog.test_blog_factory import CommentFactory, PostFactory
+from blog.models import Post, Comment
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory, fake
+from tests.blog.test_blog_factory import PostFactory, CommentFactory
+from blog.forms import PostForm, CommentForm
 
 
 @pytest.fixture

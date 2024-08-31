@@ -1,19 +1,17 @@
+from django.shortcuts import render, redirect, get_object_or_404
 import json
-
 import stripe
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth import login, logout
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import JsonResponse, HttpResponse
 from django.views import View
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-
-from cart.cart_items import update_cart_items
-from cart.models import Cart, CartItem
-from checkout.models import Payment, Refund
 from Homepage.models import CustomUser, UserProfile
+from cart.models import Cart, CartItem
+from django.contrib import messages
+from checkout.models import Payment, Refund
+from cart.cart_items import update_cart_items
+from django.core.exceptions import ObjectDoesNotExist
+
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 

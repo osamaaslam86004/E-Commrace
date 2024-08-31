@@ -1,9 +1,7 @@
 import random
 import string
-
 from django.core.management.base import BaseCommand
 from faker import Faker
-
 from Homepage.models import CustomUser
 
 

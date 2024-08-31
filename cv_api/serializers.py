@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from cv_api.models import Education
 
 

@@ -1,9 +1,6 @@
-from datetime import date, time
-
 from django.db import models
-
+from datetime import time, date
 from Homepage.models import CustomUser
-
 
 # Create your models here.
 class PersonalInfo(models.Model):

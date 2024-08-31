@@ -1,6 +1,6 @@
 
 from django.core.management.base import BaseCommand
-
+ 
 
 class Command(BaseCommand):
     help = 'Creates initial ProductCategory entries'
@@ -22,7 +22,6 @@ class Command(BaseCommand):
         subprocess.check_call([sys.executable,
             "-E", "-s", "-m", "pip", "install", "--upgrade", "certifi"])
         import certifi
-
         # change working directory to the default SSL directory
         os.chdir(openssl_dir)
         relpath_to_certifi_cafile = os.path.relpath(certifi.where())

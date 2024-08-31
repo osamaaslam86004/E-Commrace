@@ -1,8 +1,6 @@
 
 
-from i.models import (ComputerSubCategory, CustomUser, Monitors,
-                      ProductCategory, Special_Features)
-
+from i.models import ProductCategory, ComputerSubCategory, Special_Features, Monitors, CustomUser
 
 def populate_monitors():
     monitors_data = [

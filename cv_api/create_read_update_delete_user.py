@@ -1,10 +1,9 @@
-import json
-
-import requests
-from django.conf import settings
 from django.http import JsonResponse
-
+from django.conf import settings
+import requests
+import json
 from Homepage.models import CustomUser
+
 
 # Question: difference between class method and instance method in python
 
@@ -53,10 +52,12 @@ class TokenUtils:
                 # Parse the JSON response to extract the access and refresh tokens
                 json_response = response.json()
                 print(f"response_register___________{json_response}")
-                return json_response if "id" in response.json() else None
+                return json_response
+            else:
+                return None
 
         except requests.exceptions.RequestException as e:
-            return None
+            return JsonResponse({"error": f"Request failed: {e}"}, status=500)
 
     @staticmethod  # It can be called either on the class (e.g. C.f()) or on an instance (e.g. C().f()).
     def get_user(user):
@@ -139,10 +140,12 @@ class TokenUtils:
             if response.status_code == 200:
                 tokens = response.json()
                 print(f"tokens________________{tokens}")
-                return tokens if "refresh" in response.json() else None
+                return tokens
+            else:
+                return JsonResponse({"status": response.json()})
 
         except requests.exceptions.RequestException as e:
-            return None
+            return JsonResponse({"error": f"Request failed: {e}"}, status=500)
 
     @staticmethod  # It can be called either on the class (e.g. C.f()) or on an instance (e.g. C().f()).
     def get_new_access_token_for_user(refresh_token):

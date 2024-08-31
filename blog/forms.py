@@ -1,13 +1,10 @@
-from ckeditor.fields import RichTextField
-from ckeditor.widgets import CKEditorWidget
-from django import forms
-
 from blog.models import Comment, Post
+from django import forms
+from ckeditor.widgets import CKEditorWidget
+from ckeditor.fields import RichTextField
 
 
 class PostForm(forms.ModelForm):
-    content = forms.CharField(widget=CKEditorWidget())
-
     class Meta:
         model = Post
         fields = [
@@ -38,7 +35,7 @@ class PostForm(forms.ModelForm):
         "title": forms.TextInput(attrs={"class": "form-control"}),
         "slug": forms.TextInput(attrs={"class": "form-control"}),
         "meta_description": forms.TextInput(attrs={"class": "form-control"}),
-        # "content": forms.Textarea(attrs={"class": "form-control"}),
+        "content": forms.Textarea(attrs={"class": "form-control"}),
         "status": forms.Select(attrs={"class": "form-control"}),
     }
 

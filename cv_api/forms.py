@@ -1,8 +1,15 @@
 from django import forms
-
-from cv_api.models import (Education, Job, JobAccomplishment, Overview,
-                           PersonalInfo, ProgrammingArea, Projects,
-                           Publication, SkillAndSkillLevel)
+from cv_api.models import (
+    PersonalInfo,
+    Overview,
+    Education,
+    Job,
+    JobAccomplishment,
+    SkillAndSkillLevel,
+    ProgrammingArea,
+    Projects,
+    Publication,
+)
 
 
 class PersonalInfoForm(forms.ModelForm):

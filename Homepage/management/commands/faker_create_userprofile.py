@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
-
 from tests.Homepage.Homepage_factory import (
+    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration,
     CustomUserFactory_Without_UserProfile_PostGeneration,
-    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration)
+)
 
 
 class Command(BaseCommand):

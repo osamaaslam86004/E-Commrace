@@ -1,26 +1,39 @@
-import io
-import logging
-
-import pytest
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.forms import CharField, EmailField
 from django.forms.widgets import PasswordInput
-from faker import Faker
+from django.forms import (
+    CharField,
+    EmailField,
+)
+import io
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
-from PIL import Image
-
-from Homepage.forms import (AdministratorProfileForm, CustomerProfileForm,
-                            CustomerServiceProfileForm,
-                            CustomPasswordResetForm, CustomUserImageForm,
-                            E_MailForm_For_Password_Reset, LogInForm,
-                            ManagerProfileForm, OTPForm, SellerProfileForm,
-                            UserProfileForm, validate_password)
+import pytest
+import logging
+from faker import Faker
+from django.core.exceptions import ValidationError
 from tests.Homepage.Homepage_factory import (
-    CustomPasswordResetFormFactory, E_MailForm_For_Password_ResetFactory,
-    LogInFormFactory, OTPFormFactory,
-    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration)
+    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration,
+    LogInFormFactory,
+    OTPFormFactory,
+    E_MailForm_For_Password_ResetFactory,
+    CustomPasswordResetFormFactory,
+)
+from Homepage.forms import (
+    LogInForm,
+    OTPForm,
+    CustomUserImageForm,
+    E_MailForm_For_Password_Reset,
+    validate_password,
+    CustomPasswordResetForm,
+    UserProfileForm,
+    CustomerProfileForm,
+    SellerProfileForm,
+    CustomerServiceProfileForm,
+    ManagerProfileForm,
+    AdministratorProfileForm,
+)
+
 
 fake = Faker()
 

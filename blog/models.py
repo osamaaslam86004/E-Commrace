@@ -1,7 +1,7 @@
-from ckeditor.fields import RichTextField
 from django.db import models
-
 from Homepage.models import CustomUser
+from ckeditor.fields import RichTextField
+
 
 STATUS = ((0, "Draft"), (1, "Publish"))
 
@@ -27,10 +27,10 @@ class Post(models.Model):
     class Meta:
         ordering = ["-created_on"]
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.title
 
-    def admin_post_count(self, user) -> list[int]:
+    def admin_post_count(self, user):
         publish = Post.objects.filter(post_admin=user, status="1").count()
         draft = Post.objects.filter(post_admin=user, status="0").count()
         total = publish + draft
@@ -40,7 +40,7 @@ class Post(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     user_comment = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, name="comments_user"
+        CustomUser, on_delete=models.CASCADE, default=1, name="comments_user"
     )
     body = RichTextField(blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
@@ -51,4 +51,4 @@ class Comment(models.Model):
         ordering = ["created_on"]
 
     def __str__(self):
-        return f'Comment "{self.body}" by {self.user_comment.username}'
+        return f'Comment "{self.body}" by {self.comments_user.username}'

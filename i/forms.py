@@ -1,40 +1,39 @@
 from django import forms
+from i.models import Review
 from django.core.exceptions import ValidationError
-from ckeditor.widgets import CKEditorWidget
 
 from i.models import (
-    PDUS,
-    Adaptors,
-    BagPacks,
-    BriefCases,
-    ChargersAndadaptors,
+    ProductCategory,
+    ComputerSubCategory,
+    Electronics,
     ComputerAndTablets,
     ComputerAndTabletsBaseClass,
-    ComputerSubCategory,
-    Desktop,
-    Electronics,
-    FlexCables,
-    HardShellCases,
-    IsolatedTransformers,
-    LaptopAccessories,
-    LaptopBags,
-    LaptopBagSleeves,
-    LaptopBagsTypes,
-    LaptopBattry,
     Laptops,
-    LcdDisplayReplacementParts,
-    LineConditioners,
-    MessengerAndShoulderBag,
-    Monitors,
+    Tablets,
+    Desktop,
     PowerAccessories,
-    ProductCategory,
-    Review,
+    Adaptors,
+    IsolatedTransformers,
+    LineConditioners,
+    PDUS,
+    Servers,
+    Monitors,
+    LaptopAccessories,
+    LaptopBattry,
     ScreenFilters,
     ScreenProtector,
-    Servers,
-    Special_Features,
-    Tablets,
+    ChargersAndadaptors,
+    LaptopBagsTypes,
+    LaptopBags,
+    LaptopBagSleeves,
+    BagPacks,
+    BriefCases,
+    HardShellCases,
+    MessengerAndShoulderBag,
     TabletsReplacementParts,
+    FlexCables,
+    LcdDisplayReplacementParts,
+    Special_Features,
 )
 
 
@@ -1033,7 +1032,6 @@ class StarRatingField(forms.FloatField):
 
 class ReviewForm(forms.ModelForm):
     rating = StarRatingField()
-    text = forms.CharField(widget=CKEditorWidget())
 
     class Meta:
         model = Review

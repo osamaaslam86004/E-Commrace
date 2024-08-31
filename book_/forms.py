@@ -1,8 +1,8 @@
-from ckeditor.widgets import CKEditorWidget
 from django import forms
-from django.core.validators import MaxValueValidator, MinValueValidator
-
 from book_.models import BookAuthorName, BookFormat, Rating, Review
+from django.core.validators import MinValueValidator, MaxValueValidator
+from ckeditor.widgets import CKEditorWidget
+from django.core.exceptions import ValidationError
 
 
 class BookAuthorNameForm(forms.ModelForm):
@@ -264,7 +264,6 @@ class RatingForm(forms.ModelForm):
 
 class ReviewForm(forms.ModelForm):
     rating = RatingForm()
-    content = forms.CharField(widget=CKEditorWidget())
 
     class Meta:
         model = Review
@@ -278,6 +277,18 @@ class ReviewForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "Enter the review title"}
             ),
         }
+
+    # def clean_image_1(self):
+    #     image_1 = self.cleaned_data["image_1"]
+    #     if image_1 is None:
+    #         raise ValidationError("Please upload Image-1")
+    #     return image_1
+
+    # def clean_image_2(self):
+    #     image_2 = self.cleaned_data["image_2"]
+    #     if image_2 is None:
+    #         raise ValidationError("Please upload Image-1")
+    #     return image_2
 
 
 class CustomBookFormatFilterForm(forms.Form):

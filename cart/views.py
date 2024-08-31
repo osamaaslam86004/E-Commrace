@@ -1,18 +1,14 @@
+from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import render, redirect, get_object_or_404
+from cart.models import Cart, CartItem
+from cart.cart_items import add_product_to_cart_history, your_cart_items
 from collections import Counter
 from decimal import Decimal
-
 from django.contrib import messages
-from django.contrib.contenttypes.models import ContentType
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-
-from cart.cart_items import add_product_to_cart_history, your_cart_items
-from cart.models import Cart, CartItem
-from checkout.models import Payment
 
 
 def add_to_cart(request, content_id, product_id):
-    if "user_id" in request.session:
+    if "user_id" in request.session and request.user.is_authenticated:
         add_to_cart_helper(request, content_id, product_id)
         return redirect("cart:cart_view")
     else:
@@ -70,9 +66,8 @@ def remove_from_cart(request, content_id, product_id):
             request.session["cart_items"] = cookie_cart
             print(f"^^^^^^^^^^^^^^^6{request.session.get('cart_items')}")
             return response
-
     else:
-        return JsonResponse({"message": "Invalid request"})
+        return redirect("Homepage:login")
 
 
 def cart_view(request):
