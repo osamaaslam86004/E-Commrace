@@ -1,0 +1,31 @@
+{% extends 'main.html' %}
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+{% block content %}
+
+
+<form hx-post="{% url 'i:load_subcategory_form' %}" hx-target="#product-container" hx-trigger="change">
+    {% csrf_token %}
+    {% bootstrap_form product_category_form %}
+</form>
+
+
+
+
+<div id="product-container">
+
+
+</div>
+
+
+{% endblock %}

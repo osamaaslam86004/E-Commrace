@@ -1,0 +1,58 @@
+{% extends 'main.html' %}
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+{# Display a form #}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="image-container" style="margin-top: 41px;">
+                <span style="font-size: larger;"><b>Your Profile Image</b></span><br><br>
+                <img class="image" src="{{ image }}">
+            </div>
+
+            <div class="container" style="margin-top: 41px;">
+                <a class="btn btn-info" href="{% url 'blog:post_list' %}" style="margin-bottom: 5px;">
+                    View A Blog</a><br>
+                <a class="btn btn-dark" href="#" style="margin-bottom: 5px;">
+                    View Your Comments</a><br>
+                <a class="btn btn-primary" href="{% url 'i:select_product_category' %}" style="margin-bottom: 5px;">
+                    Add A Product</a><br>
+                <a class="btn btn-secondary" href="{% url 'i:list_of_products_category' %}" style="margin-bottom: 5px;">
+                    Update A Product</a><br>
+                <a class="btn btn-danger" href="{% url 'i:list_of_products_category' %}">
+                    Delete A Product</a><br><br>
+                <a class="btn btn-warning" href="{% url 'checkout:view_orders' %}">
+                    View Your Orders</a><br>
+            </div>
+
+
+            <div class="permissions-container" style="margin-top: 41px;">
+                <span><b>Your Permissions</b></span><br>
+                {% for permission in clean_permissions %}
+                {{ permission }}<br>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-6" style="margin-top:41px; margin-bottom:41px;">
+            <form method="post" class="form" style="width: 500px;" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% bootstrap_form user_profile_form %}
+                {% bootstrap_form customer_profile_form %}
+                {% bootstrap_form image_form %}
+                <div style="margin-top: 41px; margin-bottom:101px;">
+                    {% bootstrap_button button_type="submit" content="Submit" style="width: 100%;" %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

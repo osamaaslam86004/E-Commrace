@@ -1,0 +1,79 @@
+/* Reset some default browser styles */
+body, h1, h2, h3, p, ul, li {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem 0;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    margin-right: 1rem;
+}
+
+.nav-links li {
+    margin: 0 1rem;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.dashboard {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.post {
+    border: 1px solid #ddd;
+    padding: 1rem;
+}
+
+.post h2 {
+    margin-bottom: 0.5rem;
+}
+
+.read-more {
+    display: inline-block;
+    margin-top: 0.5rem;
+    color: #333;
+    text-decoration: none;
+    border: 1px solid #333;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+}
+
+.read-more:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem 0;
+    background-color: #f3f3f3;
+    border-top: 1px solid #ddd;
+}

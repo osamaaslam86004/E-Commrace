@@ -1,0 +1,35 @@
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+{% if form.errors %}
+<div class="alert alert-danger" role="alert">
+    <strong>Error:</strong>
+    <ul>
+        {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <li>{{field}}---{{ error }}</li>
+        {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+
+<div style="margin-top: 41px; margin-bottom:41px; width: 500px; margin-left:150px;">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form book_author_name_form %}
+        {% bootstrap_form book_format_form %}
+        {% bootstrap_button type="submit" content="Submit" style="width:500px;" %}
+    </form>
+
+</div>
