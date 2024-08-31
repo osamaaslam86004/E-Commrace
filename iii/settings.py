@@ -87,11 +87,6 @@ INSTALLED_APPS = [
     "axes",
     "phonenumber_field",
     "django_countries",
-    "allauth",
-    "allauth.account",
-    # # Optional -- requires install using `django-allauth[socialaccount]`.
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
 ]
 
 SITE_ID = 1
@@ -103,8 +98,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # Add the account middleware:
-    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
 ]
@@ -116,7 +109,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "templates"],
-        # "DIRS": [os.path.join(BASE_DIR, "template_dir")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
