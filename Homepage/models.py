@@ -244,7 +244,7 @@ class AdministratorProfile(models.Model):
         name="admin_profile",
     )
     bio = models.TextField(blank=True, max_length=500)
-    experience_years = models.PositiveIntegerField(blank=False)
+    experience_years = models.PositiveIntegerField(blank=False, default=1)
 
     def clean(self):
         super().clean()
@@ -267,18 +267,3 @@ class CustomSocialAccount(models.Model):
     token_created_at = models.DateTimeField(auto_now_add=True)
     code = models.TextField(max_length=500)
     refresh_token = models.TextField(max_length=500, blank=True)
-
-    # def clean(self):
-    #     super().clean()
-    #     if len(self.code) > 500:
-    #         raise ValidationError("code must be 0 to 500 characters.")
-    #     if len(self.refresh_token) > 500:
-    #         raise ValidationError("refresh token must be 0 to 500 characters.")
-    #     if len(self.access_token) > 500:
-    #         raise ValidationError("access token must be 0 to 500 characters.")
-    #     if len(self.user_info) > 1000:
-    #         raise ValidationError("user_info must be 0 to 1000 characters.")
-
-    # def save(self, *args, **kwargs):
-    #     self.clean()
-    #     super().save(*args, **kwargs)
