@@ -1,0 +1,715 @@
+{% load static %}
+{% load custom_filter %}
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    {# Load the tag library #}
+    {% load django_bootstrap5 %}
+    {% load crispy_forms_tags %}
+    {# Load CSS and JavaScript #}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% bootstrap_messages %}
+    {# Display a form #}
+    <script src="https://unpkg.com/htmx.org@1.9.10"
+        integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+        crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'css/font_css/fontawesome.min.css' %}" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        .product-card {
+            display: flex;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            width: 575px;
+            height: 700px;
+            margin-top: 41px;
+
+        }
+
+        .product-card .image-container {
+            flex: 1;
+            padding: 20px;
+
+        }
+
+        .product-card .product-details {
+            flex: 1;
+            padding: 20px;
+            margin-right: 101px;
+            margin-top: 11px;
+        }
+
+        .product-details h5 {
+            margin-top: 0;
+        }
+
+        .product-details p {
+            margin-bottom: 5px;
+        }
+
+        .product-details .btn {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .product-details .btn:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        /* user scorecard  here. */
+
+        .heading {
+            font-size: 25px;
+            margin-right: 25px;
+        }
+
+        .fa {
+            font-size: 25px;
+        }
+
+        .checked {
+            color: orange;
+        }
+
+        /* Three column layout */
+        .side {
+            float: left;
+            width: 15%;
+            margin-top: 10px;
+        }
+
+        .middle {
+            float: left;
+            width: 70%;
+            margin-top: 10px;
+        }
+
+        /* Place text to the right */
+        .right {
+            text-align: right;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* The bar container */
+        .bar-container {
+            width: 100%;
+            background-color: lightgray;
+            text-align: center;
+            color: lightgrey;
+        }
+
+        /* Individual bars */
+        .bar-5 {
+            width: 60%;
+            height: 18px;
+            background-color: #04AA6D;
+        }
+
+        .bar-4 {
+            width: 30%;
+            height: 18px;
+            background-color: #2196F3;
+        }
+
+        .bar-3 {
+            width: 10%;
+            height: 18px;
+            background-color: #00bcd4;
+        }
+
+        .bar-2 {
+            width: 4%;
+            height: 18px;
+            background-color: #ff9800;
+        }
+
+        .bar-1 {
+            width: 15%;
+            height: 18px;
+            background-color: #f44336;
+        }
+
+        /* Responsive layout - make the columns stack on top of each other instead of next to each other */
+        @media (max-width: 400px) {
+
+            .side,
+            .middle {
+                width: 100%;
+            }
+
+            /* Hide the right column on small screens */
+            .right {
+                display: none;
+            }
+        }
+
+
+        /* Star rating CSS here */
+        [data-star] {
+            text-align: left;
+            font-style: normal;
+            display: inline-block;
+            position: relative;
+            unicode-bidi: bidi-override;
+            font-size: 25px;
+        }
+
+        [data-star]::before {
+            display: block;
+            content: '★★★★★';
+            color: lightgray;
+        }
+
+        [data-star]::after {
+            white-space: nowrap;
+            position: absolute;
+            top: 0;
+            left: 0;
+            content: '★★★★★';
+            width: 0;
+            color: #ff8c00;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        [data-star^="0.1"]::after {
+            width: 2%
+        }
+
+        [data-star^="0.2"]::after {
+            width: 4%
+        }
+
+        [data-star^="0.3"]::after {
+            width: 6%
+        }
+
+        [data-star^="0.4"]::after {
+            width: 8%
+        }
+
+        [data-star^="0.5"]::after {
+            width: 10%
+        }
+
+        [data-star^="0.6"]::after {
+            width: 12%
+        }
+
+        [data-star^="0.7"]::after {
+            width: 14%
+        }
+
+        [data-star^="0.8"]::after {
+            width: 16%
+        }
+
+        [data-star^="0.9"]::after {
+            width: 18%
+        }
+
+        [data-star^="1"]::after {
+            width: 20%
+        }
+
+        [data-star^="1.1"]::after {
+            width: 22%
+        }
+
+        [data-star^="1.2"]::after {
+            width: 24%
+        }
+
+        [data-star^="1.3"]::after {
+            width: 26%
+        }
+
+        [data-star^="1.4"]::after {
+            width: 28%
+        }
+
+        [data-star^="1.5"]::after {
+            width: 30%
+        }
+
+        [data-star^="1.6"]::after {
+            width: 32%
+        }
+
+        [data-star^="1.7"]::after {
+            width: 34%
+        }
+
+        [data-star^="1.8"]::after {
+            width: 36%
+        }
+
+        [data-star^="1.9"]::after {
+            width: 38%
+        }
+
+        [data-star^="2"]::after {
+            width: 40%
+        }
+
+        [data-star^="2.1"]::after {
+            width: 42%
+        }
+
+        [data-star^="2.2"]::after {
+            width: 44%
+        }
+
+        [data-star^="2.3"]::after {
+            width: 46%
+        }
+
+        [data-star^="2.4"]::after {
+            width: 48%
+        }
+
+        [data-star^="2.5"]::after {
+            width: 50%
+        }
+
+        [data-star^="2.6"]::after {
+            width: 52%
+        }
+
+        [data-star^="2.7"]::after {
+            width: 54%
+        }
+
+        [data-star^="2.8"]::after {
+            width: 56%
+        }
+
+        [data-star^="2.9"]::after {
+            width: 58%
+        }
+
+        [data-star^="3"]::after {
+            width: 60%
+        }
+
+        [data-star^="3.1"]::after {
+            width: 62%
+        }
+
+        [data-star^="3.2"]::after {
+            width: 64%
+        }
+
+        [data-star^="3.3"]::after {
+            width: 66%
+        }
+
+        [data-star^="3.4"]::after {
+            width: 68%
+        }
+
+        [data-star^="3.5"]::after {
+            width: 70%
+        }
+
+        [data-star^="3.6"]::after {
+            width: 72%
+        }
+
+        [data-star^="3.7"]::after {
+            width: 74%
+        }
+
+        [data-star^="3.8"]::after {
+            width: 76%
+        }
+
+        [data-star^="3.9"]::after {
+            width: 78%
+        }
+
+        [data-star^="4"]::after {
+            width: 80%
+        }
+
+        [data-star^="4.1"]::after {
+            width: 82%
+        }
+
+        [data-star^="4.2"]::after {
+            width: 84%
+        }
+
+        [data-star^="4.3"]::after {
+            width: 86%
+        }
+
+        [data-star^="4.4"]::after {
+            width: 88%
+        }
+
+        [data-star^="4.5"]::after {
+            width: 90%
+        }
+
+        [data-star^="4.6"]::after {
+            width: 92%
+        }
+
+        [data-star^="4.7"]::after {
+            width: 94%
+        }
+
+        [data-star^="4.8"]::after {
+            width: 96%
+        }
+
+        [data-star^="4.9"]::after {
+            width: 98%
+        }
+
+        [data-star^="5"]::after {
+            width: 100%
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- navbar here-->
+    <section>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="Home-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'book_:book_list_filters' %}">Book's Home</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="my-post-list-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:list_of_books_for_user' %}">Your Book's </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="blog-post-create-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Book</a>
+                        </li>
+                    </ul>
+                </div>
+
+
+                <div class="form-class" style="margin-left:550px;">
+                    <form class="form-inline my-2 my-lg-0" style="display:flex;" hx-get="#" hx-target="#htmx-container">
+                        <div>
+                            <input style=" width:300px;" class="form-control mr-sm-2" type="search" placeholder="Search"
+                                aria-label="Search" name="search" hx-get="#" hx-trigger="keyup changed delay:100ms"
+                                hx-target="#htmx-container">
+                        </div>
+                        <div style="margin-left:11px;">
+                            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </nav>
+    </section>
+
+
+    <!-- product images and details here-->
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+
+                    <!-- Product Image -->
+                    <div class="product-card">
+                        <div class="col-3">
+                            <div class="row-3">
+                                <div class="image-container">
+                                    <img class="card-img-top" src="{{ book_format.image_2 }}" alt="Product Image 2"
+                                        style="width: 350px; height:350px">
+                                </div>
+                            </div>
+                            <div class="row-3">
+                                <div style="display: flex; margin-top:11px;">
+                                    <div class="image-container" style="margin-right: 11px;">
+                                        <img class="card-img-top" src="{{ book_format.image_1 }}" alt="Product Image 1"
+                                            style="width: 150px; height:150px">
+                                    </div>
+                                    <div class="image-container">
+                                        <img class="card-img-top" src="{{ book_format.image_3 }}" alt="Product Image 3"
+                                            style="width: 150px; height:150px">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="col-lg-6">
+                    <div class="product-card">
+                        <div class="product-details">
+                            <div>
+                                <h3>{{book_format}}</h3>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <p><b>Price:</b> ${{ book_format.price }}</p>
+                                <p><b>Author Name:</b> {{ book_format.book_author_name.author_name }}</p>
+                                <p><b>Format:</b> {{ book_format.format }}</p>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <a><b>Language</b> {{ book_format.book_author_name.language }}</p>
+
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <p><b>Publisher:</b> {{ book_format.publisher_name }}</p>
+                                <p><b>Published:</b> {{ book_format.publishing_date }}</p>
+                                <p><b>Edition:</b> {{ book_format.edition }} </p>
+                                <p><b>Length:</b> {{ book_format.length }} Pages</p>
+                                <p><b>Narator:</b> {{ book_format.narrator }} </p>
+                                <p><b>About Author:</b> {{ book_format.book_author_name.about_author }}</p>
+                            </div>
+                            <p class="text-muted">Book ID: {{book_format.id}}</p>
+                            <div style="margin-top: 21px;">
+                                <p><strong>Add To Cart</strong></p>
+                                <a class="btn btn-dark" style="margin-right: 15px;">
+                                    New Available: {{book_format.is_new_available }} </a>
+                                <a class="btn btn-light">Used Available: {{ book_format.is_used_available }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- User scorecard and progess bar here -->
+    <section style="margin-top: 101px; margin-bottom:91px; width:550px; margin-left:300px;">
+
+        <!-- star rating stars here-->
+        <div class="average-rating">
+            {% if rating == 0 or rating == "N/A" %}
+            <i data-star="0"></i>
+            {% else %}
+            <i data-star="{{average_rating}}"></i>
+            {% endif %}
+        </div>
+        <p>{{average_rating}} average based on {{total_ratings}} reviews.</p>
+        <hr style="border:3px solid #f1f1f1">
+
+
+        <!-- progress bar here-->
+        <div class="row">
+            {% for rating, count in star_ratings.items %}
+            <div class="side">
+                <div>{{ rating }} star</div>
+            </div>
+            <div class="middle">
+                <div class="bar-container">
+                    <div class="bar-{{ rating }}" style="width: {{ width_percentages|get_value_from_dict:rating }}%;">
+                    </div>
+                </div>
+            </div>
+            <div class="side right">
+                <div>{{ count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+
+
+    <!--- your browsing history here -->
+
+    {% if zipped %}
+    <section style="margin-bottom: 101px; margin-left:101px;">
+        <div>
+            <div style="margin-top: 21px;">
+                <h4> Your Browsing History</h4>
+            </div>
+            <div style="display: flex;">
+                <div class="col-md-10">
+                    <div class="card-container" style="margin-top: 21px; display:flex;">
+                        {% for items in zipped %}
+                        {% with item=items %}
+
+
+                        <div class="col mb-4">
+                            <div class="card" style="width: 175px; height:450px;">
+                                <div class="image-container" style="height: 100px; width: 100px;">
+                                    <img class="card-img-top" src="{{item.3}}" alt="Card image cap">
+                                </div>
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title">Name: {{item.0 }}</h5>
+                                        <p class="card-text"><b>Price</b>: {{ item.1 }}</p>
+                                        {% if item.5.0 != 1 and item.5.1 != 1 %}
+                                        <p class="card-text"><b>Features</b>: {{ item.5.0 }}, {{item.5.1}}</p>
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div class="average-rating">
+                                        {% if item.2 == 0 %}
+                                        <i data-star="0"></i>
+                                        {% else %}
+
+                                        <i data-star="{{item.2}}"></i>
+                                        {% endif %}
+                                    </div>
+
+                                    <a href="{{item.4}}" class="stretched-link">View</a>
+                                </div>
+                            </div>
+
+                        </div>
+                        {% endwith %}
+
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+
+
+
+
+
+
+
+
+    <!--user comments here -->
+
+    <section style="background-color: #ad655f;">
+        <div style="margin-left: 51px;">
+            <strong><span><a class="btn btn-info" style="width: 1250px; height:51px; font-size:31px;"
+                        href="{% url 'book_:book_detail_view_add_review_form' book_author_name_id=book_format.id format_id=book_format.id %}">
+                        Add A Review</a></span></strong>
+        </div>
+        <div class="container my-5 py-5">
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-12 col-lg-10">
+                    <div class="card text-dark">
+                        {% if review_rating_dict.items %}
+                        <div class="card-body p-4">
+                            <h4 class="mb-0" style="padding-bottom: 41px;">Recent comments</h4>
+                            {% for review, rating in review_rating_dict.items %}
+                            <div class="d-flex flex-start">
+                                <div style="display: flex;">
+                                    <img class="rounded-circle shadow-1-strong me-3" src="{{review.image_1}}"
+                                        alt="avatar" width="150" height="150" />
+                                    <img class="rounded-circle shadow-1-strong me-3" src="{{review.image_2}}"
+                                        alt="avatar" width="150" height="150" />
+                                </div>
+                                <div>
+                                    <div style="display: flex; justify-content:center; align-items:center;">
+                                        <p style="font-size: medium;; margin-right:9px;" class="fw-bold mb-1">User:
+                                            {{review.user.username}}
+                                        </p>
+                                        <h6> Rating: {{rating.rating}} Star</h6>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <p class="mb-0 text-muted">
+                                            created: {{review.created_at}}
+                                            {% if review.status %}
+                                            <span class="badge bg-primary">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-primary">Pending</span>
+                                            {% endif %}
+                                        </p>
+
+                                        <a href="{% url 'book_:edit_review_rating' review_id=review.id %}"
+                                            class="link-muted" style="padding-right:5px;"><i
+                                                class="fa-solid fa-pencil ms-2"></i></a>
+
+                                        <!-- Button trigger modal -->
+                                        <a class="link-muted" data-bs-toggle="modal"
+                                            data-bs-target="#exampleModal{{ comment.id }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </a>
+
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="exampleModal{{ comment.id }}" tabindex="-1"
+                                            role="dialog" aria-labelledby="exampleModalLabel{{ comment.id }}"
+                                            aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="exampleModalLabel{{ comment.id }}">
+                                                            Confirmation Required
+                                                        </h5>
+                                                        <button type="button" class="close" data-bs-dismiss="modal"
+                                                            aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <!-- Confirmation message -->
+                                                        <p>Are you sure you want to delete this comment?</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-danger"
+                                                            data-bs-dismiss="modal">Cancel</button>
+                                                        <a href="{% url 'book_:delete_review_rating' review_id=review.id %}"
+                                                            class="btn btn-primary">Delete Comment</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <p class="text-muted">Last Modified: {{review.modified_on}}</p>
+                                    <p class="mb-0">
+                                        {{comment.text}}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <strong><span style="font-size: 25px;"> No Comments Posted Yet!</span></strong>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+
+{% if subsubcategory_form %}
+<form hx-post="{% url 'i:load_sub_subsubcategory_form' %}" hx-target="#sub-sub-product-container" hx-trigger="change">
+    {% csrf_token %}
+    {% bootstrap_form subsubcategory_form %}
+</form>
+
+
+
+
+<div id="sub-sub-product-container">
+
+
+</div>
+
+{% else %}
+
+<div style="margin-top: 21px; margin-bottom:41px; width: 500px;">
+
+
+    <form hx-post="{% url 'i:add_monitor' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form monitor_form %}
+
+
+        {% bootstrap_button type="submit" content="Submit" style="width:500px;" %}
+
+    </form>
+</div>
+{% endif %}

@@ -1,0 +1,83 @@
+<!-- this is partial_book_seller.html -->
+{% if item_list %}
+<div class="card-container row row-cols-1 row-cols-md-3" style="margin-top: 21px;">
+    {% for book in item_list %}
+
+    <div class="col mb-4">
+        <div class="card">
+
+            {% if book.is_active %}
+            <span class="badge bg-success" style="width: 71px; margin-top:5px;
+                            margin-left:225px;">Active</span>
+            {% else %}
+            <span class="badge bg-warning" style="width: 71px; margin-top:5px;
+                            margin-left:225px;">In Active</span>
+            {% endif %}
+            </p>
+
+            <div class=" image-container" style="height: 150px; width: 150px;">
+                <img class="card-img-top" src="{{ book.image_1 }}" alt="Card image cap">
+            </div>
+            <div class="card-body">
+                <div>
+                    <h5 class="card-title">Name: {{ book }}</h5>
+                    <p class="card-text"><b>Mounting Type</b>: {{ book.language }}</p>
+                </div>
+
+                <div class="average-rating">
+                    {% if book.avg_rating == 0 or book.avg_rating == "N/A" %}
+                    <i data-star="0"></i>
+                    {% else %}
+                    <i data-star="{{book.avg_rating}}"></i>
+                    {% endif %}
+                </div>
+                <div style="margin-top: 11px;">
+                    <a href="{% url 'book_:book_detail_view' pk=book.id format_id=book.id %}">
+                        <button class="btn btn-success">View</button></a>
+
+
+                    <a href="{% url 'book_:update_book_formats' pk=book.id %}">
+                        <button class="btn btn-warning">Update</button></a>
+
+
+                    <!-- Button trigger modal -->
+                    <a class="link-muted" data-bs-toggle="modal" data-bs-target="#exampleModal{{ book.id }}">
+                        <button class="btn btn-danger">Delete</button>
+                    </a>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal{{ book.id }}" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalLabel{{ book.id }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel{{ book.id }}">
+                                        Confirmation Required
+                                    </h5>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Confirmation message -->
+                                    <p>Are you sure you want to delete this Book?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                    <a href="{% url 'book_:delete_book_formats' pk=book.id %}"
+                                        class="btn btn-primary">Delete Book</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="font-size: large; margin-top:300px; margin-left:101px;">
+    <span style="font-size: 50px;"><strong>No product found</strong></span>
+</div>
+{% endif %}
