@@ -82,17 +82,11 @@ INSTALLED_APPS = [
     "cloudinary_storage",
     "cloudinary",
     "ckeditor",
-    "compressor",
     "book_",
     "django_twilio",
     "axes",
     "phonenumber_field",
     "django_countries",
-    "allauth",
-    "allauth.account",
-    # # Optional -- requires install using `django-allauth[socialaccount]`.
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
 ]
 
 SITE_ID = 1
@@ -104,8 +98,6 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    # Add the account middleware:
-    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
 ]
@@ -133,14 +125,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "iii.wsgi.application"
 
 
-# Cache
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django.core.cache.backends.memcached.PyMemcacheCache",
-#         "LOCATION": f"{config('RAILWAY_TCP_PROXY_DOMAIN', default='localhost')}:{config('RAILWAY_TCP_PROXY_PORT', default='11211')}",
-#     },
-# }
-
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -150,18 +134,10 @@ CACHES = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DATABASE"),
-        "USER": config("POSTGRES_USER"),
-        "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": config("POSTGRES_HOST"),
-        "PORT": "5432",
-        "OPTIONS": {
-            "sslmode": "require",
-        },
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "sqlite3.db"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -275,8 +251,6 @@ AXES_COOLOFF_TIME = 0.001
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by email
-    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 ###################------------------- Google api-client library settings----------------############

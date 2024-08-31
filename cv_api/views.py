@@ -647,7 +647,6 @@ class RetrieveCVDataToUpdate(View):
                     "Authorization": f"Bearer {access_token}",
                 }
 
-
                 try:
                     json_data = json.dumps(personal_info, cls=DateTimeEncoder)
 
@@ -656,15 +655,9 @@ class RetrieveCVDataToUpdate(View):
                     return HttpResponsePermanentRedirect("/")
 
                 try:
-<<<<<<< HEAD
-                    response = requests.patch(url, headers=headers,
-                    data=json_data,
-                    verify=False, timeout=5)
-=======
                     response = requests.patch(
                         url, headers=headers, data=json_data, verify=False, timeout=5
                     )
->>>>>>> b9049e094dfd2fc67bb9ce1742c36a86a1afb024
                     response.raise_for_status()
 
                 except requests.exceptions.Timeout:
