@@ -38,7 +38,7 @@ class PostForm(forms.ModelForm):
         "title": forms.TextInput(attrs={"class": "form-control"}),
         "slug": forms.TextInput(attrs={"class": "form-control"}),
         "meta_description": forms.TextInput(attrs={"class": "form-control"}),
-        "content": forms.Textarea(attrs={"class": "form-control"}),
+        # "content": forms.Textarea(attrs={"class": "form-control"}),
         "status": forms.Select(attrs={"class": "form-control"}),
     }
 

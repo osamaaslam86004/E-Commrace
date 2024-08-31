@@ -1,6 +1,5 @@
 from ckeditor.widgets import CKEditorWidget
 from django import forms
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from book_.models import BookAuthorName, BookFormat, Rating, Review
