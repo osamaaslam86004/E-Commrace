@@ -13,15 +13,19 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import (LoginRequiredMixin,
-                                        PermissionRequiredMixin)
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.contrib.auth.models import Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import (HttpResponse, HttpResponseForbidden,
-                         HttpResponseNotFound, HttpResponsePermanentRedirect,
-                         HttpResponseRedirect, JsonResponse)
+from django.http import (
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import reverse
@@ -39,16 +43,30 @@ from sendgrid.helpers.mail import Mail
 from twilio.rest import Client
 
 from checkout.models import Payment
-from Homepage.forms import (AdministratorProfileForm, CustomerProfileForm,
-                            CustomerServiceProfileForm,
-                            CustomPasswordResetForm, CustomUserImageForm,
-                            E_MailForm_For_Password_Reset, LogInForm,
-                            ManagerProfileForm, OTPForm, SellerProfileForm,
-                            SignUpForm, UserProfileForm)
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomSocialAccount,
-                             CustomUser, ManagerProfile, SellerProfile,
-                             UserProfile)
+from Homepage.forms import (
+    AdministratorProfileForm,
+    CustomerProfileForm,
+    CustomerServiceProfileForm,
+    CustomPasswordResetForm,
+    CustomUserImageForm,
+    E_MailForm_For_Password_Reset,
+    LogInForm,
+    ManagerProfileForm,
+    OTPForm,
+    SellerProfileForm,
+    SignUpForm,
+    UserProfileForm,
+)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomSocialAccount,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
@@ -317,7 +335,7 @@ class CustomPasswordResetConfirmView(View):
             return redirect("Homepage:signup")
 
 
-def google_login(request) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
+def google_login(request):
     client_id = settings.GOOGLE_OAUTH_CLIENT_ID
     redirect_uri = settings.GOOGLE_OAUTH_REDIRECT_URI
 
@@ -333,9 +351,7 @@ def google_login(request) -> HttpResponseRedirect | HttpResponsePermanentRedirec
     return redirect(url)
 
 
-def your_callback_view(
-    request,
-) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+def your_callback_view(request):
     # Get the authorization code from the query parameters
     code = request.GET.get("code")
 
@@ -376,10 +392,6 @@ def your_callback_view(
             user_info = user_info_response.json()
             email = user_info.get("email")
 
-            # Initialize social_account to None
-            social_account = None
-            user = None
-
             try:
                 # Check if the user already exists
                 user = CustomUser.objects.get(email=email)
@@ -401,7 +413,7 @@ def your_callback_view(
                         refresh_token=refresh_token,
                         code=user_info,
                     )
-            except CustomSocialAccount.DoesNotExist:
+            except CustomUser.DoesNotExist:
                 # Create a new user if it doesn't exist
                 user = CustomUser.objects.create(
                     email=email, username=email, user_type="SELLER"
@@ -1570,7 +1582,9 @@ class DeleteUserAccount(View):
         else:
             return False
 
-    def get(self, *args, **kwargs) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
+    def get(
+        self, *args, **kwargs
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
         if "user_id" in self.request.session:
             user_id = self.request.session["user_id"]
             user = CustomUser.objects.filter(id=user_id)

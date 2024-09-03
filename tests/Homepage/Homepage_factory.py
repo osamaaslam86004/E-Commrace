@@ -6,28 +6,37 @@ from django.contrib.contenttypes.models import ContentType
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomSocialAccount,
-                             CustomUser, ManagerProfile, SellerProfile,
-                             UserProfile)
-from tests.Homepage.Custom_Permissions import (ADMIN_CUSTOM_PERMISSIONS,
-                                               CSR_CUSTOM_PERMISSIONS,
-                                               CUSTOMER_CUSTOM_PERMISSIONS,
-                                               MANAGER_CUSTOM_PERMISSIONS,
-                                               SELLER_CUSTOM_PERMISSIONS)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomSocialAccount,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
+from tests.Homepage.Custom_Permissions import (
+    ADMIN_CUSTOM_PERMISSIONS,
+    CSR_CUSTOM_PERMISSIONS,
+    CUSTOMER_CUSTOM_PERMISSIONS,
+    MANAGER_CUSTOM_PERMISSIONS,
+    SELLER_CUSTOM_PERMISSIONS,
+)
 
 fake = Faker()
 
-# class CustomUserFactory(DjangoModelFactory):
-#     class Meta:
-#         model = CustomUser
 
-#     username = factory.Faker("user_name")
-#     email = factory.LazyAttribute(lambda _: Faker().unique.email())
-#     user_type = factory.Iterator([choice[0] for choice in CustomUser.USER_TYPE_CHOICES])
-#     image = factory.Faker("image_url")
-#     user_google_id = factory.Faker("random_number")
-#     password = factory.PostGenerationMethodCall("set_password", "testpass123")
+class CustomUserFactory(DjangoModelFactory):
+    class Meta:
+        model = CustomUser
+
+    username = factory.Faker("user_name")
+    email = factory.LazyAttribute(lambda _: Faker().unique.email())
+    user_type = factory.Iterator([choice[0] for choice in CustomUser.USER_TYPE_CHOICES])
+    image = factory.Faker("image_url")
+    user_google_id = factory.Faker("random_number")
+    password = factory.PostGenerationMethodCall("set_password", "testpass123")
 
 
 class CustomUserOnlyFactory(DjangoModelFactory):
