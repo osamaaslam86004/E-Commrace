@@ -410,28 +410,26 @@ def your_callback_view(request):
 
                 except CustomSocialAccount.DoesNotExist:
                     # Create the social account if it doesn't exist
-                    social_account = CustomSocialAccount(
+                    CustomSocialAccount.objects.create(
                         user=user,
                         access_token=access_token,
                         user_info=user_info,
                         refresh_token=refresh_token,
                         code=user_info,
                     )
-                    social_account.save()
             except CustomUser.DoesNotExist:
                 # Create a new user if it doesn't exist
                 user = CustomUser.objects.create(
                     email=email, username=email, user_type="SELLER"
                 )
                 # Create the social account for the new user
-                social_account = CustomSocialAccount(
+                CustomSocialAccount.objects.create(
                     user=user,
                     access_token=access_token,
                     user_info=user_info,
                     refresh_token=refresh_token,
                     code=user_info,
                 )
-                social_account.save()
 
             if "user_id" in request.session and "social_id" in request.session:
                 logout(request)
