@@ -388,6 +388,10 @@ def your_callback_view(request):
             "https://www.googleapis.com/oauth2/v2/userinfo", headers=headers
         )
 
+        # Initialize objects
+        user = None
+        social_account = None
+
         if user_info_response.status_code == 200:
             user_info = user_info_response.json()
             email = user_info.get("email")
