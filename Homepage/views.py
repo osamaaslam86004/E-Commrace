@@ -410,7 +410,7 @@ def your_callback_view(request):
 
                 except CustomSocialAccount.DoesNotExist:
                     # Create the social account if it doesn't exist
-                    CustomSocialAccount(
+                    social_account = CustomSocialAccount(
                         user=user,
                         access_token=access_token,
                         user_info=user_info,
