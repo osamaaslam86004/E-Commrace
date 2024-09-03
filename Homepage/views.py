@@ -413,6 +413,7 @@ def your_callback_view(request):
                         refresh_token=refresh_token,
                         code=user_info,
                     )
+                    social_account.save()
             except CustomUser.DoesNotExist:
                 # Create a new user if it doesn't exist
                 user = CustomUser.objects.create(
@@ -426,6 +427,7 @@ def your_callback_view(request):
                     refresh_token=refresh_token,
                     code=user_info,
                 )
+                social_account.save()
 
             if "user_id" in request.session and "social_id" in request.session:
                 logout(request)
