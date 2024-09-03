@@ -266,7 +266,7 @@ class CustomSocialAccount(models.Model):
     user_info = models.TextField(max_length=1000)
     token_created_at = models.DateTimeField(auto_now_add=True)
     code = models.TextField(max_length=500)
-    refresh_token = models.TextField(max_length=500, blank=True)
+    refresh_token = models.TextField(max_length=500, blank=True, null=True)
 
     # def clean(self):
     #     super().clean()

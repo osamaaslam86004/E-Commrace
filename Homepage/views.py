@@ -405,7 +405,7 @@ def your_callback_view(request):
                     # Update the access token and user info
                     social_account.access_token = access_token
                     social_account.user_info = user_info
-                    social_account.refresh_token = refresh_token or ""
+                    social_account.refresh_token = refresh_token
                     social_account.save()
 
                 except CustomSocialAccount.DoesNotExist:
@@ -414,7 +414,7 @@ def your_callback_view(request):
                         user=user,
                         access_token=access_token,
                         user_info=user_info,
-                        refresh_token=refresh_token or "",
+                        refresh_token=refresh_token,
                         code=user_info,
                     )
             except CustomUser.DoesNotExist:
@@ -427,7 +427,7 @@ def your_callback_view(request):
                     user=user,
                     access_token=access_token,
                     user_info=user_info,
-                    refresh_token=refresh_token or "",
+                    refresh_token=refresh_token,
                     code=user_info,
                 )
 
