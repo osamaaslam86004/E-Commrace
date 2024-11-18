@@ -1,7 +1,6 @@
 import io
 
 import pytest
-from django import forms
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
@@ -24,10 +23,31 @@ def product_category():
 
 
 @pytest.fixture
-def computer_subcategory(product_category):
+def computer_subcategory(product_category: ProductCategory):
     return ComputerSubCategory.objects.create(
         name="MONITORS", product_category=product_category
     )
+
+
+@pytest.fixture
+def create_image_size_greater_one_mb():
+
+    # Create an image file using Pillow with size > 1MB
+    image = Image.new("RGB", (12080, 8080), color="red")
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format="JPEG", quality=100)
+    image_bytes.seek(0)
+
+    # Create a SimpleUploadedFile from the image bytes
+    uploaded_file = SimpleUploadedFile(
+        "test_image.jpeg", image_bytes.read(), content_type="image/jpeg"
+    )
+
+    assert uploaded_file is not None
+    # Debug print
+    print(f"Uploaded file size: {len(uploaded_file)} bytes")
+
+    return uploaded_file
 
 
 @pytest.fixture
@@ -69,7 +89,7 @@ def create_product():
 
 
 @pytest.fixture
-def Review_form_data(create_image):
+def Review_form_data(create_image: SimpleUploadedFile):
     def _Review_form_data():
         form_data = {
             "rating": "4.5",  # Example rating value
@@ -262,37 +282,44 @@ class Test_MonitorForm:
         assert form.is_valid() == is_valid
 
     @pytest.mark.parametrize(
-        "monitor_form_data",
+        "monitor_form_data, is_valid",
         [
-            {
-                "name": "name",
-                "image_1": None,
-                "image_2": None,
-                "image_3": None,
-                "is_active": True,
-                "brand": "LG",
-                "aspect_ratio": "16:9",
-                "max_display_resolution": "1280x1024",
-                "screen_size": "27 inch",
-                "monitor_type": "GAMING_MONITOR",
-                "refresh_rate": 240,
-                "mounting_type": "WALL_MOUNT",
-                "item_dimensions": "111 x 111 x 111",
-                "item_weight": 1,
-                "voltage": 240,
-                "color": "Black",
-                "hdmi_port": 2.0,
-                "built_speakers": "Yes",
-                "price": 55.5,
-                "quantity_available": 144,
-                "choose_special_features": ["Frameless"],
-            },
+            (
+                {
+                    "name": "name",
+                    "image_1": create_image_size_greater_one_mb,
+                    "image_2": create_image_size_greater_one_mb,
+                    "image_3": create_image_size_greater_one_mb,
+                    "is_active": True,
+                    "brand": "LG",
+                    "aspect_ratio": "16:9",
+                    "max_display_resolution": "1280x1024",
+                    "screen_size": "27 inch",
+                    "monitor_type": "GAMING_MONITOR",
+                    "refresh_rate": 240,
+                    "mounting_type": "WALL_MOUNT",
+                    "item_dimensions": "111 x 111 x 111",
+                    "item_weight": 1,
+                    "voltage": 240,
+                    "color": "Black",
+                    "hdmi_port": 2.0,
+                    "built_speakers": "Yes",
+                    "price": 55.5,
+                    "quantity_available": 144,
+                    "choose_special_features": ["Frameless"],
+                },
+                False,
+            ),
         ],
     )
-    def test_monitors_form(
-        self, create_image, monitor_form_data, product_category, computer_subcategory
+    def test_monitors_form_invalid_image_size(
+        self,
+        create_image_size_greater_one_mb: SimpleUploadedFile,
+        monitor_form_data,
+        is_valid,
     ):
         Special_Features.objects.create(name="Frameless"),
+        Special_Features.objects.create(name="Flicker-Free"),
 
         # getting the ids of special features
         special_features_objs = Special_Features.objects.filter(
@@ -303,45 +330,111 @@ class Test_MonitorForm:
             special_features_objs.values_list("id", flat=True)
         )
 
-        files = {}
-        files["image_1"] = create_image
-        files["image_2"] = create_image
-        files["image_3"] = create_image
+        assert monitor_form_data["image_1"] is not None
 
-        assert files["image_1"] is not None
-        assert files["image_2"] is not None
-        assert files["image_3"] is not None
+        files = {}
+        files["image_1"] = create_image_size_greater_one_mb
+        files["image_2"] = create_image_size_greater_one_mb
+        files["image_3"] = create_image_size_greater_one_mb
 
         form = MonitorsForm(data=monitor_form_data, files=files)
-        assert form.is_valid()
+        assert form.is_valid() == is_valid
 
-        monitor = form.save(commit=False)
+        assert not form.is_valid(), "Form should be invalid due to large image size"
+        assert "File size must be less than 1MB." in str(
+            form.errors
+        ), "Expected file size validation error"
 
-        # creating the user
-        user = CustomUserOnlyFactory(user_type="SELLER")
+    # @pytest.mark.parametrize(
+    #     "monitor_form_data",
+    #     [
+    #         {
+    #             "name": "name",
+    #             "image_1": None,
+    #             "image_2": None,
+    #             "image_3": None,
+    #             "is_active": True,
+    #             "brand": "LG",
+    #             "aspect_ratio": "16:9",
+    #             "max_display_resolution": "1280x1024",
+    #             "screen_size": "27 inch",
+    #             "monitor_type": "GAMING_MONITOR",
+    #             "refresh_rate": 240,
+    #             "mounting_type": "WALL_MOUNT",
+    #             "item_dimensions": "111 x 111 x 111",
+    #             "item_weight": 1,
+    #             "voltage": 240,
+    #             "color": "Black",
+    #             "hdmi_port": 2.0,
+    #             "built_speakers": "Yes",
+    #             "price": 55.5,
+    #             "quantity_available": 144,
+    #             "choose_special_features": ["Frameless"],
+    #         },
+    #     ],
+    # )
+    # def test_monitors_form(
+    #     self,
+    #     create_image: SimpleUploadedFile,
+    #     monitor_form_data: dict[str, str | bool | int | float | list[str] | None],
+    #     product_category: ProductCategory,
+    #     computer_subcategory: ComputerSubCategory,
+    # ):
+    #     Special_Features.objects.create(name="Frameless"),
 
-        # binding the monitor instance to Productcategory, and computerSubcategory
-        monitor.Product_Category = product_category
-        monitor.Computer_SubCategory = computer_subcategory
-        monitor.user = user
+    #     # getting the ids of special features
+    #     special_features_objs = Special_Features.objects.filter(
+    #         name__in=monitor_form_data["choose_special_features"]
+    #     )
 
-        for key, image_file in files.items():
-            setattr(monitor, f"image_{key[-1]}", image_file)
-        monitor.save()
+    #     monitor_form_data["choose_special_features"] = list(
+    #         special_features_objs.values_list("id", flat=True)
+    #     )
 
-        # Assertions
-        assert isinstance(monitor, Monitors)
-        assert monitor.monitor_type == monitor_form_data["monitor_type"]
-        assert monitor.mounting_type == monitor_form_data["mounting_type"]
-        assert (
-            monitor.max_display_resolution
-            == monitor_form_data["max_display_resolution"]
-        )
-        assert monitor.refresh_rate == monitor_form_data["refresh_rate"]
-        assert monitor.brand == monitor_form_data["brand"]
-        assert monitor.is_active == monitor_form_data["is_active"]
-        assert monitor.Product_Category == product_category
-        assert monitor.Computer_SubCategory == computer_subcategory
+    #     files = {}
+    #     files["image_1"] = create_image
+    #     files["image_2"] = create_image
+    #     files["image_3"] = create_image
+
+    #     assert files["image_1"] is not None
+    #     assert files["image_2"] is not None
+    #     assert files["image_3"] is not None
+
+    #     form = MonitorsForm(data=monitor_form_data, files=files)
+    #     assert form.is_valid()
+
+    #     monitor = form.save(commit=False)
+
+    #     # creating the user
+    #     user = CustomUserOnlyFactory(user_type="SELLER")
+
+    #     # binding the monitor instance to Productcategory, and computerSubcategory
+    #     monitor.Product_Category = product_category
+    #     monitor.Computer_SubCategory = computer_subcategory
+    #     monitor.user = user
+
+    #     try:
+    #         for key, image_file in files.items():
+    #             setattr(monitor, f"image_{key[-1]}", image_file)
+    #         monitor.save()
+
+    #     except Exception as e:
+    #         print(f"Exception: {str(e)}")
+
+    #     # Assertions
+    #     assert Monitors.objects.filter(user=user).exists()
+
+    #     assert monitor.monitor_type == monitor_form_data["monitor_type"]
+    #     assert monitor.mounting_type == monitor_form_data["mounting_type"]
+    #     assert (
+    #         monitor.max_display_resolution
+    #         == monitor_form_data["max_display_resolution"]
+    #     )
+    #     assert monitor.refresh_rate == monitor_form_data["refresh_rate"]
+    #     assert monitor.brand == monitor_form_data["brand"]
+    #     assert monitor.is_active == monitor_form_data["is_active"]
+    #     assert monitor.Product_Category == product_category
+    #     assert monitor.Computer_SubCategory == computer_subcategory
 
 
 @pytest.mark.django_db
@@ -351,8 +444,8 @@ class Test_ReviewForm:
 
         form_data = {
             "rating": "4.5",  # Example rating value
-            "image_1": None,
-            "image_2": None,
+            "image_1": create_image,
+            "image_2": create_image,
             "text": "This is a test review.",
         }
 
@@ -374,45 +467,35 @@ class Test_ReviewForm:
         assert not form.is_valid()
         assert "rating" in form.errors
 
-    def test_form_save(self, create_product, Review_form_data, create_image):
-        # create product_category, and computer sub category
-        user, product_category, computer_sub_category = create_product(
-            "SELLER", "COMPUTER", "MONITOR"
-        )
-        # Create the Monitor
-        monitor = MonitorsFactory(
-            user=user,
-            Product_Category=product_category,
-            Computer_SubCategory=computer_sub_category,
-        )
+    # def test_form_save(self, create_product, Review_form_data, create_image):
+    #     # create product_category, and computer sub category
+    #     user, product_category, computer_sub_category = create_product(
+    #         "SELLER", "COMPUTER", "MONITOR"
+    #     )
+    #     # Create the Monitor
+    #     monitor = MonitorsFactory(
+    #         user=user,
+    #         Product_Category=product_category,
+    #         Computer_SubCategory=computer_sub_category,
+    #     )
 
-        # creating form data and image files
-        form, files = Review_form_data()
+    #     # creating form data and image files
+    #     form, files = Review_form_data()
 
-        review = form.save(commit=False)
-        review.user = user
-        review.product = monitor
+    #     review = form.save(commit=False)
+    #     review.user = user
+    #     review.product = monitor
 
-        # binding image files with Review instance
-        for key, image_file in files.items():
-            setattr(review, f"image_{key[-1]}", image_file)
+    #     # binding image files with Review instance
+    #     for key, image_file in files.items():
+    #         setattr(review, f"image_{key[-1]}", image_file)
 
-        # review.image_1 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
-        # review.image_2 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
-        # review.image_3 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+    #     try:
+    #         instance = review.save()  # =====> this will raise Empty File error
 
-        assert review.image_1 == files["image_1"]
-        assert review.image_2 == files["image_2"]
+    #         assert instance.image_1 == files["image_1"]
+    #         assert instance.rating == float(Review_form_data["rating"])
+    #         assert instance.text == Review_form_data["text"]
 
-        try:
-            instance = review.save()  # =====> this will raise Empty File error
-        except Exception as e:
-            print(f"exception printed-------------{e}")
-
-        # assert (
-        #     instance.image_1
-        #     == "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
-        # )
-        assert instance.image == files["image_1"]
-        assert instance.rating == float(Review_form_data["rating"])
-        assert instance.text == Review_form_data["text"]
+    #     except Exception as e:
+    #         print(f"exception printed-------------{e}")

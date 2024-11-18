@@ -12,6 +12,9 @@ from blog.decorators import create_update_delete_blogpost_permission_required
 from blog.forms import CommentForm, PostForm
 from blog.models import Comment, Post
 from i.decorators import user_comment_permission_required
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def PostListView(request):
@@ -39,25 +42,27 @@ def my_posts_list(request):
 @login_required(login_url="Homepage:login")
 @user_comment_permission_required
 def live_post(request, slug):
+
+    # Get the user Post with it's comments
     post = get_object_or_404(Post, slug=slug, status=1)
     comments = Comment.objects.filter(post=post, active=True)
+
     new_comment = None
 
     if request.method == "POST":
+
         comment_form = CommentForm(request.POST)
+
         if comment_form.is_valid():
+
             new_comment = comment_form.save(commit=False)
             new_comment.post = post
+            new_comment.comments_user = request.user
             new_comment.save()
-            new_comment.comments_user = (
-                request.user
-            )  # Assign the logged-in user to the comment
-            new_comment.save()
+
             return redirect("blog:live_post", slug=post.slug)
         else:
-            messages.error(
-                request, "There was an error in your comment. Please try again."
-            )
+            messages.error(request, "Comment Form Not Valid. Please try again")
             return render(
                 request,
                 "live_post.html",

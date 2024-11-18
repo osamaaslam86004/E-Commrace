@@ -65,6 +65,7 @@ class BookFormat(models.Model):
     )
     is_active = models.BooleanField(default=True, null=True)
     restock_threshold = models.PositiveIntegerField(default=9)
+
     image_1 = models.ImageField(
         upload_to="images/",
         null=True,
@@ -80,6 +81,9 @@ class BookFormat(models.Model):
         null=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
+
+    class Meta:
+        unique_together = ("book_author_name", "format")
 
     def custom_string_representation_of_object(self):
         return f"Name: {self.book_author_name.book_name} - {self.format} - ${self.price} - Author: {self.book_author_name.author_name}"

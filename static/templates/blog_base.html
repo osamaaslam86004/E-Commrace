@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+<html>
+
+<head>
+  <title>Blog </title>
+  <script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="Home-container">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'blog:post_list' %}">Blog Home</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="my-post-list-container">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'blog:my_posts_list' %}">My Posts</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="blog-post-create-container">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'blog:blog_post_create' %}">Create Post</a>
+          </li>
+        </ul>
+      </div>
+
+
+      <div class="form-class" style="margin-left:550px;">
+        <form class="form-inline my-2 my-lg-0" style="display:flex;" hx-get="{% url 'blog:search_results_view' %}"
+          hx-target="#htmx-container">
+          <div>
+            <input style=" width:300px;" class="form-control mr-sm-2" type="search" placeholder="Search"
+              aria-label="Search" name="search" hx-get="{% url 'blog:search_results_view' %}"
+              hx-trigger="keyup changed delay:100ms" hx-target="#htmx-container">
+          </div>
+          <div style="margin-left:11px;">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </nav>
+
+  {% block content %}
+
+
+  {% endblock content %}
+
+
+</body>
+
+</html>

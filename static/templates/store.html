@@ -1,0 +1,85 @@
+{% extends 'main.html' %}
+{% load static %}
+
+{% block content %}
+
+<section>
+    <div class="row">
+        {% for product in images %}
+        <div class="col-lg-4">
+            <img class="thumbnail" src="{{product}}" />
+            <div class="box-element product">
+                <h6><strong>{{product.name}}</strong></h6>
+                <hr />
+
+                <button data-product="{{product.id}}" data-action="add"
+                    class="btn btn-outline-secondary add-btn update-cart">
+                    Add to Cart
+                </button>
+
+                <a class="btn btn-outline-success" href="#">View</a>
+                <h4 style="display: inline-block; float: right">
+                    <strong>$ 21</strong>
+                </h4>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% if zipped %}
+<section style="margin-bottom: 301px;">
+    <div>
+        <div style="margin-top: 21px;">
+            <h4> Your Browsing History</h4>
+        </div>
+        <div style="display: flex;">
+            <div class="col-md-10">
+                <div class="card-container" style="margin-top: 21px; display:flex;">
+                    {% for items in zipped %}
+                    {% with item=items %}
+
+
+                    <div class="col mb-4">
+                        <div class="card" style="width: 150px; height:450px;">
+                            <div class="image-container" style="height: 100px; width: 100px;">
+                                <img class="card-img-top" src="{{item.3}}" alt="Card image cap">
+                            </div>
+                            <div class="card-body">
+                                <div>
+                                    <h5 class="card-title">Name: {{item.0 }}</h5>
+                                    <p class="card-text"><b>Price</b>: {{ item.1 }}</p>
+                                    {% if item.5.0 != 1 and item.5.1 != 1 %}
+                                    <p class="card-text"><b>Features</b>: {{ item.5.0 }}, {{item.5.1}}</p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="average-rating">
+                                    {% if item.2 == 0 %}
+                                    <i data-star="0"></i>
+                                    {% else %}
+
+                                    <i data-star="{{item.2}}"></i>
+                                    {% endif %}
+                                </div>
+
+                                <a href="{{item.4}}" class="stretched-link">View</a>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endwith %}
+
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+
+
+
+{% endblock content %}

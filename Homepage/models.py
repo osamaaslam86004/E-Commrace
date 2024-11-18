@@ -18,7 +18,7 @@ class CustomUserManager(BaseUserManager):
 
         # Create a UserProfile for the user
         UserProfile.objects.create(
-            user=self,
+            user=user,
             full_name="dummy_name",
             age=18,
             gender="Male",
@@ -268,17 +268,17 @@ class CustomSocialAccount(models.Model):
     code = models.TextField(max_length=500)
     refresh_token = models.TextField(max_length=500, blank=True, null=True)
 
-    # def clean(self):
-    #     super().clean()
-    #     if len(self.code) > 500:
-    #         raise ValidationError("code must be 0 to 500 characters.")
-    #     if len(self.refresh_token) > 500:
-    #         raise ValidationError("refresh token must be 0 to 500 characters.")
-    #     if len(self.access_token) > 500:
-    #         raise ValidationError("access token must be 0 to 500 characters.")
-    #     if len(self.user_info) > 1000:
-    #         raise ValidationError("user_info must be 0 to 1000 characters.")
+    def clean(self):
+        super().clean()
+        if len(self.code) > 500:
+            raise ValidationError("code must be 0 to 500 characters.")
+        if len(self.refresh_token) > 500:
+            raise ValidationError("refresh token must be 0 to 500 characters.")
+        if len(self.access_token) > 500:
+            raise ValidationError("access token must be 0 to 500 characters.")
+        if len(self.user_info) > 1000:
+            raise ValidationError("user_info must be 0 to 1000 characters.")
 
-    # def save(self, *args, **kwargs):
-    #     self.clean()
-    #     super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)

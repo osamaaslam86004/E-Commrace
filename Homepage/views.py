@@ -11,6 +11,7 @@ from axes.decorators import axes_dispatch
 from cloudinary.uploader import upload
 from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -40,7 +41,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from twilio.rest import Client
+from Homepage.helper_functions import delete_temporary_cookies, helper_function
 
 from checkout.models import Payment
 from Homepage.forms import (
@@ -67,6 +68,7 @@ from Homepage.models import (
     SellerProfile,
     UserProfile,
 )
+from Homepage.tasks import send_password_reset_email
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
@@ -223,51 +225,42 @@ class CustomLoginView(View):
         return render(request, self.template_name, {"form": form})
 
 
-def custom_password_reset(
-    request,
-) -> HttpResponseRedirect | HttpResponsePermanentRedirect | JsonResponse | HttpResponse:
+class PasswordResetOptionsView(TemplateView):
+    template_name = "password_reset_options.html"
+
+
+def custom_password_reset(request):
+    """function to send email to user if user exist. The email contains
+    url containing uuid, and token for validation of LINK"""
+
     if request.method == "POST":
         email = request.POST.get("email")
-
         user = CustomUser.objects.filter(email=email).first()
+
         if user is not None:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = request.build_absolute_uri(
+                reverse(
+                    "Homepage:password_reset_confirm",
+                    kwargs={"uidb64": uid, "token": token},
+                )
+            )
+
             try:
-                uid = urlsafe_base64_encode(force_bytes(user.pk))
-                token = default_token_generator.make_token(user)
+                # Call Celery task to send email
+                send_password_reset_email.delay(email, reset_url)
 
-                reset_url = request.build_absolute_uri(
-                    reverse(
-                        "Homepage:password_reset_confirm",
-                        kwargs={"uidb64": uid, "token": token},
-                    )
-                )
+                # result = send_password_reset_email.delay(email, reset_url)
+                # response = result.get()
 
-                message = Mail(
-                    from_email=settings.CLIENT_EMAIL,
-                    to_emails=email,
-                    subject="Reset your password",
-                    html_content=f'Click the link to reset your password: <a href="{reset_url}">{reset_url}</a>',
-                )
-                # Initialize SendGrid API client
-                sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                mail_json = message.get()
+                messages.success(request, "A password reset email has been sent.")
+                return HttpResponseRedirect(reverse("Homepage:password_reset_done"))
 
-                # Send the email
-                response = sg.client.mail.send.post(request_body=mail_json)
-                logger.info("Email send response status: %d", response.status_code)
-                logger.debug("Email send response headers: %s", response.headers)
-
-                # Check the response status and return appropriate message
-                if response.status_code == 202:
-                    return HttpResponseRedirect(reverse("Homepage:password_reset_done"))
-                else:
-                    messages.error(request, "Fail to send E-mail, Please try again")
-
-                    # If something went wrong, redirect to a different view or page
-                    return redirect("Homepage:signup")
             except Exception as e:
-                return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
-                # return redirect("Homepage:login")
+                messages.error(request, "Fail to send E-mail, Please try again")
+                return redirect("Homepage:signup")
+
         else:
             messages.error(request, "No user found with this email.")
             return redirect("Homepage:signup")
@@ -277,12 +270,18 @@ def custom_password_reset(
 
 
 class CustomPasswordResetConfirmView(View):
+    """Validate the URL by validating the uuid, token in the url. Then renders the form
+    for password reset"""
+
     template_name = "password_reset_confirm.html"
 
     def post(
         self, request, **kwargs
     ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
-        form = CustomPasswordResetForm(request.POST)
+        """Then renders the form for password reset"""
+
+        form = CustomPasswordResetForm(self.request.POST)
+
         if form.is_valid():
             password1 = form.cleaned_data["new_password1"]
             password2 = form.cleaned_data["new_password2"]
@@ -297,29 +296,32 @@ class CustomPasswordResetConfirmView(View):
                 try:
                     user.set_password(password1)
                     user.save()
+                    messages.success(request, "Password Reset Complete!")
                     return redirect("Homepage:password_reset_complete")
+
                 except Exception as e:
-                    messages.error(request, "Something went wrong")
+                    messages.error(request, "Fail to save password, Try Again!")
                     return redirect("Homepage:signup")
             else:
-                return render(
-                    request,
-                    self.template_name,
-                    {"form": form, "messages": "Passwords does match"},
-                )
+                messages.error(request, "Passwords does match")
+                return render(request, self.template_name, {"form": form})
         else:
+            messages.error(request, "Form Not Valid")
             return render(request, self.template_name, {"form": form})
 
     def get(
         self, request, **kwargs
     ) -> HttpResponse | HttpResponseRedirect | HttpResponsePermanentRedirect:
         form = CustomPasswordResetForm()
+
+        """Validate the URL by validating the uuid, token in the url"""
+
         uidb64 = kwargs["uidb64"]
         token = kwargs["token"]
 
+        uid = force_str(urlsafe_base64_decode(uidb64))
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user, created = CustomUser.objects.get_or_create(pk=uid)
+            user = CustomUser.objects.get(pk=uid)
 
             if default_token_generator.check_token(user, token):
                 validlink = True
@@ -331,7 +333,7 @@ class CustomPasswordResetConfirmView(View):
                 return redirect("Homepage:signup")
 
         except Exception as e:
-            print(e)
+            messages.info(self.request, "Please Sign-Up!")
             return redirect("Homepage:signup")
 
 
@@ -410,7 +412,7 @@ def your_callback_view(request):
 
                 except CustomSocialAccount.DoesNotExist:
                     # Create the social account if it doesn't exist
-                    CustomSocialAccount.objects.create(
+                    social_account = CustomSocialAccount.objects.create(
                         user=user,
                         access_token=access_token,
                         user_info=user_info,
@@ -423,7 +425,7 @@ def your_callback_view(request):
                     email=email, username=email, user_type="SELLER"
                 )
                 # Create the social account for the new user
-                CustomSocialAccount.objects.create(
+                social_account = CustomSocialAccount.objects.create(
                     user=user,
                     access_token=access_token,
                     user_info=user_info,
@@ -550,17 +552,6 @@ class CustomLogoutView(View, SuccessMessageMixin):
             return False
 
 
-# def custom_csrf_failure(request, reason="") -> HttpResponseForbidden:
-#     # Your custom logic for handling CSRF failures
-#     # Mark the reason as safe to render HTML
-#     reason_message = mark_safe(reason)
-#     context = {
-#         "reason": reason_message
-#     }  # Pass any additional context data needed for the template
-#     template = loader.get_template("custom_csrf_failure.html")
-#     return HttpResponseForbidden(template.render(context, request))
-
-
 @method_decorator(login_required, name="dispatch")
 class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
     user_profile_form_class = UserProfileForm
@@ -665,6 +656,7 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
             and customer_profile_form.is_valid()
             and image_form.is_valid()
         ):
+
             user_form = user_profile_form.save(commit=False)
             customer_form = customer_profile_form.save(commit=False)
             transformation_options = {
@@ -825,6 +817,7 @@ class SellerProfilePageView(PermissionRequiredMixin, TemplateView):
             and seller_profile_form.is_valid()
             and image_form.is_valid()
         ):
+
             user_form = user_profile_form.save(commit=False)
             seller_form = seller_profile_form.save(commit=False)
 
@@ -855,6 +848,7 @@ class SellerProfilePageView(PermissionRequiredMixin, TemplateView):
             except Exception as e:
                 messages.error(request, "Image upload failed")
 
+        messages.error(request, "Form not valid")
         return render(
             request,
             self.template_name,
@@ -884,6 +878,8 @@ class SellerProfilePageView(PermissionRequiredMixin, TemplateView):
         image_form = CustomUserImageForm(instance=custom_user)
         user_profile_form = UserProfileForm(instance=user_profile)
         seller_profile_form = SellerProfileForm(instance=seller_profile)
+
+        print(user_profile_form.errors)
 
         clean_permissions = self.display_seller_user_type_permissions(self.request)
 
@@ -1409,167 +1405,196 @@ def generate_otp() -> str:
     return str(random.randint(100000, 999999))
 
 
-def send_sms(
-    request,
-) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse | JsonResponse:
+def validate_user(request, *args, **kwargs):
+    """POST: 1. Validate User in Post request by authenticating user with email
+             2. Send OTP
+    GET: get the email"""
+
+    # Initialize variable for storing url
+    referer_url = request.META.get("HTTP_REFERER", None)
+
     if request.method == "POST":
-        otp_form = OTPForm(request.POST)
         form = E_MailForm_For_Password_Reset(request.POST)
 
-        generated_otp = request.session.get("generated_otp")
+        if form.is_valid():
+            email = form.cleaned_data["email"]
 
-        if otp_form.is_valid() and otp_form.cleaned_data["otp"] is not None:
+            user = cache.get(f"user_{email}", None)
+            if not user:
+                try:
+                    user = CustomUser.objects.select_related("userprofile").get(
+                        email=email
+                    )
+                    cache.set(f"user_{email}", user, timeout=300)
+
+                except CustomUser.DoesNotExist:
+                    return redirect("Homepage:signup")
+
+            generated_otp = generate_otp()
+            phone_number = user.userprofile.phone_number
+
+            if phone_number:
+
+                if helper_function(generated_otp, phone_number):
+                    messages.success(request, "An OTP is to your mobile number")
+                    response = redirect(reverse("Homepage:validate_otp_view"))
+
+                    # Create OTP Cookie for storing generated otp
+                    response.set_cookie(
+                        key="temporary_cookie",
+                        value=json.dumps(
+                            {
+                                "email": email,
+                                "id": user.id,
+                                "generated_otp": generated_otp,
+                                "referer_url": referer_url,
+                            }
+                        ),
+                        max_age=300,
+                        path="/",
+                        httponly=True,
+                    )
+                    return response
+                else:
+                    messages.error(request, "Failed to send SMS, Try Again")
+                    return redirect("Homepage:login")
+            else:
+                messages.warning(
+                    request, "Your profile is not updated, Email-Verification Required"
+                )
+                return redirect("Homepage:password_reset")
+    else:
+        form = E_MailForm_For_Password_Reset()
+        return render(request, "password_reset_email.html", {"form": form})
+
+
+def validate_otp_view(request, *args, **kwargs):
+    """Check if OTP provided by user is valid"""
+
+    intent = None
+
+    if request.method == "POST":
+
+        # Init variables
+        email = None
+        generated_otp = None
+        referer_url = None
+        user = None
+
+        # get email for Cookie
+        temporary_cookie = request.COOKIES.get("temporary_cookie", None)
+
+        if temporary_cookie:
+
+            temporary_cookie = json.loads(temporary_cookie)
+            # get the user intent
+            referer_url = temporary_cookie.get("referer_url", None)
+
+        if referer_url == reverse("Homepage:password_reset"):
+            return redirect(reverse("Homepage:password_reset_confirm_via_otp"))
+
+        email = temporary_cookie.get("email", None)
+        generated_otp = temporary_cookie.get("generated_otp", None)
+
+        otp_form = OTPForm(request.POST)
+
+        if otp_form.is_valid():
+
             user_entered_otp = otp_form.cleaned_data["otp"]
 
-            if str(generated_otp) == str(user_entered_otp):
-                if "user_id" in request.session:
-                    user_id = request.session.get("user_id")
-                    user = CustomUser.objects.get(id=user_id)
-                    authenticate(request=request, user=user)
-                    login(
-                        request,
-                        user,
-                        backend="django.contrib.auth.backends.ModelBackend",
-                    )
-                    messages.success(request, "Successfully Logged In")
-                    return redirect(request.GET.get("next", "/"))
-                else:
-                    email = request.session.get("email")
-                    user = CustomUser.objects.get(email=email)
-                    authenticate(request=request, user=user)
-                    login(
-                        request,
-                        user,
-                        backend="django.contrib.auth.backends.ModelBackend",
-                    )
-                    request.session["user_id"] = user.id
-                    messages.success(request, "Successfully Logged In")
-                    return redirect(request.GET.get("next", "/"))
-            else:
-                messages.error(request, "You entered Incorrect OTP")
-                return render(
+            user = cache.get(f"user_{email}", None)
+
+            if not user:
+                user = CustomUser.objects.get(email=email)
+                cache.set(f"user_{email}", user, timeout=300)
+
+            user = cache.get(f"user_{email}")
+
+            # Check if the OTP matches and user instance exists
+            if generated_otp == str(user_entered_otp) and user:
+
+                # deleting temporary_cookie, and otp_cookie
+                response = redirect("/")
+                delete_temporary_cookies(response)
+
+                # Log in the user (session-based)
+                login(
                     request,
-                    "otp.html",
-                    {"form": otp_form},
+                    user,
+                    backend="django.contrib.auth.backends.ModelBackend",
                 )
+                # Set session user_id for cookie-based session
+                request.session["user_id"] = user.id
+                messages.success(request, "Successfully Logged In")
+                return response
+
+            else:
+                messages.error(request, "Invalid OTP. Please try again.")
+                return redirect("Homepage:validate_otp_view")
         else:
-            if form.is_valid():
-                user_entered_email = form.cleaned_data["email"]
-                request.session["email"] = user_entered_email
-                print(f"email___________{request.session['email']}")
-
-                user = CustomUser.objects.get(email=user_entered_email)
-                user_profile = UserProfile.objects.get(user=user)
-
-                print(f"phone_number_________________{user_profile.phone_number}")
-                if user_profile.phone_number:
-                    generated_otp = generate_otp()
-                    request.session["generated_otp"] = generated_otp
-                    phone_number = user_profile.phone_number
-                    print(f"generated_otp___________{request.session['generated_otp']}")
-
-                    if helper_function(generated_otp, phone_number):
-                        form = OTPForm
-                        messages.success(
-                            request, "An OTP has been sent to your mobile number"
-                        )
-                        return render(request, "otp.html", {"form": form})
-                    else:
-                        messages.error(
-                            request, "Failed to send SMS, Please log-in again"
-                        )
-                        return redirect("Homepage:login")
-                else:
-                    messages.warning(
-                        request,
-                        "Your Phone Number does not exist in database, so you have to recover your password with e-mail verification method",
-                    )
-                    return redirect("Homepage:password_reset")
-            else:
-                form = E_MailForm_For_Password_Reset()
-                return render(request, "password_reset_email.html", {"form": form})
+            messages.error(request, "Invalid OTP. Please try again.")
+            return redirect("Homepage:validate_otp_view")
     else:
-        try:
-            if "user_id" in request.session:
-                user_id = request.session.get("user_id")
+        otp_form = OTPForm()
+        return render(request, "otp.html", {"form": otp_form})
 
-                user = CustomUser.objects.get(id=user_id)
-                user_profile = UserProfile.objects.get(user=user)
-                if user_profile.phone_number:
-                    phone_number = user_profile.phone_number
-                    generated_otp = generate_otp()
-                    request.session["generated_otp"] = generated_otp
 
-                    print(f"generated_otp___________{request.session['generate_otp']}")
-                    print(f"phone_number_________________{user_profile.phone_number}")
+class CustomPasswordResetConfirmViaOTPView(View):
+    """Password-Reset-Done: Validate the Password and log-in the user"""
 
-                    if helper_function(generated_otp, phone_number):
+    template_name = "password_reset_confirm.html"
 
-                        form = OTPForm
-                        messages.success(
-                            request, "An OTP has been sent to your mobile number"
-                        )
-                        return render(request, "otp.html", {"form": form})
-                    else:
-                        messages.error(
-                            request, "Failed to send SMS, Please log-in again"
-                        )
-                        return redirect("Homepage:login")
-                else:
-                    messages.warning(
-                        request,
-                        "Your Phone Number does not exist in database, so you have to recover your password with e-mail verification method",
-                    )
-                    return redirect("Homepage:password_reset")
+    def post(
+        self, request, **kwargs
+    ) -> HttpResponseRedirect | HttpResponsePermanentRedirect | HttpResponse:
+        """Then renders the form for password reset"""
+
+        form = CustomPasswordResetForm(self.request.POST)
+
+        # get user email from temporary_cookie
+        temporary_cookie = request.COOKIES.get("temporary_cookie", None)
+
+        # Assert if cookie is not empty
+        if temporary_cookie:
+            temporary_cookie = json.loads(temporary_cookie)
+            email = temporary_cookie.get("email", None)
+        else:
+            return redirect("Homepage:send_sms")
+
+        user = cache.get(f"user{email}", None)
+
+        if not user:
+            user = CustomUser.objects.get(email=email)
+            cache.set(f"user_{email}", user, timeout=300)
+
+        if form.is_valid():
+
+            password1 = form.cleaned_data["new_password1"]
+            password2 = form.cleaned_data["new_password2"]
+
+            if password1 == password2:
+
+                try:
+
+                    user.set_password(password1)
+                    user.save()
+
+                    # deleting temporary_cookie, and otp_cookie
+                    response = redirect("Homepage:password_reset_complete")
+                    delete_temporary_cookies(response)
+
+                    messages.success(request, "Password Reset Complete!")
+                    return response
+
+                except Exception as e:
+                    messages.error(request, "Fail to save password, Try Again!")
+                    return redirect("Homepage:signup")
             else:
-                form = E_MailForm_For_Password_Reset()
-                return render(request, "password_reset_email.html", {"form": form})
-        except Exception as e:
-            return JsonResponse({"message": f"Error: {str(e)}"}, status=500)
-
-
-def helper_function(generated_otp, phone_number) -> bool:
-    import requests
-
-    # Twilio API endpoint
-    endpoint = f"https://api.twilio.com/2010-04-01/Accounts/{settings.ACCOUNT_SID}/Messages.json"
-
-    # Construct the request payload
-    payload = {
-        "From": settings.FROM_,
-        "To": str(phone_number),  # otherwise 'PhoneNumber' object is not iterable
-        "Body": f"Your OTP is: {generated_otp}",
-    }
-
-    # HTTP Basic Authentication credentials
-    auth = (settings.ACCOUNT_SID, settings.AUTH_TOKEN)
-
-    # Send HTTP POST request to Twilio
-    # response = requests.post(endpoint, data=payload, auth=auth, verify=False)
-    response = requests.post(endpoint, data=payload, auth=auth)
-
-    # Check if request was successful
-    if response.status_code == 201:
-        return True
-    else:
-        return False
-
-    # # message body
-    # message_body = f"Your OTP is: {generated_otp}"
-
-    # account_sid = settings.ACCOUNT_SID
-    # auth_token = settings.AUTH_TOKEN
-
-    # client = Client(account_sid, auth_token)
-
-    # message = client.messages.create(
-    #     from_=settings.FROM_, body=message_body, to=str(phone_number)
-    # )
-
-    # if message.sid:
-    #     return True
-    # else:
-    #     return False
+                messages.error(request, "Passwords does not match")
+                return render(request, self.template_name, {"form": form})
+        else:
+            messages.error(request, "Form Not Valid")
+            return render(request, self.template_name, {"form": form})
 
 
 class DeleteUserAccount(View):

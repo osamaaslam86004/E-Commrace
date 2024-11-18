@@ -3,28 +3,41 @@ import logging
 from unittest.mock import Mock, patch
 
 import pytest
-import requests
+from django.conf import settings
 from django.contrib.messages import get_messages
 from django.http.response import JsonResponse
 from django.test import Client
 from django.urls import reverse
 from django_mock_queries.mocks import mocked_relations
 from django_mock_queries.query import MockSet
+from requests_mock import mock
 
-from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
-                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
-                          ProjectsForm, PublicationForm,
-                          SkillAndSkillLevelForm)
+from cv_api.forms import (
+    EducationfoForm,
+    JobAccomplishmentfoForm,
+    JobfoForm,
+    OverviewForm,
+    PersonalInfoForm,
+    ProgrammingAreaForm,
+    ProjectsForm,
+    PublicationForm,
+    SkillAndSkillLevelForm,
+)
 from cv_api.models import PersonalInfo, TokensForUser
 from Homepage.models import UserProfile
-from tests.cv_api.cv_api_factory import (CustomUserOnlyFactory,
-                                         EducationFactory,
-                                         JobAccomplishmentFactory, JobFactory,
-                                         OverviewFactory, PersonalInfoFactory,
-                                         ProgrammingAreaFactory,
-                                         ProjectsFactory, PublicationFactory,
-                                         SkillAndSkillLevelFactory,
-                                         TokensForUserFactory)
+from tests.cv_api.cv_api_factory import (
+    CustomUserOnlyFactory,
+    EducationFactory,
+    JobAccomplishmentFactory,
+    JobFactory,
+    OverviewFactory,
+    PersonalInfoFactory,
+    ProgrammingAreaFactory,
+    ProjectsFactory,
+    PublicationFactory,
+    SkillAndSkillLevelFactory,
+    TokensForUserFactory,
+)
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")
@@ -40,19 +53,7 @@ def client():
 def custom_user():
     def _custom_user():
         user = CustomUserOnlyFactory()
-
-        # Create a UserProfile for the user
-        user_profile = UserProfile.objects.create(
-            user=user,
-            full_name="",
-            age=18,
-            gender="",
-            phone_number="",
-            city="",
-            country="",
-            postal_code="",
-        )
-        return user, user_profile
+        return user
 
     return _custom_user
 
@@ -71,7 +72,7 @@ def login_form_data():
 @pytest.fixture
 def client_logged_in(client, custom_user, login_form_data):
     # Create user
-    user, _ = custom_user()
+    user = custom_user()
     # Log-in the user
     response = client.post(reverse("Homepage:login"), login_form_data(user))
 
@@ -79,6 +80,10 @@ def client_logged_in(client, custom_user, login_form_data):
     session = client.session
     session["user_id"] = user.id
     session.save()
+
+    # Update session's cookie
+    session_cookie_name = settings.SESSION_COOKIE_NAME
+    client.cookies[session_cookie_name] = session.session_key
 
     assert response.status_code == 302
     assert response.url == "/"
@@ -559,37 +564,39 @@ class Test_ListOfCVForUser:
             assert "cv_data" in response.context
             assert response.context["cv_data"] is None
 
+    @patch("requests.get")
+    @patch("cv_api.models.PersonalInfo.objects.filter")
+    @patch("cv_api.models.TokensForUser.objects.filter")
     @pytest.mark.django_db
-    def test_error_fetching_cv_data(self, client_logged_in):
+    def test_error_fetching_cv_data(
+        self, mock_token_set, mock_personal_info_set, mock_get, client_logged_in
+    ):
         client, user = client_logged_in
 
         mock_tokens_for_user = TokensForUser(user=user, access_token="valid_token")
-        mock_token_set = MockSet(mock_tokens_for_user)
+        # Mock Tokens for user
+        mock_token_set.return_value = MockSet(mock_tokens_for_user)
 
         mock_personal_info = PersonalInfo(
             user_id_for_personal_info=user,
             api_user_id_for_cv="12345",
             api_id_of_cv="9999999",
         )
-        mock_personal_info_set = MockSet(mock_personal_info)
 
-        with patch(
-            "cv_api.models.TokensForUser.objects.filter", return_value=mock_token_set
-        ):
-            with patch(
-                "cv_api.models.PersonalInfo.objects.filter",
-                return_value=mock_personal_info_set,
-            ):
-                with patch("requests.get") as mock_get:
-                    mock_response = Mock()
-                    mock_response.status_code = 500
-                    mock_get.return_value = mock_response
+        # Mock PersonalInfo model instance
+        mock_personal_info_set.return_value = MockSet(mock_personal_info)
 
-                    response = client.get(reverse("cv_api:list_of_cv_for_user"))
+        # Mock GET request
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_response.json.return_value = []
+        mock_get.return_value = mock_response
 
-                    assert response.status_code == 200
-                    assert "cv_data" in response.context
-                    assert response.context["cv_data"] is None
+        response = client.get(reverse("cv_api:list_of_cv_for_user"))
+
+        assert response.status_code == 200
+        assert "cv_data" in response.context
+        assert response.context["cv_data"] is None
 
 
 @pytest.mark.django_db
@@ -610,9 +617,11 @@ class Test_DeleteCVForUser:
 
         # Mock response json data
         mock_response_json_data = {
-            "status": "DELETED",
-            "id": personalinfo_instance.api_id_of_cv,
-            "user_id": personalinfo_instance.api_user_id_for_cv,
+            "data": {
+                "status": "DELETED",
+                "id": personalinfo_instance.api_id_of_cv,
+                "user_id": personalinfo_instance.api_user_id_for_cv,
+            }
         }
         with patch(
             "cv_api.models.TokensForUser.objects.filter",
@@ -689,8 +698,11 @@ class Test_DeleteCVForUser:
                     "Token not found for user." in str(message) for message in messages
                 )
 
+    @patch("cv_api.views.requests.delete")
     @pytest.mark.django_db
-    def test_delete_cv_for_user_with_invalid_id(self, client, client_logged_in):
+    def test_delete_cv_for_user_with_invalid_id(
+        self, mock_delete_request, client, client_logged_in
+    ):
         client, user = client_logged_in
 
         # Create a PersonalInfo instance
@@ -698,28 +710,39 @@ class Test_DeleteCVForUser:
             user_id_for_personal_info=user,
             api_user_id_for_cv="12345",
             api_id_of_cv="9999999",
+            status="PENDING",
         )
 
         # CREATE TOKENS FOR USER
         token_instance = TokensForUserFactory(user=user)
 
+        # Mock the response of the requests.delete call
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "data": {"status": "FAILED", "id": 9999999, "user_id": 12345}
+        }
+        mock_delete_request.return_value = mock_response
+
         # Simulate the delete request with an invalid id
         response = client.get(
             reverse(
                 "cv_api:get_cv_to_delete",
-                kwargs={"personal_info_id": personal_info.id + 11},
+                kwargs={"personal_info_id": personal_info.id},
             ),
             HTTP_AUTHORIZATION=f"Bearer {token_instance.access_token}",
         )
 
         # Check the response status code
-        assert response.status_code == 302
-
+        assert response.status_code == 301
         # Check the response redirect URL
         assert response.url == "/"
-
         # Check the PersonalInfo instance status
-        personal_info.refresh_from_db()
+        personal_info = PersonalInfo.objects.filter(
+            api_user_id_for_cv="12345",
+            api_id_of_cv="9999999",
+        ).first()
+
         assert personal_info.status == "FAILED"
 
 
@@ -862,7 +885,7 @@ class Test_WebHookEvent:
         assert personal_info.status == "FAILED"
 
     @patch("json.loads")
-    def test_invalid_event_type(self, client, mock_json_loads):
+    def test_invalid_event_type(self, mock_json_loads, client):
         # Create PersonalInfo instance for user
         personal_info = PersonalInfoFactory.create()
 

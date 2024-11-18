@@ -1,9 +1,30 @@
 import django_filters
 from django import forms
-from django.db.models import Q
-
+from django.db.models import (
+    OuterRef,
+    Subquery,
+    Avg,
+    Count,
+    Prefetch,
+)
+import django_filters.filterset
 from i.forms import MonitorsForm
-from i.models import Monitors, Special_Features
+from i.models import Monitors, Special_Features, Review
+
+
+review_avg_subquery = (
+    Review.objects.filter(product_id=OuterRef("pk"))
+    .values("product_id")
+    .annotate(average_rating=Avg("rating"))
+    .values("average_rating")
+)
+
+review_count_subquery = (
+    Review.objects.filter(product_id=OuterRef("pk"))
+    .values("product_id")
+    .annotate(rating_count=Count("rating"))
+    .values("rating_count")
+)
 
 
 class MonitorsFilter(django_filters.FilterSet):
@@ -21,9 +42,10 @@ class MonitorsFilter(django_filters.FilterSet):
     )
     brand = django_filters.ChoiceFilter(choices=MonitorsForm.brand_choices)
     special_features = django_filters.ModelMultipleChoiceFilter(
-        field_name="special_features__id",  # Filter by IDs instead of objects
-        to_field_name="id",  # Use primary key (ID) for filtering
-        queryset=Special_Features.objects.all(),
+        field_name="special_features__name",  # Filter by IDs instead of objects
+        to_field_name="name",  # Use primary key (ID) for filtering
+        label="Special Features",
+        queryset=Special_Features.objects.all().only("name"),
         widget=forms.CheckboxSelectMultiple,
         conjoined=True,  # when set to False, the filter applies an OR operation. Setting conjoined=True
         #    is useful when you want to narrow down results based on multiple selections,
@@ -42,22 +64,52 @@ class MonitorsFilter(django_filters.FilterSet):
             "special_features": ["exact"],
         }
 
-    def filter_queryset(self, queryset):
-        special_features = self.form.cleaned_data.get("special_features")
+    @property
+    def qs(self):
+        queryset = (
+            super()
+            .qs.only(
+                "name",
+                "price",
+                "mounting_type",
+                "monitor_type",
+                "max_display_resolution",
+                "refresh_rate",
+                "brand",
+                "image_2",
+                "monitor_id",
+            )
+            .annotate(
+                average_rating=Subquery(review_avg_subquery),
+                rating_count=Subquery(review_count_subquery),
+            )
+            .prefetch_related(
+                Prefetch(
+                    "special_features",
+                    queryset=Special_Features.objects.all().only("name"),
+                )
+            )
+        )
 
-        q_objects = Q()
+        return queryset
 
-        if special_features:
-            # Extract IDs from Special_Features objects
-            special_feature_ids = [sf.id for sf in special_features]
-            q_objects |= Q(special_features__id__in=special_feature_ids)
+    # With OR operator for all inputs
+    # def filter_queryset(self, queryset):
+    #     special_features = self.form.cleaned_data.get("special_features")
 
-        # Apply other filters similarly
-        for name, value in self.form.cleaned_data.items():
-            if value and name != "special_features":
-                q_objects |= Q(**{f"{name}__exact": value})
+    #     q_objects = Q()
 
-        return queryset.filter(q_objects)
+    #     if special_features:
+    #         # Extract IDs from Special_Features objects
+    #         special_feature_ids = [sf.id for sf in special_features]
+    #         q_objects |= Q(special_features__id__in=special_feature_ids)
+
+    #     # Apply other filters similarly
+    #     for name, value in self.form.cleaned_data.items():
+    #         if value and name != "special_features":
+    #             q_objects |= Q(**{f"{name}__exact": value})
+
+    #     return queryset.filter(q_objects)
 
 
 """

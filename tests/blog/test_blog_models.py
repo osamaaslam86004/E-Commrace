@@ -47,7 +47,7 @@ class Test_PostModel:
 
     def test_post_status(self, create_admin_user):
         admin = create_admin_user
-        post = PostFactory(post_admin=admin)
+        post = PostFactory(post_admin=admin, status=1)
         assert post.status == 1
 
     def test_post_admin_post_count(self, create_post_batch):
@@ -96,8 +96,8 @@ class Test_CommentModel:
         # create a comment for the Post
         comment = CommentFactory(post=post, comments_user=admin)
 
-        # create a comment for the Post
-        comment = CommentFactory(post=post, comments_user=admin)
+        # Get the comment from database
+        comment = Comment.objects.get(id=comment.id)
         assert (
             str(comment)
             == f'Comment "{comment.body}" by {comment.comments_user.username}'

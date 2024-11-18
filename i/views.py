@@ -1,45 +1,75 @@
-# from typing import Any
-# from django.db.models.query import QuerySet
-from typing import Any
-
+from turtle import width
 from cloudinary.uploader import upload
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Avg, Count, Q
-from django.http import (HttpResponseBadRequest, HttpResponseRedirect,
-                         JsonResponse)
+from django.db.models import Avg, Count, Q, Subquery, OuterRef, Prefetch
+from django.http import (
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+    QueryDict,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import CreateView
+from django.core.cache import cache
 
 from book_.forms import CustomBookFormatFilterForm
 from book_.models import BookFormat
-from i.browsing_history import (add_product_to_browsing_history,
-                                your_browsing_history)
-from i.decorators import (user_add_product_permission_required,
-                          user_comment_permission_required)
+from i.browsing_history import add_product_to_browsing_history, your_browsing_history
+from i.decorators import (
+    user_add_product_permission_required,
+    user_comment_permission_required,
+)
 from i.filters import MonitorsFilter
-from i.forms import (AdaptorsForm, BagPacksForm, BriefCasesForm,
-                     ChargersAndadaptorsForm, ComputerAndTabletsForm,
-                     ComputerSubCategoryForm, DesktopForm, ElectronicsForm,
-                     FlexCablesForm, HardShellCasesForm,
-                     IsolatedTransformersForm, LaptopAccessoriesForm,
-                     LaptopBagsForm, LaptopBagSleevesForm, LaptopBattryForm,
-                     LaptopsForm, LcdDisplayReplacementPartsForm,
-                     LineConditionersForm, MessengerAndShoulderBagForm,
-                     MonitorsForm, PDUsForm, PowerAccessoriesForm,
-                     ProductCategoryForm, ReviewForm, ScreenFiltersForm,
-                     ScreenProtectorForm, ServersForm, Special_Features,
-                     SpecialFeaturesForm, TabletsForm,
-                     TabletsReplacementPartsForm)
+from i.forms import (
+    AdaptorsForm,
+    BagPacksForm,
+    BriefCasesForm,
+    ChargersAndadaptorsForm,
+    ComputerAndTabletsForm,
+    ComputerSubCategoryForm,
+    DesktopForm,
+    ElectronicsForm,
+    FlexCablesForm,
+    HardShellCasesForm,
+    IsolatedTransformersForm,
+    LaptopAccessoriesForm,
+    LaptopBagsForm,
+    LaptopBagSleevesForm,
+    LaptopBattryForm,
+    LaptopsForm,
+    LcdDisplayReplacementPartsForm,
+    LineConditionersForm,
+    MessengerAndShoulderBagForm,
+    MonitorsForm,
+    PDUsForm,
+    PowerAccessoriesForm,
+    ProductCategoryForm,
+    ReviewForm,
+    ScreenFiltersForm,
+    ScreenProtectorForm,
+    Special_Features,
+    TabletsForm,
+    TabletsReplacementPartsForm,
+)
 from i.models import ComputerSubCategory, Monitors, ProductCategory, Review
 from i.utils import Calculate_Ratings, RatingCalculator
+from i.utils import (
+    storing_filtered_conditions_in_cookie,
+    fetching_filtered_conditions_from_cookie,
+    py_dictionary_to_query_dictionary,
+    user_submitted_data_to_dictionary,
+    MonitorDetailViewHelperFunctions,
+    MonitorDetailViewAddReviewHelper,
+    UpdateMonitorProduct,
+)
 
 
 def success_page(request):
@@ -89,6 +119,8 @@ def load_subsubcategory_form(request):
             return redirect("i:add_server")
         elif selected_subcategory == "POWER_ACCESSORIES":
             subsubcategory_form = PowerAccessoriesForm()
+        else:
+            return HttpResponseBadRequest("Invalid category selected.")
 
         return render(
             request,
@@ -130,6 +162,8 @@ def load_sub_subsubcategory_form(request):
             form_1 = LineConditionersForm()
         elif selected_subcategory == "PDUS":
             form_1 = PDUsForm()
+        else:
+            return HttpResponseBadRequest("Invalid category selected.")
 
         return render(request, "sub_subsubcategory_form.html", {"form_1": form_1})
 
@@ -150,7 +184,9 @@ def load_sub_sub_subsubcategory_form(request):
         elif selected_category == "BAGPACKS":
             sub_sub_subcategory_form = BagPacksForm()
         else:
-            subcategory_form = None
+            return HttpResponseBadRequest("Invalid category selected.")
+        # else:
+        #     subcategory_form = None
 
         return render(
             request,
@@ -161,10 +197,6 @@ def load_sub_sub_subsubcategory_form(request):
 
 class List_Of_Products_Category(TemplateView):
     template_name = "update_product.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        return context
 
 
 @method_decorator(login_required, name="dispatch")
@@ -200,7 +232,7 @@ class List_Of_Books_For_User(ListView):
         item_list = BookFormat.objects.filter(user=self.request.user)
 
         if self.request.method == "POST":
-            requested_user = self.request.user
+            context = {"item_list": None}
             form = CustomBookFormatFilterForm(self.request.POST)
             if form.is_valid():
                 filter_conditions = Q()
@@ -220,7 +252,8 @@ class List_Of_Books_For_User(ListView):
 
                 format = form.cleaned_data.get("format")
                 if format:
-                    filter_conditions |= Q(format=format)
+                    # filter_conditions |= Q(format=format)
+                    filter_conditions &= Q(format=format)
 
                 book_name = form.cleaned_data.get("book_name")
 
@@ -237,26 +270,31 @@ class List_Of_Books_For_User(ListView):
 
                 price_min = form.cleaned_data.get("price_min")
                 if price_min:
-                    filter_conditions |= Q(price__gte=price_min)
+                    # filter_conditions |= Q(price__gte=price_min)
+                    filter_conditions &= Q(price__gte=price_min)
 
                 price_max = form.cleaned_data.get("price_max")
                 if price_max:
                     filter_conditions &= Q(price__lte=price_max)
 
                 if is_new_available:
-                    filter_conditions |= Q(is_new_available=is_new_available)
+                    # filter_conditions |= Q(is_new_available=is_new_available)
+                    filter_conditions &= Q(is_new_available=is_new_available)
 
                 if is_used_available:
-                    filter_conditions |= Q(is_used_available=is_used_available)
+                    # filter_conditions |= Q(is_used_available=is_used_available)
+                    filter_conditions &= Q(is_used_available=is_used_available)
 
                 publisher_name = form.cleaned_data.get("publisher_name")
 
                 if publisher_name:
-                    filter_conditions |= Q(publisher_name__icontains=publisher_name)
+                    # filter_conditions |= Q(publisher_name__icontains=publisher_name)
+                    filter_conditions &= Q(publisher_name__icontains=publisher_name)
 
                 rating_min = form.cleaned_data.get("rating_min")
                 if rating_min:
-                    filter_conditions |= Q(rating_format__rating__gte=rating_min)
+                    # filter_conditions |= Q(rating_format__rating__gte=rating_min)
+                    filter_conditions &= Q(rating_format__rating__gte=rating_min)
 
                 rating_max = form.cleaned_data.get("rating_max")
                 if rating_max:
@@ -304,16 +342,30 @@ class List_Of_Monitors_For_User(ListView):
     def post(self, request):
         item_list = Monitors.objects.filter(user=self.request.user)
 
+        # Print filter data for debugging
+        print(f"POST Data: {self.request.POST}")
+
         if self.request.method == "POST":
+            # Initialize variables
+            item_ratings = []
+            rating_count = []
+
+            # Filter
             filter_form = MonitorsFilter(self.request.POST, queryset=item_list)
 
             # if self.request.POST is None, meaning seller clicks on filter button without selecting any field
             # then due to presence of queryset, all monitors of self.request.user will be displayed
             if filter_form.is_valid():
+                # Print filter data for debugging
+                print("Filter form is valid.")
+
                 item_list = filter_form.qs
                 item_ratings, rating_count = Calculate_Ratings.calculate_ratings(
                     item_list
                 )
+
+                # Print filter data for debugging
+            print("Filter form is in-valid.")
 
             context = {
                 "form": filter_form,
@@ -325,8 +377,8 @@ class List_Of_Monitors_For_User(ListView):
         return render(self.request, "partial_monitor_seller.html", context)
 
 
-@method_decorator(login_required, name="dispatch")
-@method_decorator(user_add_product_permission_required, name="dispatch")
+# @method_decorator(login_required, name="dispatch")
+# @method_decorator(user_add_product_permission_required, name="dispatch")
 class Create_Monitors_Product(SuccessMessageMixin, CreateView):
     template_name = "subsubcategory_form.html"
     form_class = MonitorsForm
@@ -350,11 +402,14 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
     def form_valid(self, form):
         if form.is_valid():
             monitor = form.save(commit=False)
+            print(f"monitor instance commit=False: {monitor}")
+
             uploaded_images = {
                 "image_1": self.request.FILES["image_1"],
                 "image_2": self.request.FILES["image_2"],
                 "image_3": self.request.FILES["image_3"],
             }
+            print(f"uploaded images: {uploaded_images}")
 
             if self.all_images_uploaded_by_user(uploaded_images):
                 transformation_options = {
@@ -375,6 +430,7 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
                         resized_image_url = image_data["url"]
                         setattr(monitor, f"image_{key[-1]}", resized_image_url)
                     else:
+                        print("images did not uploaded properly, Try again!")
                         messages.info(
                             self.request, "images did not uploaded properly, Try again!"
                         )
@@ -418,9 +474,11 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
 
                 return HttpResponseRedirect(self.get_success_url())
             else:
+                print(f"please upload all images!")
                 messages.error(self.request, "please upload all images!")
                 return self.form_invalid(form)
         else:
+            print(f"Form is not valid")
             messages.error(self.request, "Form is not valid")
             return self.form_invalid(form)
         # return super().form_valid(form)
@@ -436,31 +494,38 @@ class Update_Monitor_Product(View):
             False
 
     def get(self, request, product_id):
-        monitor = get_object_or_404(
-            Monitors, monitor_id=product_id, user=self.request.user
-        )
 
-        monitor_features = monitor.special_features.all()
+        monitor_data_exists = Monitors.objects.filter(monitor_id=product_id).exists()
+
+        if not monitor_data_exists:
+            messages.info(self.request, "Product Does not exists")
+            return redirect("Homepage:Home")
+
+        # Get the monitor data
+        monitor_data = UpdateMonitorProduct.get_monitor_instance(product_id)
 
         # Get a list of special feature names for the monitor
-        monitor_feature_names = [feature.name for feature in monitor_features]
+        monitor_feature_ids = [
+            feature.id for feature in monitor_data.special_features.all()
+        ]
 
         # Get the initial data for the form to preselect checkboxes
         initial_data = {
-            "special_features": monitor_feature_names,
+            "choose_special_features": monitor_feature_ids,
         }
 
-        form = MonitorsForm(instance=monitor, initial=initial_data)
+        form = MonitorsForm(instance=monitor_data, initial=initial_data)
 
         context = {
             "form": form,
-            "monitor": monitor,
+            "monitor": monitor_data,
             # "special_features_form": special_features_form,
         }
         return render(request, self.template_name, context)
 
     def post(self, request, product_id):
-        monitor = Monitors.objects.get(monitor_id=product_id, user=request.user)
+        # Get the monitor data
+        monitor = UpdateMonitorProduct.get_monitor_instance(product_id)
 
         form = MonitorsForm(self.request.POST, self.request.FILES, instance=monitor)
 
@@ -468,7 +533,7 @@ class Update_Monitor_Product(View):
             monitor = form.save(commit=False)
             # Same logic as before for Cloudinary upload and processing
             selected_features_names = form.cleaned_data.get("choose_special_features")
-            print(selected_features_names)
+            print(f"selected_features_names----------{selected_features_names}")
 
             uploaded_images = {
                 "image_1": self.request.FILES.get("image_1"),
@@ -557,7 +622,11 @@ class Delete_Monitors_Product(View):
     def get(self, request, **kwargs):
         monitor_id = kwargs["product_id"]
         try:
-            monitor = Monitors.objects.get(monitor_id=monitor_id)
+            monitor = (
+                Monitors.objects.filter(monitor_id=monitor_id)
+                .select_related("user")
+                .first()
+            )
 
             if monitor.user == self.request.user:
                 monitor.delete()
@@ -574,64 +643,159 @@ class Delete_Monitors_Product(View):
 
 
 def List_View(request, model, filter_form, template_name):
-    item_list = model.objects.all()
-    filter = filter_form(request.GET, queryset=item_list)
 
-    item_ratings, rating_count = Calculate_Ratings.calculate_ratings(item_list)
+    item_list = None
+    context = None
+    content_type_id = None
 
-    paginated_items = paginate_items(request, item_list, 3)
+    if (
+        "filtered_condition" not in request.COOKIES
+        or "filtered_condition" not in request.session
+    ):
+        content_type_id = ContentType.objects.get_for_model(model).id
 
-    content_id = ContentType.objects.get(app_label="i", model="monitors").id
+    else:
+        if "filtered_condition" in request.COOKIES:
+            content_type_id = request.COOKIES["filtered_condition"]["content_type_id"]
+        else:
+            content_type_id = request.session["filtered_condition"]["content_type_id"]
 
-    context = {
-        "item_list": paginated_items,
-        "item_ratings": item_ratings,
-        "rating_count": rating_count,
-        "filter": filter,
-        "content_id": content_id,
-    }
-    return render(request, template_name, context)
+    # Create a Filter Form instance
+    if request.method == "POST":
+
+        filter_form = filter_form(request.POST)
+
+        if filter_form.is_valid():
+            item_list = filter_form.qs
+
+            post_data_dictionary = user_submitted_data_to_dictionary(filter_form)
+
+            # Paginate items
+            paginated_items = paginate_items(request, item_list, 30)
+
+            context = {
+                "item_list": paginated_items,
+                "filter": filter_form,
+                "content_id": content_type_id,
+            }
+
+            response = render(request, "partial_monitor.html", context)
+            response = storing_filtered_conditions_in_cookie(
+                request, response, post_data_dictionary, content_type_id
+            )
+            return response
+        else:
+            return redirect("i:MonitorListView")
+
+    if (
+        "HX-Request" in request.headers
+        and request.method == "GET"
+        and (
+            "filtered_conditions" in request.COOKIES
+            or "filtered_conditions" in request.session
+        )
+    ):
+
+        filtered_conditions = fetching_filtered_conditions_from_cookie(request)
+
+        query_dictionary = py_dictionary_to_query_dictionary(filtered_conditions)
+        # print(f"QueryDict in filter-GET----------{query_dictionary}")
+
+        filter_form = filter_form(query_dictionary)
+        item_list = filter_form.qs
+
+        paginated_items = paginate_items(request, item_list, 30)
+
+        context = {
+            "item_list": paginated_items,
+            "filter": filter_form,
+            "content_id": content_type_id,
+        }
+        return render(request, "partial_monitor.html", context)
+
+    else:
+
+        filter_form = filter_form()
+        item_list = filter_form.qs
+
+        # Paginate items
+        paginated_items = paginate_items(request, item_list, 30)
+
+        if request.headers.get("HX-Request"):
+            context = {"item_list": paginated_items}
+            return render(request, "partial_monitor.html", context=context)
+
+        context = {
+            "item_list": paginated_items,
+            "filter": filter_form,
+            "content_id": content_type_id,
+        }
+        # For normal requests, return the full template
+        return render(request, template_name, context)
 
 
 def Filter_List_View(request, model, filter_form_class, template_name):
+    filter_form = None
+
     if request.method == "POST":
-        filter_form = filter_form_class(request.POST or None)
-        filtered_queryset = None
+
+        filter_form = filter_form_class(request.POST)
 
         if filter_form.is_valid():
-            filtered_queryset = filter_form.qs
+            item_list = filter_form.qs
 
-            item_ratings, rating_count = Calculate_Ratings.calculate_ratings(
-                filtered_queryset
-            )
+            print(f"item_list type: {type(item_list)}")
+
+            # Cache only the IDs, not the full object
+            item_ids = list(item_list.values_list("name", flat=True))
+            cache.set("queryset_monitor_names", item_ids, timeout=60 * 15)
+
+            print(f"items_list---------- {item_list}")
+
             paginated_items = (
-                paginate_items(request, filtered_queryset, 3)
-                if filtered_queryset
-                else None
+                paginate_items(request, item_list, 30) if item_list else None
             )
+            print(f"paginated_items---------- {paginated_items}")
 
             context = {
                 "form": filter_form,
                 "item_list": paginated_items,
-                "item_ratings": item_ratings,
-                "rating_count": rating_count,
             }
 
-            return render(request, template_name, context)
+        return render(request, template_name, context)
+
+    else:
+        # Retrieve the cached IDs instead of the queryset
+        item_ids = cache.get("queryset_monitor_names", None)
+
+        if item_ids:
+            # Re-fetch the full queryset based on cached IDs
+            queryset = model.objects.filter(name=item_ids)
         else:
-            return JsonResponse({"error": "Form is not valid"}, status=400)
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+            queryset = model.objects.none()
+
+        # Paginate the filtered queryset
+        paginated_items = paginate_items(request, queryset, 30)
+
+        context = {
+            "form": filter_form,
+            "item_list": paginated_items,
+        }
+
+        return render(request, template_name, context)
 
 
 def paginate_items(request, items_list, num_items):
     paginator = Paginator(items_list, num_items)
-    page_number = request.GET.get("page")
+    page_number = request.GET.get("page", "1")
+
     try:
         paginated_items = paginator.page(page_number)
     except PageNotAnInteger:
         paginated_items = paginator.page(1)
     except EmptyPage:
         paginated_items = paginator.page(paginator.num_pages)
+
     return paginated_items
 
 
@@ -644,77 +808,43 @@ def monitor_filter_list(request):
 
 
 def monitor_detail_view(request, product_id):
-    monitor = Monitors.objects.get(monitor_id=product_id)
 
-    comments = monitor.product_review.all()
-
-    # Calculate the average rating, total ratings, and star ratings
-    average_rating = RatingCalculator.calculate_average_rating(monitor)
-    total_ratings = RatingCalculator.count_users_who_rated(monitor)
-
-    star_ratings = {}
-
-    for rating in [5, 4, 3, 2, 1]:
-        star_ratings[rating] = RatingCalculator.count_star_ratings(monitor, rating)
-    print(f"star_ratings{star_ratings}")
+    # fetch Monitor data, Reviews, Special Features linked to product_id
+    monitor_data = MonitorDetailViewHelperFunctions.getting_data(product_id)
+    monitor_data = monitor_data.first()
 
     # Calculate the width of rating bars
-    width_percentages = {}
-
-    for rating in [5, 4, 3, 2, 1]:
-        count = star_ratings.get(rating, 0)
-        width_percentages[rating] = (
-            count / total_ratings * 100 if total_ratings > 0 else 0
-        )
+    width_percentages = MonitorDetailViewHelperFunctions.calculate_width_percentages_for_rating_progress_bar(
+        monitor_data
+    )
     print(f"width_percentages{width_percentages}")
 
-    # make list of special features to pass in cookie
-    sp = monitor.special_features.all()
-    print(f"&&&&&&&&&&&&{sp}")
-    sp_list = []
-    for i in range(len(sp)):
-        sp_list.append(sp[i].name)
+    # star rating dictionary for progress bar
+    star_ratings = MonitorDetailViewHelperFunctions.creating_star_ratings_dictionary(
+        monitor_data
+    )
+    # prepare data for browsing_history session cookie
+    product_details = (
+        MonitorDetailViewHelperFunctions.preparing_data_for_browsing_history_cookie(
+            request, monitor_data
+        )
+    )
+    print(f"prodyct details---- {product_details}")
 
-    # add product image URL to session cookie
-    scheme = "https://" if request.is_secure() else "http://"
-    path = scheme + str(request.get_host()) + str(request.get_full_path())
-
-    # key, values in cookie
-    product_details = {
-        "name": monitor.name,
-        "price": str(monitor.price),
-        "rating": str(average_rating),
-        "image_url": str(monitor.image_1),
-        "path": path,
-        "special_features": sp_list,
-    }
+    # Add visted product to user browsing history
     add_product_to_browsing_history(request, product_details)
     zipped = your_browsing_history(request)
 
-    # Falt = True => queryset will be a list of objects else tuple
-    # It's useful when you want to retrieve specific fields from the database rather than entire model instances.
-    # When you use values_list(), you can specify which fields you want to retrieve
-
     print(
-        f"features----------------: {monitor.special_features.all().values_list('name', flat=True)}"
+        f"features-: {[feature.get_name_display() for feature in monitor_data.special_features.all()]}"
     )
+    for review in monitor_data.product_review.all():
+        print(f"review----------------: {review}")
 
-    context = {
-        "monitor": monitor,
-        "average_rating": average_rating,
-        "total_ratings": total_ratings,
-        "star_ratings": star_ratings,
-        "width_percentages": width_percentages,
-        # "sp": monitor.special_features.all(),  this will display names
-        # this will display names
-        # he get_name_display() method because it is a method available on the model instance.
-        # The method get_name_display() is automatically generated by Django for fields with choices defined.
-        "sp": [
-            feature.get_name_display() for feature in monitor.special_features.all()
-        ],
-        "comments": comments,
-        "zipped": zipped,
-    }
+    # Preparing context for template
+    context = MonitorDetailViewHelperFunctions.prepare_context(
+        monitor_data, star_ratings, width_percentages, zipped
+    )
 
     return render(request, "product_detail.html", context=context)
 
@@ -722,76 +852,67 @@ def monitor_detail_view(request, product_id):
 @method_decorator(login_required, name="dispatch")
 @method_decorator(user_comment_permission_required, name="dispatch")
 class Monitor_Detail_View_Add_Review_Form(View):
-    def all_images_uploaded_by_user(self, uploaded_images):
-        if all(uploaded_images.values()):
-            return True
-        else:
-            False
 
     def post(self, request, **kwargs):
         monitor_id = kwargs["product_id"]
 
-        monitor = Monitors.objects.get(monitor_id=monitor_id)
-        existing_review = Review.objects.filter(
-            user=request.user, product=monitor
-        ).exists()
-        if existing_review:
+        monitor = MonitorDetailViewAddReviewHelper.getting_data(monitor_id).first()
+
+        if monitor.user == self.request.user:
             messages.error(
                 request,
-                "You have already submitted a review for this book format.",
+                "You have already submitted a review",
             )
             return redirect("i:monitor_detail_view", product_id=monitor.monitor_id)
 
-        review_form = ReviewForm(request.POST)
+            # Check if images are uploaded
+        uploaded_images = {
+            "image_1": self.request.FILES["image_1"],
+            "image_2": self.request.FILES["image_2"],
+        }
+
+        if uploaded_images is None:
+            messages.info(self.request, "Please upload all images")
+            return redirect(
+                "i:monitor_add_review",
+                product_id=monitor.monitor_id,
+            )
+
+        review_form = ReviewForm(self.request.POST, files=uploaded_images)
         if review_form.is_valid():
             new_review = review_form.save(commit=False)
-            uploaded_images = {
-                "image_1": self.request.FILES["image_1"],
-                "image_2": self.request.FILES["image_2"],
+
+            transformation_options = {
+                "width": 75,
+                "height": 75,
+                "crop": "fill",
+                "gravity": "face",
+                "effect": "auto_contrast",
             }
 
-            if self.all_images_uploaded_by_user(uploaded_images):
-                transformation_options = {
-                    "width": 75,
-                    "height": 75,
-                    "crop": "fill",
-                    "gravity": "face",
-                    "effect": "auto_contrast",
-                }
+            for key, image_file in uploaded_images.items():
+                if image_file:
+                    image_data = upload(
+                        image_file,
+                        transformation=transformation_options,
+                        resource_type="image",
+                    )
+                    resized_image_url = image_data["url"]
+                    setattr(new_review, f"image_{key[-1]}", resized_image_url)
+                else:
+                    messages.info(
+                        self.request, "images did not uploaded properly, Try again!"
+                    )
+                    return redirect("i:monitor_add_review")
 
-                for key, image_file in uploaded_images.items():
-                    if image_file:
-                        image_data = upload(
-                            image_file,
-                            transformation=transformation_options,
-                            resource_type="image",
-                        )
-                        resized_image_url = image_data["url"]
-                        setattr(new_review, f"image_{key[-1]}", resized_image_url)
-                    else:
-                        messages.info(
-                            self.request, "images did not uploaded properly, Try again!"
-                        )
-                        return redirect("i:monitor_add_review")
-
-                new_review.user = request.user
-                new_review.product = monitor
-                new_review.save()
-                messages.success(request, "Review submitted successfully.")
-                return redirect("i:add_review", product_id=monitor.monitor_id)
-            else:
-                messages.info(
-                    self.request, "Please upload all images properly, Try again!"
-                )
-                return redirect(
-                    "i:monitor_detail_view_add_review_form",
-                    product_id=monitor.monitor_id,
-                )
+            new_review.user = request.user
+            new_review.product = monitor
+            new_review.save()
+            messages.success(request, "Review submitted successfully.")
+            return redirect("i:add_review", product_id=monitor.monitor_id)
         else:
             messages.error(request, "Form is not valid.")
-            return redirect(
-                "i:monitor_detail_view_add_review_form", product_id=monitor.monitor_id
-            )
+            return redirect("i:monitor_add_review", product_id=monitor.monitor_id)
 
     def get(self, request, **kwargs):
         context = {"form": ReviewForm()}
@@ -825,7 +946,7 @@ class Monitor_Detail_View_Update_Review_Form(View):
                 "image_1": self.request.FILES.get("image_1"),
                 "image_2": self.request.FILES.get("image_2"),
             }
-            print(f"$$$$$$$$$$$${uploaded_images}")
+            # print(f"$$$$$$$$$$$${uploaded_images}")
 
             if self.all_images_uploaded_by_user(uploaded_images):
                 transformation_options = {
@@ -899,11 +1020,21 @@ class Monitor_Detail_View_Delete_Review_Form(View):
         comment_id = kwargs["review_id"]
         monitor_id = kwargs["product_id"]
 
-        monitor = Monitors.objects.get(monitor_id=monitor_id)
-        comment = Review.objects.get(id=comment_id, product=monitor)
+        try:
+            monitor = Monitors.objects.get(monitor_id=monitor_id)
+        except Monitors.DoesNotExist:
+            messages.error(self.request, "Monitor does not exists")
+            return redirect("Homepage:Home")
+
+        try:
+            comment = Review.objects.get(id=comment_id, product=monitor)
+        except Review.DoesNotExist:
+            messages.error(self.request, "Review does not exists")
+            return redirect("i:add_review", product_id=monitor_id)
 
         if comment.user == self.request.user:
             comment.delete()
+
             messages.success(self.request, "Your comment has been deleted.")
             return redirect("i:add_review", product_id=monitor_id)
         else:

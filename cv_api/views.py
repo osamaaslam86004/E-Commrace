@@ -5,8 +5,13 @@ from typing import Any
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.http import (HttpResponse, HttpResponsePermanentRedirect,
-                         HttpResponseRedirect, JsonResponse, response)
+from django.http import (
+    HttpResponse,
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+    response,
+)
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -14,12 +19,22 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from cv_api.create_read_update_delete_user import TokenUtils
-from cv_api.forms import (EducationfoForm, JobAccomplishmentfoForm, JobfoForm,
-                          OverviewForm, PersonalInfoForm, ProgrammingAreaForm,
-                          ProjectsForm, PublicationForm,
-                          SkillAndSkillLevelForm)
+from cv_api.forms import (
+    EducationfoForm,
+    JobAccomplishmentfoForm,
+    JobfoForm,
+    OverviewForm,
+    PersonalInfoForm,
+    ProgrammingAreaForm,
+    ProjectsForm,
+    PublicationForm,
+    SkillAndSkillLevelForm,
+)
 from cv_api.models import PersonalInfo, TokensForUser
 from Homepage.models import CustomUser
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -264,13 +279,11 @@ class RetrieveCVDataToUpdate(View):
             return None
 
     def get(self, request, **kwargs):
-        user_id = self.request.user.id
-        if (
-            not "sessionid" not in request.session
-            or request.session["user_id"] is None
-            or "user_id" not in request.session
-        ):
+
+        if not request.session or not "sessionid" in request.session:
             return redirect("Homepage:login")
+
+        user_id = self.request.user.id
 
         access_token = self.get_token_from_database(user_id)
         if access_token:
@@ -739,8 +752,6 @@ class DeleteCVForUser(View):
 
         try:
             response = requests.delete(url, headers=headers, verify=False)
-            # response.raise_for_status()
-            print(f"response.json() delte ------ {response.json()}")
 
             if response.status_code == 204 or response.status_code == 200:
                 # Get all PersonalInfo instances for current user
@@ -762,11 +773,13 @@ class DeleteCVForUser(View):
                     messages.success(request, "Cv DELETED successfully!")
                 else:
                     messages.info(request, "Fail to Delete Cv, Try Again!")
+
                     # get the required instance
                     required_instance = instances_of_current_user.filter(
                         api_id_of_cv=response.json()["data"]["id"],
                         api_user_id_for_cv=response.json()["data"]["user_id"],
                     ).first()
+
                     required_instance.status = "FAILED"
 
                     required_instance.save()

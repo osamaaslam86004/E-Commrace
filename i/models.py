@@ -138,9 +138,6 @@ class Servers(models.Model):
         related_name="server_product_category",
     )
 
-    def __str__(self):
-        return self.name
-
 
 class Special_Features(models.Model):
     SPECIAL_FEATURES_CHOICES = [
@@ -225,9 +222,6 @@ class Monitors(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="monitor_user"
     )
-
-    def __str__(self):
-        return f"{self.name}- {self.max_display_resolution} Pixels- {self.mounting_type}- {self.monitor_type}- {self.screen_size}"
 
 
 class LaptopAccessories(models.Model):
@@ -723,6 +717,3 @@ class Review(models.Model):
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - {self.product.name} Review"

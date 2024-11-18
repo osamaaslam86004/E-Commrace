@@ -1,8 +1,7 @@
 import json
 from decimal import Decimal  # Import Decimal module
 
-from django.db.models.fields.files import \
-    ImageFieldFile  # Import ImageFieldFile
+from django.db.models.fields.files import ImageFieldFile  # Import ImageFieldFile
 
 MAX_HISTORY_ITEMS = 7  # Maximum number of items to store in the browsing history
 MAX_COOKIE_SIZE = 4000  # Maximum size of the cookie data in bytes (4KB)
@@ -56,16 +55,22 @@ def your_browsing_history(request):
         browsing_history = request.session.get("browsing_history")
         names = browsing_history.get("name")
         prices = browsing_history.get("price")
-        ratings = browsing_history.get("rating")
+        ratings = browsing_history.get("rating", None)
         product_urls = browsing_history.get("image_url")
         product_path = browsing_history.get("path")
-        special_features = browsing_history.get("special_features")
+        special_features = browsing_history.get("special_features", None)
+
+        # Initialize list of rating
+        rating = []
+        # storing values in list
+        for string in ratings:
+            rating.append(Decimal(string))
 
         zipped = list(
             zip(
                 names,
                 prices,
-                [Decimal(string) for string in ratings],
+                rating,
                 product_urls,
                 product_path,
                 special_features,

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from re import T
+from xmlrpc.client import INTERNAL_ERROR
 
 from decouple import config
 
@@ -63,6 +64,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    "grappelli",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -76,23 +78,29 @@ INSTALLED_APPS = [
     "checkout",
     "cv_api",
     "django_extensions",
-    # "django_htmx",
     "crispy_forms",
     "crispy_bootstrap5",
     "django_bootstrap5",
-    "cloudinary_storage",
     "cloudinary",
     "ckeditor",
     "book_",
     "django_twilio",
+    "debug_toolbar",
     "axes",
     "phonenumber_field",
     "django_countries",
+    "django_htmx",
 ]
+
+
+DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
+INTERNAL_IPS = ["127.0.0.1"]
 
 SITE_ID = 1
 
 MIDDLEWARE = [
+    # "iii.rate_limit_middleware.GlobalRateLimitMiddleware",  # Global Rate Limit
+    "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -101,6 +109,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "iii.urls"
@@ -126,27 +136,50 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "E-commrace",
+            "USER": "postgres",
+            "PASSWORD": "osama1122334455!",
+            "HOST": "localhost",
+            "PORT": "5432",
+            "OPTIONS": {
+                "options": "-c statement_timeout=600000",
+            },
+        }
     }
-}
-
 
 # DATABASES = {
 #     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("POSTGRES_DATABASE"),
-#         "USER": config("POSTGRES_USER"),
-#         "PASSWORD": config("POSTGRES_PASSWORD"),
-#         "HOST": config("POSTGRES_HOST"),
-#         "PORT": "5432",
-#         "OPTIONS": {
-#             "sslmode": "require",
-#         },
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
 #     }
 # }
+# else:
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.postgresql",
+#             "NAME": config("AMAZON_POSTGRES_DATABASE"),
+#             "USER": config("AMAZON_POSTGRES_USER"),
+#             "PASSWORD": config("AMAZON_POSTGRES_PASSWORD"),
+#             "HOST": config("AMAZON_POSTGRES_HOST"),
+#             "PORT": "5432",
+#             "OPTIONS": {
+#                 "sslmode": "require",
+#                 "options": "-c statement_timeout=60000",
+#             },
+#         }
+#     }
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        # "LOCATION": "unique-snowflake",
+    }
+}
 
 
 # Password validation
@@ -158,9 +191,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        #'OPTIONS': {
-        #'min_length': 12,
-        # },
+        "OPTIONS": {
+            "min_length": 8,
+        },
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -189,9 +222,14 @@ USE_TZ = True
 STATIC_URL = "/static/"
 # STATICFILES_DIRS is for directories where Django will search for additional static files
 # that aren't tied to any specific app. These files can be served during development.
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+# STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+# STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+# Location of static files during development
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+# Directory where all static files will be collected in production
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -213,6 +251,13 @@ SESSION_COOKIE_AGE = 7200000
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
+
+# Celery settings : Redis as the broker
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 
 ###############################Cloudinary Settings For Image Storage###########################
@@ -252,11 +297,15 @@ else:
         api_secret=CLOUDINARY_API_SECRET,
         api_proxy="http://proxy.server:3128",
     )
-MEDIA_URL = "/media/"
+if DEBUG:
+    MEDIA_URL = "/media/"
+else:
+    MEDIA_URL = f'https://res.cloudinary.com/{config("CLOUDINARY_CLOUD_NAME")}/media/'
+
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
-###########################----------Security Related Settings-----------########################################
+###########################----------Security Related Settings-----------####################
 
 # Uncomment these settings only in production
 if not DEBUG:
@@ -264,6 +313,72 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
     SECURE_SSL_REDIRECT = True
+
+
+# Content-Security Header settings
+CSP_BASE_URI = (
+    "'self'",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://stackpath.bootstrapcdn.com",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",
+    "https://fontawesome.com/",
+)
+CSP_IMG_SRC = (
+    "'self'",  # Allow images from the same domain
+    "https://res.cloudinary.com",  # Current allowed sources
+    "https://mdbcdn.b-cdn.net",
+    "https://dummyimage.com",
+    "https://fastly.picsum.photos",
+    "https://picsum.photos",  # Allow images from picsum.photos
+    "https://placekitten.com",
+)
+
+CSP_STYLE_SRC = (
+    "'self'",  # Allow styles from the same domain
+    "'unsafe-inline'",  # Allow inline styles (if required)
+    "https://cdn.jsdelivr.net",  # Allow styles from JSDelivr (for Bootstrap)
+    "https://stackpath.bootstrapcdn.com",  # Allow Bootstrap CDN
+    "https://fonts.googleapis.com",  # Allow Google Fonts
+    "https://maxcdn.bootstrapcdn.com",  # Allow MaxCDN (Bootstrap)
+    "https://cdnjs.cloudflare.com",  # Allow FontAwesome from Cloudflare
+)
+
+
+CSP_FONT_SRC = (
+    "'self'",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",
+    "https://fontawesome.com",
+    "https://maxcdn.bootstrapcdn.com",
+)
+
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "'unsafe-inline'",  # Allows inline scripts (consider removing if possible)
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js",
+    "https://unpkg.com/htmx.org@1.9.10",
+    "https://code.jquery.com",  # For jQuery CDN
+    "https://cdn.jsdelivr.net/npm/@popperjs",  # For Popper.js CDN
+    "https://stackpath.bootstrapcdn.com/bootstrap",  # For Bootstrap
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",  # FontAwesome
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js",
+    "https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js",  # Add Popper.js
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js",  # Add Bootstrap 4.4.1
+    "https://unpkg.com/htmx.org@1.9.10",
+    "https://code.jquery.com",
+    "https://cdn.jsdelivr.net/npm/@popperjs",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js",
+    "https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js",
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js",
+)
+
 
 ###############################-----------Set Login rate limit For Users-------------#############################
 SILENCED_SYSTEM_CHECKS = ["axes.W003"]
@@ -297,6 +412,7 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://diverse-intense-whippet.ngrok-free.app",
     "https://osama11111.pythonanywhere.com",
+    "http://127.0.0.1",
 ]
 
 
@@ -466,11 +582,12 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "level": "DEBUG",  # Set the level to DEBUG for the console handler
         },
     },
     "root": {
         "handlers": ["console"],
-        "level": "DEBUG",
+        "level": "DEBUG",  # Set this to DEBUG to capture all debug logs
     },
     "loggers": {
         "axes": {
@@ -478,5 +595,15 @@ LOGGING = {
             "level": "ERROR",  # Set the level to ERROR to suppress AXES logs
             "propagate": True,
         },
+        "book_": {  # Replace with the relevant module or class
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        # "django": {
+        #     "handlers": ["console"],
+        #     "level": "DEBUG",  # Ensure Django's logger captures DEBUG logs
+        #     "propagate": True,
+        # },
     },
 }

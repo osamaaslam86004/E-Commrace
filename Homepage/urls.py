@@ -2,11 +2,20 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from Homepage import views
-from Homepage.views import (AdminProfilePageView, CSRProfilePageView,
-                            CustomerProfilePageView, CustomLoginView,
-                            CustomLogoutView, DeleteUserAccount, HomePageView,
-                            ManagerProfilePageView, SellerProfilePageView,
-                            SignupView)
+from Homepage.views import (
+    AdminProfilePageView,
+    CSRProfilePageView,
+    CustomerProfilePageView,
+    CustomLoginView,
+    CustomLogoutView,
+    DeleteUserAccount,
+    HomePageView,
+    ManagerProfilePageView,
+    SellerProfilePageView,
+    SignupView,
+    PasswordResetOptionsView,
+    CustomPasswordResetConfirmViaOTPView,
+)
 
 # from axes.decorators import axes_dispatch
 
@@ -44,7 +53,18 @@ urlpatterns = [
     ),
     path("google-drive/", views.read_user_document, name="google_drive"),
     path("send-email/", views.send_email, name="send_email"),
-    path("send-msg/", views.send_sms, name="send_sms"),
+    path("send-msg/", views.validate_user, name="send_sms"),
+    path("validate-otp/", views.validate_otp_view, name="validate_otp_view"),
+    path(
+        "validate-otp/reset/",
+        views.CustomPasswordResetConfirmViaOTPView.as_view(),
+        name="password_reset_confirm_via_otp",
+    ),
+    path(
+        "password_reset/options/",
+        PasswordResetOptionsView.as_view(),
+        name="password_reset_options",
+    ),
     path("password_reset/", views.custom_password_reset, name="password_reset"),
     path(
         "password_reset/done/",

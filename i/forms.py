@@ -1,7 +1,9 @@
+from dataclasses import fields
+from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.core.exceptions import ValidationError
-from ckeditor.widgets import CKEditorWidget
 
+from i.custom_validators import file_size_validator, image_validator
 from i.models import (
     PDUS,
     Adaptors,
@@ -221,6 +223,23 @@ class SpecialFeaturesForm(forms.ModelForm):
 
 
 class MonitorsForm(forms.ModelForm):
+
+    image_1 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+    image_2 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+    image_3 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+
     monitor_type_choices = [
         ("GAMING_MONITOR", "Gaming Monitor"),
         ("CARE_MONITOR", "Care Monitor"),
@@ -394,24 +413,6 @@ class MonitorsForm(forms.ModelForm):
                 "Item weight must greater than 0 and less than 9999999999."
             )
         return price
-
-    # def clean_iamge_1(self):
-    #     image_1 = self.cleaned_data.get("image_1")
-    #     if image_1 is None:
-    #         return image_1
-    #     return image_1
-
-    # def clean_iamge_2(self):
-    #     image_2 = self.cleaned_data.get("image_2")
-    #     if image_2 is None:
-    #         return image_2
-    #     return image_2
-
-    # def clean_iamge_3(self):
-    #     image_3 = self.cleaned_data.get("image_3")
-    #     if image_3 is None:
-    #         return image_3
-    #     return image_3
 
 
 class LaptopAccessoriesForm(forms.ModelForm):

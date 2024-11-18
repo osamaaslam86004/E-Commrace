@@ -1,0 +1,53 @@
+{% extends 'blog_base.html' %}
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+{% block content %}
+
+<div id="htmx-container">
+  <div class="card-container row row-cols-1 row-cols-md-3" style="margin-left:41px; margin-top:41px;">
+    {% for post in blog_posts %}
+
+    <div class="col mb-4">
+      <div class="card">
+        <div class="image-container" style="height: 100px; width:100px;">
+          <img class="card-img-top"
+            src="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+            alt="Card image cap">
+        </div>
+        <div class="card-body">
+          <div>
+            <h5 class="card-title">Post Title: {{post.title}}</h5>
+            <p class="card-text"><b>Post Meta</b>: {{post.meta_description}}</p>
+            <p class="card-text"><b>Author</b>: {{post.post_admin}}</p>
+          </div>
+
+          <div style="margin-top: 3px; margin-bottom:15px;">
+            <span><small class="text-muted" style="margin-right: 15px;"><strong>Created:</strong>
+                {{post.created_on}}</small></span><br>
+            <span><small class="text-muted"><strong>Last Modified:</strong>
+                {{post.modified_on }}</small></span>
+          </div>
+
+          <a href="{% url 'blog:live_post' slug=post.slug %}" class="btn btn-primary">View</a>
+        </div>
+      </div>
+    </div>
+
+    {% endfor %}
+
+  </div>
+  <div>
+
+
+
+    {% endblock %}

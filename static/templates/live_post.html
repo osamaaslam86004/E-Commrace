@@ -1,0 +1,135 @@
+{% extends 'blog_base.html' %}
+
+{% load static %}
+{# Load the tag library #}
+{%load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+{% block content %}
+
+{% if form.errors %}
+<div class="alert alert-danger" role="alert">
+    <strong>Error:</strong>
+    <ul>
+        {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <li>{{field}}---{{ error }}</li>
+        {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card mb-4" style="max-height: 900px; overflow-y: auto;">
+                <div class="card-body">
+                    <h2 class="card-title">{{ blog_post.title }}</h2>
+                    <p class="card-text"><strong>Meta Description:</strong> {{ blog_post.meta_description }}</p>
+                    <p class="card-text"><strong>Author:</strong> {{ blog_post.post_admin }}</p>
+                    <div style="display: flex;">
+                        <p class="card-text" style="margin-right: 15px;"><strong>Created:</strong>
+                            {{blog_post.created_on}}</p>
+                        <p class="card-text"><strong>Last Modified:</strong> {{ blog_post.modified_on }}</p>
+                    </div>
+                    <div style="width: 700px; height:300px;">
+                        {{blog_post.content|safe}}
+                    </div>
+                </div>
+            </div>
+
+            <h3>Comments:</h3>
+            <hr>
+
+            {% if comments %}
+            {% for comment in comments %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p><strong>User: </strong>{{ comment.comments_user.username }}</p>
+                    <p>{{ comment.body }}</p>
+                    <div style="display: flex;">
+                        <p style="margin-right: 9px;"><small class="text-muted">created: {{ comment.created_on}}</small>
+                        </p>
+                        <p><small class="text-muted">last modified: {{ comment.modified_on }}</small></p>
+                    </div>
+                </div>
+
+                <div class="edit-delete-container" style="display: flex;">
+
+                    <div class="edit-container" style="margin-bottom:11px; width:59px;margin-left:11px;">
+                        <form method="GET"
+                            action="{% url 'blog:update_comment' slug=blog_post.slug comment_id=comment.id %}">
+                            {% bootstrap_button content="Edit" type="submit" %}
+                        </form>
+                    </div>
+
+
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#exampleModal{{ comment.id }}"
+                        style="margin-bottom:11px; width:79px;margin-left:11px; height:41px;">
+                        Delete
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal{{ comment.id }}" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalLabel{{ comment.id }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel{{ comment.id }}">Confirmation Required
+                                    </h5>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Confirmation message -->
+                                    <p>Are you sure you want to delete this comment?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                    <a href="{% url 'blog:delete_comment' slug=blog_post.slug comment_id=comment.id %}"
+                                        class="btn btn-primary">Delete Comment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>No comments yet.</p>
+            {% endif %}
+
+            <!-- Add new comment form -->
+            <form method="post" action="{% url 'blog:live_post' slug=blog_post.slug %}" style="margin-bottom: 71px;">
+                {% csrf_token %}
+                {{form.media}}
+                <div class="mb-3">
+                    <label for="comment" class="form-label">Your Comment:</label>
+
+                    <textarea class="form-control" name="body" rows="3" required></textarea>
+
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock content %}

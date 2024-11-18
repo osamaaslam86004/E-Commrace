@@ -1,3 +1,5 @@
+import logging
+
 from cloudinary.uploader import upload
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -23,6 +25,8 @@ from i.decorators import (check_user_linked_to_comment,
                           user_comment_permission_required)
 from i.models import ProductCategory
 
+logger = logging.getLogger(__name__)
+
 
 class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
     template_name = "subcategory_form.html"
@@ -38,6 +42,8 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        logger.info(f"Form data received: {self.request.POST}")
+
         book_author_name_form = BookAuthorNameForm(self.request.POST)
         book_format_form = form
 
@@ -65,6 +71,8 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
                 "image_3": self.request.FILES.get("image_3"),
             }
 
+            logger.debug(f"uploaded_images: {uploaded_images}")
+
             if self.all_images_uploaded_by_user(uploaded_images):
                 book_author.save()
                 transformation_options = {
@@ -75,8 +83,13 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
                     "effect": "auto_contrast",
                 }
 
+                logger.debug(f"transformation_options: {transformation_options}")
+
                 for key, image_file in uploaded_images.items():
-                    if image_file:
+
+                    try:
+                        logger.debug(f"image_file: {image_file}")
+
                         image_data = upload(
                             image_file,
                             transformation=transformation_options,
@@ -84,11 +97,24 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
                         )
 
                         resized_image_url = image_data["url"]
-                        setattr(book_format, f"image_{key[-1]}", resized_image_url)
-                    else:
+                        logger.debug(f"resized_image_url: {resized_image_url}")
+
+                        try:
+
+                            setattr(book_format, f"image_{key[-1]}", resized_image_url)
+
+                        except Exception as e:
+                            logger.debug(f"Ecveption: {e}")
+
+                            messages.error(self.request, "Failed to save images.")
+                            return self.form_invalid(form)
+
+                    except Exception as e:
+                        logger.debug(f"exception: {str(e)}")
+
                         messages.info(
                             self.request,
-                            "Images did not upload properly, try again!",
+                            f"Images did not upload properly, try again! {str(e)}",
                         )
                         return self.form_invalid(form)
 
@@ -99,9 +125,12 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
                     book_format.product_category = book_category
                     book_format.book_author_name = book_author
                     book_format.save()
+
                 except Exception as e:
                     book_author.delete()
-                    print(f"Error: {e}")
+
+                    logger.debug(f"Error: {e}")
+
                     messages.error(self.request, "Failed to save book format.")
                     return self.form_invalid(form)
             else:
@@ -111,6 +140,7 @@ class Create_Book_Formats_View(SuccessMessageMixin, CreateView):
             # Print form errors
             print("Author form errors:", book_author_name_form.errors)
             print("Format form errors:", book_format_form.errors)
+
             messages.error(self.request, "Form not valid")
             return self.form_invalid(form)
 
@@ -286,8 +316,15 @@ class Delete_Book_Format_View(View, PermissionRequiredMixin):
 
     def get(self, request, **kwargs):
         book_object = BookFormat.objects.get(id=kwargs["pk"])
-        BookFormat.objects.get(id=kwargs["pk"]).delete()
-        messages.success(self.request, f"Your Book with {book_object} is deleted")
+        try:
+            BookFormat.objects.get(id=kwargs["pk"]).delete()
+            messages.success(self.request, f"Your Book with {book_object} is deleted")
+
+        except BookFormat.DoesNotExist:
+            messages.error(
+                self.request, f"The Book you are trying to delete does not exist."
+            )
+
         return redirect("i:list_of_books_for_user")
 
 

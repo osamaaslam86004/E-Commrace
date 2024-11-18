@@ -7,9 +7,15 @@ from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomUser,
-                             ManagerProfile, SellerProfile, UserProfile)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
 
 
 class SignUpForm(UserCreationForm):
@@ -127,20 +133,28 @@ class CustomPasswordResetForm(forms.Form):
         ),
     )
 
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     new_password1 = cleaned_data.get("new_password1")
-    #     new_password2 = cleaned_data.get("new_password2")
-
-    #     if new_password1 and new_password2 and new_password1 != new_password2:
-    #         raise ValidationError({
-    #             "new_password2": "The two password fields must match.",
-    #         })
-
 
 class UserProfileForm(forms.ModelForm):  # no need to validate max_length
     #  this model field will allow only max_character in the form
     # if user try, then django form rendering will prevent this
+
+    # phone number in GET: dict_items([('full_name', 'osama'), ('age', 18), ('gender', 'Male'),
+    # ('phone_number', PhoneNumber(country_code=92, national_number=3074649892, extension=None,
+    # italian_leading_zero=None, number_of_leading_zeros=None, country_code_source=1,
+    # preferred_domestic_carrier_code=None)), ('city', 'lahore'), ('country', Country(code='PK')),
+    # ('postal_code', '54000'), ('shipping_address', 'House no. 237 block G-4 Johar Town')])
+
+    phone_number = PhoneNumberField(
+        # Comment out Widget During Testing Phase
+        widget=PhoneNumberPrefixWidget(
+            attrs={"placeholder": "Enter your phone number"}
+        ),
+        help_text="Include country code. For example: +1 123-456-7890",
+        error_messages={
+            "invalid": "Enter a valid phone number with valid country code."
+        },
+    )
+
     GENDER_CHOICES = UserProfile.GENDER_CHOICES
     gender = forms.ChoiceField(
         choices=GENDER_CHOICES,
@@ -172,7 +186,6 @@ class UserProfileForm(forms.ModelForm):  # no need to validate max_length
             "full_name": "Full Name",
             "age": "Age",
             "gender": "Gender",
-            "phone_number": "Phone Number",
             "city": "City",
             "country": "Country",
             "postal_code": "Postal Code",
@@ -191,7 +204,6 @@ class UserProfileForm(forms.ModelForm):  # no need to validate max_length
             "shipping_address": forms.TextInput(
                 attrs={"placeholder": "Enter shipping address"}
             ),
-            "phone_number": PhoneNumberPrefixWidget(),
         }
         help_texts = {
             "full_name": "Enter your full name as it appears on official documents.",

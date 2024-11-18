@@ -20,6 +20,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from debug_toolbar.toolbar import debug_toolbar_urls
+
 urlpatterns = [
     path("blog/", include(("blog.urls", "blog"))),
     path("", include(("book_.urls", "book_"))),
@@ -28,7 +30,11 @@ urlpatterns = [
     path("", include(("cv_api.urls", "cv_api"))),
     path("", include(("Homepage.urls", "Homepage"))),
     path("", include(("i.urls", "i"))),
+    path("grappelli/", include("grappelli.urls")),  # grappelli URLS
     path("admin/", admin.site.urls),
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+urlpatterns += debug_toolbar_urls()

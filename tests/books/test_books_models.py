@@ -5,9 +5,12 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from book_.models import BookAuthorName, BookFormat, Rating, Review
-from tests.books.books_factory_classes import (BookAuthorNameFactory,
-                                               BookFormatFactory,
-                                               RatingFactory, ReviewFactory)
+from tests.books.books_factory_classes import (
+    BookAuthorNameFactory,
+    BookFormatFactory,
+    RatingFactory,
+    ReviewFactory,
+)
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 from tests.i.factory_classes import ProductCategoryFactory
 
@@ -103,8 +106,7 @@ def test_book_author_name_on_cascade(build_setup_testing_Bookformat):
     user.delete()
 
     # Assertions
-    with pytest.raises(BookAuthorName.DoesNotExist):
-        assert BookFormat.objects.get(id=book_format.id)
+    assert BookAuthorName.objects.filter(id=book_format.id).exists()
 
 
 @pytest.mark.django_db

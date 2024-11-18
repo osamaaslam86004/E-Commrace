@@ -1,14 +1,13 @@
+import json
 from collections import Counter
 from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from cart.cart_items import add_product_to_cart_history, your_cart_items
 from cart.models import Cart, CartItem
-from checkout.models import Payment
 
 
 def add_to_cart(request, content_id, product_id):
@@ -21,37 +20,44 @@ def add_to_cart(request, content_id, product_id):
 
 
 def remove_from_cart(request, content_id, product_id):
+
     if request.method == "GET":
+
         if "user_id" and "cart_items" in request.session:
             content_type = ContentType.objects.get_for_id(content_id)
-            # cart = Cart.objects.get(user=request.user)
 
             cart = (
                 Cart.objects.filter(user=request.user)
                 .exclude(cart_payment__isnull=False)
                 .select_related("user")
             )
+            print(f"cart: {cart}")
 
             cart = cart.first()
 
-            cart_item = CartItem.objects.get(
+            cart_item = CartItem.objects.filter(
                 cart=cart, content_type=content_type, object_id=product_id
-            )
-            if cart_item.quantity > 1:
-                cart_item.quantity = cart_item.quantity - 1
-            else:
-                cart_item.delete()
+            ).first()
+
+            print(f"cartitems before delete: {cart_item}")
 
             # Update cart totals
             cart.subtotal = cart.subtotal - cart_item.price
             cart.total = cart.total - cart_item.price
             cart.save()
-            cart_item.save()
 
-            # delete product and content type from the cookie
+            if cart_item.quantity > 1:
+                cart_item.quantity = cart_item.quantity - 1
+                cart_item.save()
+
+            else:
+                cart_item.delete()
+
             cookie_cart = request.session.get("cart_items")
+            print(f"cookie before update: {cookie_cart}")
+
             prompted_list = [content_id, product_id]
-            print(f"&&&&&&&&&&&&&&&{prompted_list}")
+            print(f"prompted list: {prompted_list}")
 
             # 2. Identify the index of the list that matches the prompted list
             index_to_remove = None
@@ -60,35 +66,39 @@ def remove_from_cart(request, content_id, product_id):
                     index_to_remove = i
                     break
 
+            print(f"index to remove: {index_to_remove}")
+
             # 3. If found, remove that list from the cart_items list
             if index_to_remove is not None:
                 del cookie_cart[index_to_remove]
-            print(f"%%%%%%%%%%%%5{cookie_cart}")
+                print(f"cookie after update: {cookie_cart}")
 
             response = redirect("cart:cart_view")
             # response.set_cookie("sessionid", {"cart_items": cookie_cart}, httponly=True)
             request.session["cart_items"] = cookie_cart
-            print(f"^^^^^^^^^^^^^^^6{request.session.get('cart_items')}")
-            return response
 
+            return response
+        else:
+            return redirect("cart:cart_view")
     else:
-        return JsonResponse({"message": "Invalid request"})
+        return redirect("cart:cart_view")
 
 
 def cart_view(request):
     if "user_id" in request.session and "cart_items" in request.session:
+
         cart_items = your_cart_items(request)
 
-        # cart = Cart.objects.get(user=request.user)
-        # if cart:
-        #     cart_items_ = cart.cartitem_set.all()
+        print(f"cart_items from cookie: {cart_items}")
 
         Content_Type_id = []
         product_id = []
 
-        for items in cart_items:
-            Content_Type_id.append(items[0])
-            product_id.append(items[1])
+        for item in cart_items:
+            print(f"item: {item}")
+
+            Content_Type_id.append(item[0])
+            product_id.append(item[1])
 
         # Combine content_type_id and product_id into tuples
         combined_data = list(zip(Content_Type_id, product_id))
@@ -105,7 +115,8 @@ def cart_view(request):
             else:
                 product = content_type.get_object_for_this_type(id=key[1])
             results.append((count, key[0], key[1], product))
-        print(results)
+
+        print(f"results: {results}")
 
         cart_total = 0
         for item in results:
@@ -116,8 +127,6 @@ def cart_view(request):
             request,
             "cart.html",
             {
-                # "cart_items": cart_items_,
-                # "cart": cart,
                 "cart_items": len(results),
                 "sub_total": cart_total,
                 "total_amount": cart_total + 53,

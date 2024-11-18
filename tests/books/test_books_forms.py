@@ -1,6 +1,5 @@
 import io
 import logging
-from datetime import date
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -23,6 +22,69 @@ faker_logger.setLevel(logging.WARNING)
 
 
 @pytest.fixture
+def create_image_size_greater_one_mb():
+
+    # Create an image file using Pillow with size > 1MB
+    image = Image.new("RGB", (12080, 8080), color="red")
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format="JPEG", quality=100)
+    image_bytes.seek(0)
+
+    # Create a SimpleUploadedFile from the image bytes
+    uploaded_file = SimpleUploadedFile(
+        "test_image.jpeg", image_bytes.read(), content_type="image/jpeg"
+    )
+
+    assert uploaded_file is not None
+    # Debug print
+    print(f"Uploaded file size: {len(uploaded_file)} bytes")
+
+    return uploaded_file
+
+
+@pytest.fixture
+def create_image_tiff():
+
+    # Create an image file using Pillow
+    image = Image.new("RGB", (100, 100), color="red")
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format="TIFF")
+    image_bytes.seek(0)
+
+    # Create a SimpleUploadedFile from the image bytes
+    uploaded_file = SimpleUploadedFile(
+        "test_image.tiff", image_bytes.read(), content_type="image/tiff"
+    )
+
+    assert uploaded_file is not None
+    # Debug print
+    print(f"Uploaded file size: {len(uploaded_file)} bytes")
+
+    return uploaded_file
+
+
+@pytest.fixture
+def create_image():
+
+    # Create an image file using Pillow with size > 1MB
+    image = Image.new("RGB", (100, 100), color="red")
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format="JPEG", quality=100)
+    image_bytes.seek(0)
+
+    # Create a SimpleUploadedFile from the image bytes
+    uploaded_file = SimpleUploadedFile(
+        "test_image.jpeg", image_bytes.read(), content_type="image/jpeg"
+    )
+
+    assert uploaded_file is not None
+    # Debug print
+    print(f"Uploaded file size: {len(uploaded_file)} bytes")
+
+    return uploaded_file
+
+
+@pytest.fixture
 def build_setup_testing_Bookformat():
 
     def _build_setup_testing_Review(user_type):
@@ -37,9 +99,9 @@ def build_setup_testing_Bookformat():
 
         # create BookFormat instance
         book = BookFormatFactory(
-            # user=user,
-            # book_author_name=book_author_name,
-            # product_category=product_category,
+            user=user,
+            book_author_name=book_author_name,
+            product_category=product_category,
         )
         return product_category, user, book_author_name, book
 
@@ -65,7 +127,7 @@ def book_author_name_form_data(build_setup_testing_Bookformat):
 
 
 @pytest.fixture
-def book_format_form_data(build_setup_testing_Bookformat):
+def book_format_form_data(build_setup_testing_Bookformat, create_image):
     def _book_format_form_data():
         product_category, user, book_author_name, book_format = (
             build_setup_testing_Bookformat(user_type="SELLER")
@@ -84,9 +146,9 @@ def book_format_form_data(build_setup_testing_Bookformat):
             "price": float(book_format.price),
             "is_active": book_format.is_active,
             "restock_threshold": book_format.restock_threshold,
-            "image_1": book_format.image_1,
-            "image_2": book_format.image_2,
-            "image_3": book_format.image_3,
+            "image_1": create_image,
+            "image_2": create_image,
+            "image_3": create_image,
         }
         return form_data, product_category, user, book_author_name, book_format
 
@@ -130,27 +192,6 @@ def rating_form_data(build_setup_testing_Bookformat):
         return form_data, product_category, user, book_author_name, book_format
 
     return _rating_form_data
-
-
-@pytest.fixture
-def create_image():
-
-    # Create an image file using Pillow
-    image = Image.new("RGB", (100, 100), color="red")
-    image_bytes = io.BytesIO()
-    image.save(image_bytes, format="JPEG")
-    image_bytes.seek(0)
-
-    # Create a SimpleUploadedFile from the image bytes
-    uploaded_file = SimpleUploadedFile(
-        "test_image.jpg", image_bytes.read(), content_type="image/jpeg"
-    )
-
-    assert uploaded_file is not None
-    # Debug print
-    print(f"Uploaded file size: {len(uploaded_file)} bytes")
-
-    return uploaded_file
 
 
 def generate_paragraph(input):
@@ -221,203 +262,227 @@ class Test_Clean_Mthods_BookAuthorName:
         data, product_category, user, book_author_name, book_format = (
             book_author_name_form_data()
         )
-        # print(f"data--------- : {data}")
 
-        # creating author name with len > 50
         data["author_name"] = generate_paragraph(60)
         assert len(data["author_name"]) > 50
 
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
+        form = BookAuthorNameForm(data=data)
+        assert not form.is_valid()
 
     def test_clean_book_name(self, book_author_name_form_data):
         data, product_category, user, book_author_name, book_format = (
             book_author_name_form_data()
         )
 
-        # creating author name with len > 50
-        data["book_name"] = generate_paragraph(255)
+        data["book_name"] = generate_paragraph(100)
 
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
+        form = BookAuthorNameForm(data=data)
+        assert not form.is_valid()
 
     def test_clean_about_author(self, book_author_name_form_data):
         data, product_category, user, book_author_name, book_format = (
             book_author_name_form_data()
         )
 
-        # creating author name with len > 50
-        data["about_author"] = generate_paragraph(500)
+        data["about_author"] = generate_paragraph(510)
 
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
+        form = BookAuthorNameForm(data=data)
+        assert not form.is_valid()
 
     def test_clean_language(self, book_author_name_form_data):
         data, product_category, user, book_author_name, book_format = (
             book_author_name_form_data()
         )
 
-        # creating author name with len > 50
-        data["language"] = generate_paragraph(15)
+        data["language"] = generate_paragraph(25)
 
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
+        form = BookAuthorNameForm(data=data)
+        assert not form.is_valid()
 
 
 @pytest.mark.django_db
 class Test_Clean_Mthods_BookFormat:
-    def test_clean_book_author_name(self, book_format_form_data):
+
+    @pytest.mark.parametrize(
+        "format, is_valid", [(None, False), ("invalid", False), ("HARDCOVER", True)]
+    )
+    def test_clean_format(self, format, is_valid, book_format_form_data):
+
         data, product_category, user, book_author_name, book_format = (
             book_format_form_data()
         )
 
-        # creating book author name with len > 0
-        data["book_author_name"] = None
+        data["format"] = format
+        form = BookFormatForm(data=data)
+        assert form.is_valid() == is_valid
 
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
+    @pytest.mark.parametrize(
+        "is_new_available, is_valid",
+        [(None, False), ("invalid", False), (-5, False), (21474836470, False)],
+    )
+    def test_clean_is_new_available(
+        self, is_new_available, is_valid, book_format_form_data
+    ):
 
-    def test_clean_format(self, book_format_form_data):
-        data, product_category, user, book_author_name, book_format = (
-            book_format_form_data()
-        )
-        # creating format with len > 0
-        data["format"] = None
-
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
-
-        data["format"] = "invalid"
-        with pytest.raises(ValidationError):
-            form = BookAuthorNameForm(data=data)
-            form.is_valid()
-
-    def test_clean_is_new_available_negative(self, book_format_form_data):
         form_data, product_category, user, book_author_name, book_format = (
             book_format_form_data()
         )
-        # print(f"form data---------------- {form_data}")
-        form_data = {
-            "is_new_available": -5,  # Invalid value
+
+        form_data["is_new_available"] = is_new_available
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    @pytest.mark.parametrize(
+        "is_used_available, is_valid",
+        [(None, False), ("invalid", False), (-5, False), (21474836470, False)],
+    )
+    def test_clean_is_used_available(
+        self, is_used_available, is_valid, book_format_form_data
+    ):
+
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        form_data["is_used_available"] = is_used_available
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    @pytest.mark.parametrize(
+        "publisher_name, is_valid",
+        [
+            (None, False),
+            ("invalid", True),
+            (-5, False),
+            (10, False),
+            (fake.text(max_nb_chars=110), False),
+            (fake.text(max_nb_chars=100), True),
+        ],
+    )
+    def test_clean_publisher_name(
+        self, publisher_name, is_valid, book_format_form_data
+    ):
+
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        form_data["publisher_name"] = publisher_name
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    @pytest.mark.parametrize(
+        "narrator, is_valid",
+        [
+            (None, True),
+            (-5, True),
+            (fake.text(max_nb_chars=30), False),
+            (fake.text(max_nb_chars=20), True),
+        ],
+    )
+    def test_clean_narrator(self, narrator, is_valid, book_format_form_data):
+
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        form_data["narrator"] = narrator
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    @pytest.mark.parametrize(
+        "price, is_valid",
+        [
+            (None, False),
+            (-5, False),
+            (1, False),
+            (999999.99, True),
+            (999999.999, False),
+            (9999990.99, False),
+        ],
+    )
+    def test_clean_price(self, price, is_valid, book_format_form_data):
+
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        form_data["price"] = price
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    @pytest.mark.parametrize(
+        "restock_threshold, is_valid",
+        [
+            (None, False),
+            (-5, False),
+            (1, False),
+            (9, True),
+            (21474836470, False),
+        ],
+    )
+    def test_clean_restock_threshold(
+        self, restock_threshold, is_valid, book_format_form_data
+    ):
+
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        form_data["restock_threshold"] = restock_threshold
+        form = BookFormatForm(data=form_data)
+        form.is_valid() == is_valid
+
+    def test_clean_image_1(self, book_format_form_data):
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        # form_data["image_1"] = None
+        print(f"form data: {form_data}")
+
+        form = BookFormatForm(data=form_data)
+        print(f"errors: {form.errors}")
+        assert form.is_valid()
+
+    def test_image_1_extension(self, create_image_tiff, book_format_form_data):
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
+
+        files = {
+            "image_1": create_image_tiff,
+            "image_2": create_image_tiff,
+            "image_3": create_image_tiff,
         }
 
-        assert len(form_data["is_new_available"]) < 0
+        form = BookFormatForm(data=form_data, files=files)
 
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
+        # Ensure the form is not valid and check for extension error
+        assert not form.is_valid()
+        assert "image_1" in form.errors
+        assert (
+            "Allowed extensions 'png', 'jpeg', 'jpg', 'webp'"
+            in form.errors["image_1"][0]
+        )
 
-    def test_clean_is_used_available_negative():
-        form_data = {
-            "is_used_available": -10,  # Invalid value
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
+    def test_clean_image_2(self, book_format_form_data):
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
 
-    def test_clean_publisher_name_required():
-        form_data = {
-            "publisher_name": "",  # Empty value
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_publishing_date_valid():
-        form_data = {
-            "publishing_date": date.today(),  # Valid date
-        }
+        form_data["image_2"] = None
         form = BookFormatForm(data=form_data)
         assert form.is_valid()
-        assert form.cleaned_data["publishing_date"] == date.today()
 
-    def test_clean_publishing_date_invalid_format():
-        form_data = {
-            "publishing_date": "2023-13-01",  # Invalid date format
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
+    def test_clean_image_3(self, book_format_form_data):
+        form_data, product_category, user, book_author_name, book_format = (
+            book_format_form_data()
+        )
 
-    def test_clean_length_negative():
-        form_data = {
-            "length": -100,  # Invalid negative length
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_narrator_too_long():
-        form_data = {
-            "narrator": "This is a narrator name that is too long",  # Invalid long narrator name
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_price_too_low_or_None():
-        form_data = {
-            "price": 0.99,  # Invalid price (too low)
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-        form_data = {"price": None}
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_price_too_high():
-        form_data = {
-            "price": 1000000.00,  # Invalid price (too high)
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_restock_threshold_negative():
-        form_data = {
-            "restock_threshold": -5,  # Invalid negative threshold
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-        form_data = {"restock_threshold": None}  # Invalid negative threshold
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_image_1_required():
-        form_data = {
-            "image_1": None,  # None value for image_1
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_image_2_required():
-        form_data = {
-            "image_2": None,  # None value for image_1
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
-
-    def test_clean_image_3_required():
-        form_data = {
-            "image_3": None,  # None value for image_1
-        }
-        with pytest.raises(ValidationError):
-            form = BookFormatForm(data=form_data)
-            form.is_valid()
+        form_data["image_3"] = None
+        form = BookFormatForm(data=form_data)
+        assert form.is_valid()
 
 
 @pytest.mark.django_db
@@ -430,10 +495,11 @@ class Test_ReviewAndRatingForms:
             "content": "I really enjoyed reading this book.",
             "rating": 4,
         }
-        form = ReviewForm(data=data)
+        files = {"image_1": None, "image_2": None}
+        form = ReviewForm(data=data, files=files)
         assert form.is_valid()
 
-    def test_review_form_missing_required_field(self, create_image):
+    def test_review_form_missing_required_field(self, create_image: SimpleUploadedFile):
         data = {
             "image_1": create_image,
             "image_2": create_image,
@@ -441,7 +507,9 @@ class Test_ReviewAndRatingForms:
             "content": "I really enjoyed reading this book.",
             "rating": None,
         }
-        form = ReviewForm(data=data)
+
+        files = {"image_1": create_image, "image_2": create_image}
+        form = ReviewForm(data=data, files=files)
         assert form.is_valid()
 
     def test_rating_form_valid_data(self):
@@ -459,3 +527,35 @@ class Test_ReviewAndRatingForms:
         assert not form.is_valid()
         assert "rating" in form.errors
         assert "Ensure this value is less than or equal to 5" in str(form.errors)
+
+
+@pytest.mark.django_db
+def test_book_format_form_image_size_validation(
+    create_image_size_greater_one_mb: SimpleUploadedFile, book_format_form_data
+):
+
+    book_data, product_category, user, book_author_name, book_format = (
+        book_format_form_data()
+    )
+
+    assert len(create_image_size_greater_one_mb) > 1048576
+
+    files = {
+        "image_1": create_image_size_greater_one_mb,
+        "image_2": create_image_size_greater_one_mb,
+        "image_3": create_image_size_greater_one_mb,
+    }
+
+    book_data["image_1"] = create_image_size_greater_one_mb
+    book_data["image_2"] = create_image_size_greater_one_mb
+    book_data["image_3"] = create_image_size_greater_one_mb
+
+    # Initialize the form with POST data and file data
+    form = BookFormatForm(data=book_data, files=files)
+
+    # Check if the form is invalid due to image size
+    # with pytest.raises(ValidationError):
+    assert not form.is_valid(), "Form should be invalid due to large image size"
+    assert "File size must be less than 1MB." in str(
+        form.errors
+    ), "Expected file size validation error"

@@ -1,11 +1,6 @@
 import json
-from decimal import Decimal  # Import Decimal module
-
-from django.db.models.fields.files import \
-    ImageFieldFile  # Import ImageFieldFile
 
 from cart.models import CartItem
-from checkout.models import Payment
 
 MAX_HISTORY_ITEMS = 7  # Maximum number of items to store in the browsing history
 MAX_COOKIE_SIZE = 4000  # Maximum size of the cookie data in bytes (4KB)
@@ -40,6 +35,7 @@ def add_product_to_cart_history(request, cart_items_in_cookie):
 
 
 def your_cart_items(request):
+    
     if "cart_items" in request.session:
         items_in_cart = request.session.get("cart_items")
         return items_in_cart
@@ -74,6 +70,13 @@ def remove_items_from_cart_history(request, items_to_remove):
     updated_items_in_cart = []
 
     items_in_cart = request.session.get("cart_items", [])
+
+    try:
+        items_in_cart = json.loads(items_in_cart)
+    except json.JSONDecodeError:
+        # In case of a decoding error, set items_in_cart as an empty list
+        items_in_cart = []
+
     print(f"Displaying items in cart session before modification: {items_in_cart}")
 
     for item in items_in_cart:
@@ -86,5 +89,7 @@ def remove_items_from_cart_history(request, items_to_remove):
     del request.session["cart_items"]
     request.session["cart_items"] = updated_items_in_cart
     request.session.modified = True
+    
+    print(f"cart_items cookie: {request.session["cart_items"]}")
 
     print("Session modified!")

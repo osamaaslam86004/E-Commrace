@@ -1,8 +1,11 @@
+from typing import Any
+
 from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from book_.models import BookAuthorName, BookFormat, Rating, Review
+from i.custom_validators import file_size_validator, image_validator
 
 
 class BookAuthorNameForm(forms.ModelForm):
@@ -40,32 +43,32 @@ class BookAuthorNameForm(forms.ModelForm):
             ),
         }
 
-    def clean_author_name(self):
-        author_name = self.cleaned_data.get("author_name")
-        if len(author_name) > 50:
-            raise forms.ValidationError("Author name must be 50 characters or fewer.")
-        return author_name
-
     def clean_book_name(self):
         book_name = self.cleaned_data.get("book_name")
         if len(book_name) > 50:
             raise forms.ValidationError("Book name must be 255 characters or fewer.")
         return book_name
 
-    def clean_about_author(self):
-        about_author = self.cleaned_data.get("about_author")
-        if len(about_author) > 500:
-            raise forms.ValidationError("About Author must be 500 characters or fewer.")
-        return about_author
-
-    def clean_language(self):
-        language = self.cleaned_data.get("language")
-        if len(language) > 15:
-            raise forms.ValidationError("Language must be 15 characters or fewer.")
-        return language
-
 
 class BookFormatForm(forms.ModelForm):
+    allowed_extensions = ["png", "jpeg", "jpg", "webp"]
+
+    image_1 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+    image_2 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+    image_3 = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+        validators=[image_validator, file_size_validator],
+    )
+
     class Meta:
         model = BookFormat
         fields = [
@@ -131,81 +134,54 @@ class BookFormatForm(forms.ModelForm):
             ),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "restock_threshold": forms.NumberInput(
-                attrs={"class": "form-control", "min": 0}
+                attrs={"class": "form-control", "min": 9}
             ),
-            "image_1": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
-            "image_2": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
-            "image_3": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+            # "image_2": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
+            # "image_3": forms.ClearableFileInput(attrs={"class": "form-control-file"}),
         }
-
-    def clean_book_author_name(self):
-        book_author_name = self.cleaned_data.get("book_author_name")
-        if not book_author_name:
-            raise forms.ValidationError("Book author name is required.")
-        return book_author_name
-
-    # def clean_user(self):
-    #     user = self.cleaned_data.get("user")
-    #     if not user:
-    #         raise forms.ValidationError("User is required.")
-    #     return user
-
-    # def clean_product_category(self):
-    #     product_category = self.cleaned_data.get("product_category")
-    #     if not product_category:
-    #         raise forms.ValidationError("Product category is required.")
-    #     return product_category
 
     def clean_format(self):
         format = self.cleaned_data.get("format")
-        if not format or format not in dict(BookFormat.FORMAT_CHOICES):
+        if (
+            not format
+            or format is None
+            or format not in dict(BookFormat.FORMAT_CHOICES)
+        ):
             raise forms.ValidationError("Valid format is required.")
         return format
 
     def clean_is_new_available(self):
         is_new_available = self.cleaned_data.get("is_new_available")
-        if is_new_available is None or is_new_available < 0:
-            raise forms.ValidationError(
-                "Is new available must be a non-negative integer."
-            )
+        if (
+            is_new_available is None
+            or is_new_available < 0
+            or is_new_available > 2147483647
+        ):
+            raise forms.ValidationError("Is new available is in range 0 to 2147483647")
         return is_new_available
 
     def clean_is_used_available(self):
         is_used_available = self.cleaned_data.get("is_used_available")
-        if is_used_available is None or is_used_available < 0:
-            raise forms.ValidationError(
-                "Is used available must be a non-negative integer."
-            )
+        if (
+            is_used_available is None
+            or is_used_available < 0
+            or is_used_available > 2147483647
+        ):
+            raise forms.ValidationError("Is used available is in range 0 to 2147483647")
         return is_used_available
 
     def clean_publisher_name(self):
         publisher_name = self.cleaned_data.get("publisher_name")
-        if not publisher_name:
-            raise forms.ValidationError("Publisher name is required.")
+        if not publisher_name or len(publisher_name) > 100:
+            raise forms.ValidationError(
+                "Publisher name is required, 0 to 100 characters"
+            )
         return publisher_name
-
-    def clean_publishing_date(self):
-        publishing_date = self.cleaned_data.get("publishing_date")
-        # Add custom validation if needed
-        return publishing_date
-
-    def clean_edition(self):
-        edition = self.cleaned_data.get("edition")
-        # Add custom validation if needed
-        return edition
-
-    def clean_length(self):
-        length = self.cleaned_data.get("length")
-        if length is None or length < 0:
-            raise forms.ValidationError("Length must be a non-negative integer.")
-        return length
 
     def clean_narrator(self):
         narrator = self.cleaned_data.get("narrator")
         if narrator is None or len(narrator) > 20:
-            raise forms.ValidationError(
-                "Length of narrator must be less than 20 characters."
-            )
+            raise forms.ValidationError("Length of narrator must 0 to 20 characters")
         return narrator
 
     def clean_price(self):
@@ -214,41 +190,67 @@ class BookFormatForm(forms.ModelForm):
             raise forms.ValidationError("Price must be between 1 and 999999.99.")
         return price
 
-    # def clean_is_active(self):
-    #     is_active = self.cleaned_data.get("is_active")
-    #     # Add custom validation if needed
-    #     return is_active
-
     def clean_restock_threshold(self):
         restock_threshold = self.cleaned_data.get("restock_threshold")
-        if restock_threshold is None or restock_threshold < 0:
-            raise forms.ValidationError(
-                "Restock threshold must be a non-negative integer."
-            )
+        if (
+            not restock_threshold
+            or restock_threshold < 9
+            or restock_threshold > 2147483647
+        ):
+            raise forms.ValidationError(("restock_threshold range: 9 to 2147483647"))
         return restock_threshold
 
-    def clean_image_1(self):
-        image_1 = self.cleaned_data.get("image_1")
-        if image_1 is None:
-            raise forms.ValidationError("image 1 is None..")
-        return image_1
+    # def clean_image_1(self):
+    #     image_1 = self.cleaned_data.get("image_1")
 
-    def clean_image_2(self):
-        image_2 = self.cleaned_data.get("image_2")
-        if image_2 is None:
-            raise forms.ValidationError("image 2 is None..")
-        return image_2
+    #     if image_1 is not None:
+    #         if (
+    #             image_1
+    #             and str(image_1.image.format).lower() not in self.allowed_extensions
+    #         ):
+    #             raise forms.ValidationError(
+    #                 f"image 1 in {self.allowed_extensions} formats is required.."
+    #             )
 
-    def clean_image_3(self):
-        image_3 = self.cleaned_data.get("image_3")
-        if image_3 is None:
-            raise forms.ValidationError("image 3 is None.")
-        return image_3
+    #         if image_1 and image_1.size > 5 * 1024 * 1024:
+    #             raise forms.ValidationError(
+    #                 "Image_1 is too large. Maximum size is 5MB."
+    #             )
+    #     return image_1
 
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     # Add additional custom validation if needed
-    #     return cleaned_data
+    # def clean_image_2(self):
+    #     image_2 = self.cleaned_data.get("image_2")
+    #     if image_2 is not None:
+    #         if (
+    #             image_2
+    #             and str(image_2.image.format).lower() not in self.allowed_extensions
+    #         ):
+    #             raise forms.ValidationError(
+    #                 f"image 2 in {self.allowed_extensions} formats is required.."
+    #             )
+
+    #         if image_2 and image_2.size > 5 * 1024 * 1024:
+    #             raise forms.ValidationError(
+    #                 "Image_2 is too large. Maximum size is 5MB."
+    #             )
+    #     return image_2
+
+    # def clean_image_3(self):
+    #     image_3 = self.cleaned_data.get("image_3")
+    #     if image_3 is not None:
+    #         if (
+    #             image_3
+    #             and str(image_3.image.format).lower() not in self.allowed_extensions
+    #         ):
+    #             raise forms.ValidationError(
+    #                 f"image 3 in {self.allowed_extensions} formats is required.."
+    #             )
+
+    #         if image_3 and image_3.size > 5 * 1024 * 1024:
+    #             raise forms.ValidationError(
+    #                 "Image_3 is too large. Maximum size is 5MB."
+    #             )
+    #     return image_3
 
 
 class RatingForm(forms.ModelForm):
