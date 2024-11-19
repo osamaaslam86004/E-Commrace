@@ -58,7 +58,7 @@ if DEBUG:
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.80.246.79"]
 
 # Application definition
 
@@ -126,28 +126,28 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
-
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": config("POSTGRES_DATABASE"),
-#         "USER": config("POSTGRES_USER"),
-#         "PASSWORD": config("POSTGRES_PASSWORD"),
-#         "HOST": config("POSTGRES_HOST"),
-#         "PORT": "5432",
-#         "OPTIONS": {
-#             "sslmode": "require",
-#         },
-#     }
-# }
-
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("AMAZON_POSTGRES_DATABASE"),
+            "USER": config("AMAZON_POSTGRES_USER"),
+            "PASSWORD": config("AMAZON_POSTGRES_PASSWORD"),
+            "HOST": config("AMAZON_POSTGRES_HOST"),
+            "PORT": "5432",
+            "OPTIONS": {
+                "sslmode": "require",
+                "options": "-c statement_timeout=60000",
+            },
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
