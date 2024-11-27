@@ -1,25 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-
-<head>
-
-    {# Load the tag library #}
-    {% load django_bootstrap5 %}
-    {% load crispy_forms_tags %}
-    {# Load CSS and JavaScript #}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    {# Display django.contrib.messages as Bootstrap alerts #}
-    {% bootstrap_messages %}
-    {# Display a form #}
-    <script src="https://unpkg.com/htmx.org@1.9.10"
-        integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
-        crossorigin="anonymous"></script>
-
-
-
-    <style>
+    <head>
+        {# Load the tag library #}
+        {% load django_bootstrap5 %}
+        {% load crispy_forms_tags %}
+        {# Load CSS and JavaScript #}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        {# Display django.contrib.messages as Bootstrap alerts #}
+        {% bootstrap_messages %}
+        {# Display a form #}
+        <script src="https://unpkg.com/htmx.org@1.9.10"
+                integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+                crossorigin="anonymous"></script>
+        <style>
         body {
             background: #eee;
 
@@ -251,160 +246,155 @@
         [data-star^="5"]::after {
             width: 100%
         }
-    </style>
-
-</head>
-
-<body>
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <div class="Home-container">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
-                    </li>
-                </ul>
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a style="padding-left:41px"
+               class="navbar-brand"
+               href="{% url 'Homepage:Home' %}">E-Store</a>
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="Home-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="blog-post-create-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-
-            <div class="blog-post-create-container">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
-                    </li>
-                </ul>
+        </nav>
+        <div class="row">
+            <div class="col-3">
+                <!--  filter form here --->
+                <div style="margin-left: 30px; width:75%; margin-top:41px;">
+                    <form hx-post="{% url 'i:list_of_monitors_for_user' %}"
+                          hx-target="#htmx-container">
+                        {% csrf_token %}
+                        {{ filter_form|crispy }}
+                        <button class="btn btn-success" type="submit">Filter</button>
+                        <button type="reset" class="btn btn-warning">Reset</button>
+                    </form>
+                </div>
             </div>
-
-
-
-
-        </div>
-    </nav>
-
-
-    <div class="row">
-        <div class="col-3">
-
-            <!--  filter form here --->
-            <div style="margin-left: 30px; width:75%; margin-top:41px;">
-                <form hx-post="{% url 'i:list_of_monitors_for_user' %}" hx-target="#htmx-container">
-
-                    {% csrf_token %}
-                    {{ filter_form|crispy }}
-
-                    <button class="btn btn-success" type="submit">Filter</button>
-                    <button type="reset" class="btn btn-warning">Reset</button>
-
-                </form>
-            </div>
-        </div>
-
-        <!-- list of monitors here --->
-        <div class="col-9">
-            {% if monitors %}
-            <div id="htmx-container" style="margin-right: 13px;">
-                <div class="card-container row row-cols-1 row-cols-md-3" style="margin-top: 21px;">
-                    {% for monitor in monitors %}
-                    <div class="col mb-4">
-                        <div class="card">
-
-                            {% if monitor.is_active %}
-                            <span class="badge bg-success" style="width: 71px; margin-top:5px;
-                            margin-left:225px;">Active</span>
-                            {% else %}
-                            <span class="badge bg-warning" style="width: 71px; margin-top:5px;
-                            margin-left:225px;">In Active</span>
-                            {% endif %}
-                            </p>
-
-                            <div class=" image-container" style="height: 150px; width: 150px;">
-                                <img class="card-img-top" src="{{ monitor.image_2 }}" alt="Card image cap">
-                            </div>
-                            <div class="card-body">
-                                <div>
-                                    <h5 class="card-title">Name: {{ monitor.name }}</h5>
-                                    <p class="card-text"><b>Price</b>: {{ monitor.price }}</p>
-                                    <p class="card-text"><b>Mounting Type</b>: {{ monitor.mounting_type }}</p>
-                                </div>
-                                <div style="display: flex; align-items:center">
-                                    <div class="average-rating">
-                                        {% if monitor.avg_rating == 0 or monitor.avg_rating == "N/A" %}
-                                        <i data-star="0"></i>
+            <!-- list of monitors here --->
+            <div class="col-9">
+                {% if monitors %}
+                    <div id="htmx-container" style="margin-right: 13px;">
+                        <div class="card-container row row-cols-1 row-cols-md-3"
+                             style="margin-top: 21px">
+                            {% for monitor in monitors %}
+                                <div class="col mb-4">
+                                    <div class="card">
+                                        {% if monitor.is_active %}
+                                            <span class="badge bg-success"
+                                                  style="width: 71px;
+                                                         margin-top:5px;
+                                                         margin-left:225px">Active</span>
                                         {% else %}
-                                        <i data-star="{{monitor.avg_rating}}"></i>
+                                            <span class="badge bg-warning"
+                                                  style="width: 71px;
+                                                         margin-top:5px;
+                                                         margin-left:225px">In Active</span>
                                         {% endif %}
+                                    </p>
+                                    <div class=" image-container" style="height: 150px; width: 150px;">
+                                        <img class="card-img-top" src="{{ monitor.image_2 }}" alt="Card image cap">
                                     </div>
-                                    <div>
-                                        <span style="margin-left: 11px;"> <b>users</b>:
-                                            {{monitor.num_users_rated}}</span>
-                                    </div>
-                                </div>
-                                <div style="margin-top: 11px;">
-                                    <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
-                                        <button class="btn btn-success">View</button></a>
-
-
-                                    <a href="{% url 'i:update_monitor' product_id=monitor.monitor_id %}">
-                                        <button class="btn btn-warning">Update</button></a>
-
-
-                                    <!-- Button trigger modal -->
-                                    <a class="link-muted" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal{{ monitor.monitor_id }}">
-                                        <button class="btn btn-danger">Delete</button>
-                                    </a>
-
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="exampleModal{{ monitor.monitor_id }}" tabindex="-1"
-                                        role="dialog" aria-labelledby="exampleModalLabel{{ monitor.monitor_id }}"
-                                        aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title"
-                                                        id="exampleModalLabel{{ monitor.monitor_id }}">
-                                                        Confirmation Required
-                                                    </h5>
-                                                    <button type="button" class="close" data-bs-dismiss="modal"
-                                                        aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <!-- Confirmation message -->
-                                                    <p>Are you sure you want to delete this Product?</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-danger"
-                                                        data-bs-dismiss="modal">Cancel</button>
-                                                    <a href="{% url 'i:delete_monitor' product_id=monitor.monitor_id %}"
-                                                        class="btn btn-primary">Delete Product</a>
+                                    <div class="card-body">
+                                        <div>
+                                            <h5 class="card-title">Name: {{ monitor.name }}</h5>
+                                            <p class="card-text">
+                                                <b>Price</b>: {{ monitor.price }}
+                                            </p>
+                                            <p class="card-text">
+                                                <b>Mounting Type</b>: {{ monitor.mounting_type }}
+                                            </p>
+                                        </div>
+                                        <div style="display: flex; align-items:center">
+                                            <div class="average-rating">
+                                                {% if monitor.avg_rating == 0 or monitor.avg_rating == "N/A" %}
+                                                    <i data-star="0"></i>
+                                                {% else %}
+                                                    <i data-star="{{ monitor.avg_rating }}"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <span style="margin-left: 11px;"> <b>users</b>:
+                                                {{ monitor.num_users_rated }}</span>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 11px;">
+                                            <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
+                                                <button class="btn btn-success">View</button>
+                                            </a>
+                                            <a href="{% url 'i:update_monitor' product_id=monitor.monitor_id %}">
+                                                <button class="btn btn-warning">Update</button>
+                                            </a>
+                                            <!-- Button trigger modal -->
+                                            <a class="link-muted"
+                                               data-bs-toggle="modal"
+                                               data-bs-target="#exampleModal{{ monitor.monitor_id }}">
+                                                <button class="btn btn-danger">Delete</button>
+                                            </a>
+                                            <!-- Modal -->
+                                            <div class="modal fade"
+                                                 id="exampleModal{{ monitor.monitor_id }}"
+                                                 tabindex="-1"
+                                                 role="dialog"
+                                                 aria-labelledby="exampleModalLabel{{ monitor.monitor_id }}"
+                                                 aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel{{ monitor.monitor_id }}">Confirmation Required</h5>
+                                                            <button type="button"
+                                                                    class="close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <!-- Confirmation message -->
+                                                            <p>Are you sure you want to delete this Product?</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                                            <a href="{% url 'i:delete_monitor' product_id=monitor.monitor_id %}"
+                                                               class="btn btn-primary">Delete Product</a>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                    <!-- pagination here -->
                 </div>
-                <!-- pagination here -->
-            </div>
             {% else %}
-            <div style="font-size: large; margin-top:300px; margin-left:101px;">
-                <span style="font-size: 50px;"><strong>No product found</strong></span>
-
-            </div>
+                <div style="font-size: large; margin-top:300px; margin-left:101px;">
+                    <span style="font-size: 50px;"><strong>No product found</strong></span>
+                </div>
             {% endif %}
         </div>
-</body>
-
+    </body>
 </html>

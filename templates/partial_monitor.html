@@ -1,139 +1,152 @@
 {% load static %}
-
 {% if item_list %}
-
-<details class="row displaying-product-count">
-    <summary>
-        <span> Displaying Page: {{ item_list.number }} of {{ item_list.paginator.num_pages }}</span>
-    </summary>
-
-</details>
-
-<!-- Main content container that will update dynamically with HTMX -->
-<div class="card-container row row-cols-1 row-cols-md-3">
-
-    {% for monitor in item_list %}
-    <div class="col mb-4 product-card-wrapper" id="product-card-wrapper">
-        <div class="card">
-            {% if monitor.image_2|slice:"0:27" != "https://res.cloudinary.com/" %}
-            <img class="card-img-top" src="https://dummyimage.com/285x929/" alt="Image of {{ monitor.name }}">
-            {% else %}
-            <img class="card-img-top" src="{{ monitor.image_2 }}" alt="Image of {{ monitor.name }}">
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">Name: {{ monitor.name }}</h5>
-                <p class="card-text"><b>Price</b>: {{ monitor.price }}</p>
-
-                <p class="card-text"><b>Special Features</b>:
-                    {% for feature in monitor.special_features.all %}
-                    {{ feature.get_name_display }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-
-                <div class="rating-count">
-                    <div class="average-rating">
-                        {% with monitor.average_rating as rating %}
-                        {% if rating == 0 or monitor.rating == "N/A" %}
-                        <i data-star="0"></i>
-                        {% else %}
-                        <i data-star="{{rating}}"></i>
-                        {% endif %}
-                        {% endwith %}
-                    </div>
-                    <div class="count">
-
-                        <div class="count-wrapper">
-                            {% if monitor.rating_count == 0 or monitor.rating_count == "N/A" %}
-                            <p>{{ monitor.rating_count }}</p>
-                            {% endif %}
-                            <p>{{ monitor.rating_count }}</p>
+    <details class="row displaying-product-count">
+        <summary>
+            <span>Displaying Page: {{ item_list.number }} of {{ item_list.paginator.num_pages }}</span>
+        </summary>
+    </details>
+    <!-- Main content container that will update dynamically with HTMX -->
+    <div class="card-container row row-cols-1 row-cols-md-3">
+        {% for monitor in item_list %}
+            <div class="col mb-4 product-card-wrapper" id="product-card-wrapper">
+                <div class="card">
+                    {% if monitor.image_2|slice:"0:27" != "https://res.cloudinary.com/" %}
+                        <img class="card-img-top"
+                             src="https://dummyimage.com/285x929/"
+                             alt="Image of {{ monitor.name }}">
+                    {% else %}
+                        <img class="card-img-top"
+                             src="{{ monitor.image_2 }}"
+                             alt="Image of {{ monitor.name }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Name: {{ monitor.name }}</h5>
+                        <p class="card-text">
+                            <b>Price</b>: {{ monitor.price }}
+                        </p>
+                        <p class="card-text">
+                            <b>Special Features</b>:
+                            {% for feature in monitor.special_features.all %}
+                                {{ feature.get_name_display }}
+                                {% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        </p>
+                        <div class="rating-count">
+                            <div class="average-rating">
+                                {% with monitor.average_rating as rating %}
+                                    {% if rating == 0 or monitor.rating == "N/A" %}
+                                        <i data-star="0"></i>
+                                    {% else %}
+                                        <i data-star="{{ rating }}"></i>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="count">
+                                <div class="count-wrapper">
+                                    {% if monitor.rating_count == 0 or monitor.rating_count == "N/A" %}<p>{{ monitor.rating_count }}</p>{% endif %}
+                                    <p>{{ monitor.rating_count }}</p>
+                                </div>
+                            </div>
+                            <!-- Collapsible Menu Triggered by Vertical Dots -->
+                            <details id="details">
+                                <summary class="details-summary" id="details-summary">
+                                    <img src="{% static '/images/ellipsis-v-solid.svg' %}"
+                                         alt="monitor collapseable">
+                                </summary>
+                                <ul>
+                                    <li>
+                                        <img src="{% static '/images/shopping-cart-solid.svg' %}" alt="cart icon">
+                                        <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
+                                            <p>View</p>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <img src="{% static '/images/eye-solid.svg' %}" alt="eye icon">
+                                        <a href="{% url 'cart:add_to_cart' content_id=content_id product_id=monitor.monitor_id %}">
+                                            <p>Add to Cart</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </details>
                         </div>
-
                     </div>
-
-                    <!-- Collapsible Menu Triggered by Vertical Dots -->
-                    <details id="details">
-                        <summary class="details-summary" id="details-summary">
-                            <img src="{% static '/images/ellipsis-v-solid.svg' %}" alt="monitor collapseable">
-                        </summary>
-
-                        <ul>
-                            <li>
-                                <img src="{% static '/images/shopping-cart-solid.svg' %}" alt="cart icon">
-                                <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
-                                    <p>View</p>
-                                </a>
-                            </li>
-                            <li>
-                                <img src="{% static '/images/eye-solid.svg' %}" alt="eye icon">
-                                <a
-                                    href="{% url 'cart:add_to_cart' content_id=content_id product_id=monitor.monitor_id %}">
-                                    <p>Add to Cart</p>
-                                </a>
-                            </li>
-                        </ul>
-                    </details>
                 </div>
             </div>
-        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-
-</div>
-
-<!-- Pagination links with HTMX settings -->
-<div class="row pagination-container">
-    <nav aria-label="Page navigation example">
-        <ul class="pagination">
-
-            {% if item_list.has_previous %}
-            <li class="page-item">
-                <a class="page-link" hx-get="?page={{ item_list.previous_page_number}}" hx-target="#content-container"
-                    hx-boost="true" hx-push-url="true">Previous</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled">
-                <a class="page-link">Previous</a>
-            </li>
-            {% endif %}
-
-            <li class="page-item">
-                <a class="page-link" hx-get="?page=1" hx-target="#content-container" hx-trigger="click"
-                    hx-params="?page=1" hx-boost="true" hx-push-url="true">1</a>
-            </li>
-
-            {% if item_list.paginator.num_pages > 2 %}
-            <li class="page-item">
-                <a class="page-link" hx-get="?page=2" hx-target="#content-container" hx-trigger="click"
-                    hx-params="?page=2" hx-boost="true" hx-push-url="true">2</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><a class="page-link">2</a></li>
-            {% endif %}
-
-            {% if item_list.paginator.num_pages > 3 %}
-            <li class="page-item">
-                <a class="page-link" hx-get="?page=3" hx-target="#content-container" hx-params="?page=3" hx-boost="true"
-                    hx-push-url="true">3</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><a class="page-link">3</a></li>
-            {% endif %}
-
-            {% if item_list.has_next %}
-            <li class="page-item">
-                <a class="page-link" hx-get="?page={{ item_list.next_page_number }}" hx-target="#content-container"
-                    hx-boost="true" hx-push-url="true">Next</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><a class="page-link">Next</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
-
+    <!-- Pagination links with HTMX settings -->
+    <div class="row pagination-container">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                {% if item_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           hx-get="?page={{ item_list.previous_page_number }}"
+                           hx-target="#content-container"
+                           hx-boost="true"
+                           hx-push-url="true">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">Previous</a>
+                    </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link"
+                       hx-get="?page=1"
+                       hx-target="#content-container"
+                       hx-trigger="click"
+                       hx-params="?page=1"
+                       hx-boost="true"
+                       hx-push-url="true">1</a>
+                </li>
+                {% if item_list.paginator.num_pages > 2 %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           hx-get="?page=2"
+                           hx-target="#content-container"
+                           hx-trigger="click"
+                           hx-params="?page=2"
+                           hx-boost="true"
+                           hx-push-url="true">2</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">2</a>
+                    </li>
+                {% endif %}
+                {% if item_list.paginator.num_pages > 3 %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           hx-get="?page=3"
+                           hx-target="#content-container"
+                           hx-params="?page=3"
+                           hx-boost="true"
+                           hx-push-url="true">3</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">3</a>
+                    </li>
+                {% endif %}
+                {% if item_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           hx-get="?page={{ item_list.next_page_number }}"
+                           hx-target="#content-container"
+                           hx-boost="true"
+                           hx-push-url="true">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
 {% else %}
-<div class="no-product-container">
-    <span class="no-product-text"><strong>No product found</strong></span>
-</div>
+    <div class="no-product-container">
+        <span class="no-product-text"><strong>No product found</strong></span>
+    </div>
 {% endif %}

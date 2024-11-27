@@ -1,14 +1,13 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Page</title>
-    <!-- Include Stripe.js -->
-    <script src="https://js.stripe.com/v3/"></script>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Payment Page</title>
+        <!-- Include Stripe.js -->
+        <script src="https://js.stripe.com/v3/"></script>
+        <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
@@ -55,22 +54,21 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
-    </style>
-</head>
-
-<body>
-    <form method="POST" id="payment-form">
-        {% csrf_token %}
-        <h1>Payment Information</h1>
-        <!-- Stripe Elements container -->
-        <div id="card-element">
-            <!-- A Stripe Element will be inserted here. -->
-        </div>
-        <!-- Used to display form errors. -->
-        <div id="card-errors" role="alert"></div>
-        <button type="submit">Submit Payment</button>
-    </form>
-    <script>
+        </style>
+    </head>
+    <body>
+        <form method="POST" id="payment-form">
+            {% csrf_token %}
+            <h1>Payment Information</h1>
+            <!-- Stripe Elements container -->
+            <div id="card-element">
+                <!-- A Stripe Element will be inserted here. -->
+            </div>
+            <!-- Used to display form errors. -->
+            <div id="card-errors" role="alert"></div>
+            <button type="submit">Submit Payment</button>
+        </form>
+        <script>
         var stripe = Stripe("{{ stripe_publication_key }}");
         var elements = stripe.elements();
         var card = elements.create('card');
@@ -108,7 +106,6 @@
             form.appendChild(hiddenInput);
             form.submit();
         }
-    </script>
-</body>
-
+        </script>
+    </body>
 </html>

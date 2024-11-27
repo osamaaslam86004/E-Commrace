@@ -1,21 +1,17 @@
 <!DOCTYPE html>
-
 {% load static %}
 {# Load the tag library #}
 {% load django_bootstrap5 %}
 {# Load CSS and JavaScript #}
 {% bootstrap_css %}
-{%bootstrap_javascript %}
+{% bootstrap_javascript %}
 {# Display django.contrib.messages asBootstrapalerts#}
 {% bootstrap_messages %}
 {# Display a form #}
-
-
 <html>
-
-<head>
-  <title>Login </title>
-  <style>
+    <head>
+        <title>Login</title>
+        <style>
     * {
       box-sizing: border-box;
     }
@@ -143,60 +139,46 @@
         text-align: center;
       }
     }
-  </style>
-
-
-</head>
-
-<body>
-  <div class="container" style="margin-top:41px;">
-
-    <div class="row">
-      <h2 style="text-align:center">Login with Social Media or Manually</h2>
-      <div class="vl">
-        <span class="vl-innertext">or</span>
-      </div>
-
-      <div class="col" style="margin-top:150px;">
-
-        <a href="{% url 'Homepage:google_login' %}" class="google btn">
-          <i class="fa fa-google fa-fw"></i> Login with Google
-        </a>
-
-        <a href="{% url 'Homepage:send_sms' %}" class="twitter btn">
-          <i class="fa fa-twitter fa-fw"></i> Login with SMS
-        </a>
-      </div>
-
-      <div class="col" style="margin-top:150px;">
-
-
-
-        <div>
-          <form method='POST'>
-            {% csrf_token %}
-            <input type="email" name="email" placeholder="E-Mail" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="submit" value="Login">
-          </form>
+        </style>
+    </head>
+    <body>
+        <div class="container" style="margin-top:41px;">
+            <div class="row">
+                <h2 style="text-align:center">Login with Social Media or Manually</h2>
+                <div class="vl">
+                    <span class="vl-innertext">or</span>
+                </div>
+                <div class="col" style="margin-top:150px;">
+                    <a href="{% url 'Homepage:google_login' %}" class="google btn">
+                        <i class="fa fa-google fa-fw"></i> Login with Google
+                    </a>
+                    <a href="{% url 'Homepage:send_sms' %}" class="twitter btn">
+                        <i class="fa fa-twitter fa-fw"></i> Login with SMS
+                    </a>
+                </div>
+                <div class="col" style="margin-top:150px;">
+                    <div>
+                        <form method='POST'>
+                            {% csrf_token %}
+                            <input type="email" name="email" placeholder="E-Mail" required>
+                            <input type="password" name="password" placeholder="Password" required>
+                            <input type="submit" value="Login">
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-
-      </div>
-
-    </div>
-  </div>
-
-  <div class="bottom-container" style="width:1150px; margin-left:110px;">
-    <div class="row">
-      <div class="col">
-        <a href="{% url 'Homepage:signup' %}" style="color:white" class="btn">Sign up</a>
-      </div>
-      <div class="col">
-        <a href="{% url 'Homepage:password_reset_options'  %}" style="color:white" class="btn">Forgot password?</a>
-      </div>
-    </div>
-  </div>
-
-</body>
-
+        <div class="bottom-container" style="width:1150px; margin-left:110px;">
+            <div class="row">
+                <div class="col">
+                    <a href="{% url 'Homepage:signup' %}" style="color:white" class="btn">Sign up</a>
+                </div>
+                <div class="col">
+                    <a href="{% url 'Homepage:password_reset_options' %}"
+                       style="color:white"
+                       class="btn">Forgot password?</a>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

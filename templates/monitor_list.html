@@ -2,97 +2,84 @@
 {% load django_htmx %}
 <!--load startswith  filter for string-->
 {% load custom_filter %}
-
 <html lang="en">
-
-<head>
-    {# Load the tag library #}
-    {% load django_bootstrap5 %}
-    {# Load CSS and JavaScript #}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    {# Display django.contrib.messages as Bootstrap alerts #}
-    {% bootstrap_messages %}
-    {# Display a form #}
-    {% load crispy_forms_tags %}
-
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Store</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Custom stylesheet-->
-    <link rel="stylesheet" href="{% static 'css/monitor_list.css' %}">
-
-
-
-</head>
-
-<body>
-
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <a class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'i:list_of_monitors_for_user' %}">Your Monitors</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
-                </li>
-            </ul>
-            <div class="ml-auto d-flex align-items-center">
-                <strong><b>
+    <head>
+        {# Load the tag library #}
+        {% load django_bootstrap5 %}
+        {# Load CSS and JavaScript #}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        {# Display django.contrib.messages as Bootstrap alerts #}
+        {% bootstrap_messages %}
+        {# Display a form #}
+        {% load crispy_forms_tags %}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>E-Store</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+              rel="stylesheet">
+        <!-- Custom stylesheet-->
+        <link rel="stylesheet" href="{% static 'css/monitor_list.css' %}">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <a class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'i:list_of_monitors_for_user' %}">Your Monitors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
+                    </li>
+                </ul>
+                <div class="ml-auto d-flex align-items-center">
+                    <strong><b>
                         <p id="cart-total">{{ request.session.cart_items|default_if_none:0|length }}</p>
                     </b></strong>
-                <a href="{% url 'cart:cart_view' %}" class="cart-icon">
-                    <img src="https://res.cloudinary.com/dh8vfw5u0/image/upload/cart_50_50" alt="Shopping cart icon">
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="filter-form">
-                    <form hx-post="{% url 'i:MonitorListView' %}" hx-target="#content-container">
-                        {% csrf_token %}
-                        {{ filter.form|crispy }}
-                        <button class="btn btn-success" type="submit">Filter</button>
-                        <button type="reset" class="btn btn-warning">Reset</button>
-                    </form>
+                    <a href="{% url 'cart:cart_view' %}" class="cart-icon">
+                        <img src="https://res.cloudinary.com/dh8vfw5u0/image/upload/cart_50_50"
+                             alt="Shopping cart icon">
+                    </a>
                 </div>
             </div>
-
-            <div id="content-container" class="col-md-9 product-listing-wrapper" style="border:1px solid blue">
-
-                {% include "partial_monitor.html" %}
-
+        </nav>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="filter-form">
+                        <form hx-post="{% url 'i:MonitorListView' %}"
+                              hx-target="#content-container">
+                            {% csrf_token %}
+                            {{ filter.form|crispy }}
+                            <button class="btn btn-success" type="submit">Filter</button>
+                            <button type="reset" class="btn btn-warning">Reset</button>
+                        </form>
+                    </div>
+                </div>
+                <div id="content-container"
+                     class="col-md-9 product-listing-wrapper"
+                     style="border:1px solid blue">{% include "partial_monitor.html" %}</div>
             </div>
         </div>
-    </div>
-
-
-
-    <script src="{% static '/js/htmx.min.js' %}" defer></script>
-    {% django_htmx_script %}
-
-    <!-- Custom script to open and close <details> tag-->
-    <script src="{% static '/js/monitor-list-html.js' %}" defer></script>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
+        <script src="{% static '/js/htmx.min.js' %}" defer></script>
+        {% django_htmx_script %}
+        <!-- Custom script to open and close <details> tag-->
+        <script src="{% static '/js/monitor-list-html.js' %}" defer></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </body>
 </html>

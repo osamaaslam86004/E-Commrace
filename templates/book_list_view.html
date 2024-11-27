@@ -1,25 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-
-<head>
-
-    {# Load the tag library #}
-    {% load django_bootstrap5 %}
-    {% load crispy_forms_tags %}
-    {# Load CSS and JavaScript #}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-    {# Display django.contrib.messages as Bootstrap alerts #}
-    {% bootstrap_messages %}
-    {# Display a form #}
-    <script src="https://unpkg.com/htmx.org@1.9.10"
-        integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
-        crossorigin="anonymous"></script>
-
-
-
-    <style>
+    <head>
+        {# Load the tag library #}
+        {% load django_bootstrap5 %}
+        {% load crispy_forms_tags %}
+        {# Load CSS and JavaScript #}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        {# Display django.contrib.messages as Bootstrap alerts #}
+        {% bootstrap_messages %}
+        {# Display a form #}
+        <script src="https://unpkg.com/htmx.org@1.9.10"
+                integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+                crossorigin="anonymous"></script>
+        <style>
         body {
             background: #eee;
 
@@ -251,152 +246,137 @@
         [data-star^="5"]::after {
             width: 100%
         }
-    </style>
-
-</head>
-
-<body>
-
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <div class="Home-container">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'book_:book_list_filters' %}">Books Home</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="my-post-list-container">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'i:list_of_books_for_user' %}">Your Book's </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="blog-post-create-container">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Book</a>
-                    </li>
-                </ul>
-            </div>
-            <div style="margin-left: 751px;">
-                <strong><b>
-                        <p id="cart-total" style="font-size: 21px;">{{request.session.cart_items|length}}</p>
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a style="padding-left:41px"
+               class="navbar-brand"
+               href="{% url 'Homepage:Home' %}">E-Store</a>
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="Home-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'book_:book_list_filters' %}">Books Home</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="my-post-list-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:list_of_books_for_user' %}">Your Book's</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="blog-post-create-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Book</a>
+                        </li>
+                    </ul>
+                </div>
+                <div style="margin-left: 751px;">
+                    <strong><b>
+                        <p id="cart-total" style="font-size: 21px;">{{ request.session.cart_items|length }}</p>
                     </b></strong>
-                <a href="{% url 'cart:cart_view' %}">
-                    <img src="https://res.cloudinary.com/dh8vfw5u0/image/upload/cart_50_50" />
-                </a>
-
-            </div>
-        </div>
-    </nav>
-
-
-    <div class="row">
-        <div class="col-3">
-
-            <!--  filter form here --->
-            <div style="margin-left: 30px; width:75%; margin-top:41px;">
-                <form method='GET'>
-
-                    {% csrf_token %}
-                    {{ form|crispy }}
-
-                    <button class="btn btn-success" type="submit">Filter</button>
-                    <button type="reset" class="btn btn-warning">Reset</button>
-
-                </form>
-            </div>
-        </div>
-
-
-        <!-- list of monitors here --->
-        <div class="col-9">
-            {% if item_list %}
-
-            <div class="card-container row row-cols-1 row-cols-md-2 row-cols-lg-3" style="margin-top: 21px;">
-                {% for book in item_list %}
-                <div class="col-mb-4">
-
-                    <div class="card">
-                        <div class="image-container" style="height: 200px; width: 200px;">
-                            <img class="card-img-top" src="{{ book.image_2 }}" alt="Card image cap">
-                        </div>
-                        <div class="card-body"">
-                                <div>
-                                    <h5 class=" card-title">Name: {{ book.format }}</h5>
-                            <span class="card-text"><b>Price</b>: ${{ book.price }}</span><br>
-                            <span class="card-text" style="margin-right: 9px;">
-                                <b>Book</b>: {{book.book_author_name.book_name }}</span>
-                            <span class="card-text"><b>Author</b>:
-                                {{ book.book_author_name.author_name}}</span>
-                        </div>
-                        <div style="display:flex;">
-                            <div class="average-rating">
-                                {% if book.avg_rating == 0 or book.avg_rating == "N/A" %}
-                                <i data-star="0"></i>
-                                {% else %}
-                                <i data-star="{{book.avg_rating}}"></i>
-                                {% endif %}
-                            </div>
-                            <div style="margin-left: 17px; margin-top:7px;">
-                                <span><b>user</b>: {{book.num_users_rated}}</span>
-
-                            </div>
-                        </div>
-                        <div style="display: flex;">
-                            <a href="{% url 'book_:book_detail_view' pk=book.id format_id=book.id %}" class=" link"
-                                style="margin-right: 11px;">View</a>
-                            <a href="{% url 'cart:add_to_cart' content_id=content_id product_id=book.id %}"
-                                class="link">Cart</a>
-                        </div>
-                    </div>
-
+                    <a href="{% url 'cart:cart_view' %}">
+                        <img src="https://res.cloudinary.com/dh8vfw5u0/image/upload/cart_50_50" />
+                    </a>
                 </div>
-                {% endfor %}
             </div>
-
-            {% else %}
-
-            <div style="font-size: large; margin-top:300px; margin-left:101px;">
-                <span style="font-size: 50px;"><strong>No product found</strong></span>
+        </nav>
+        <div class="row">
+            <div class="col-3">
+                <!--  filter form here --->
+                <div style="margin-left: 30px; width:75%; margin-top:41px;">
+                    <form method='GET'>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button class="btn btn-success" type="submit">Filter</button>
+                        <button type="reset" class="btn btn-warning">Reset</button>
+                    </form>
+                </div>
             </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <section>
-
-        <!-- pagination here -->
-        <div class="pagination" style="margin-top: 101px; margin-bottom:101px; margin-left:700px;">
-            <strong>
-                <div>
-                    {% if item_list.has_previous %}
-                    <a href="?page=1">&laquo; First</a>
-                    <a href="?page={{ item_list.previous_page_number }}">Previous</a>
-                    {% endif %}
-
-                    <span> Page {{ item_list.number }} of {{ item_list.paginator.num_pages }}. </span>
-
-                    {% if item_list.has_next %}
-                    <a href="?page={{ item_list.next_page_number }}">Next</a>
-                    <a href="?page={{ item_list.paginator.num_pages }}">Last &raquo;</a>
+            <!-- list of monitors here --->
+            <div class="col-9">
+                {% if item_list %}
+                    <div class="card-container row row-cols-1 row-cols-md-2 row-cols-lg-3"
+                         style="margin-top: 21px">
+                        {% for book in item_list %}
+                            <div class="col-mb-4">
+                                <div class="card">
+                                    <div class="image-container" style="height: 200px; width: 200px;">
+                                        <img class="card-img-top" src="{{ book.image_2 }}" alt="Card image cap">
+                                    </div>
+                                    <div class="card-body"">
+                                        <div>
+                                            <h5 class=" card-title">Name: {{ book.format }}</h5>
+                                            <span class="card-text"><b>Price</b>: ${{ book.price }}</span>
+                                            <br>
+                                            <span class="card-text" style="margin-right: 9px;">
+                                                <b>Book</b>: {{ book.book_author_name.book_name }}</span>
+                                            <span class="card-text"><b>Author</b>:
+                                            {{ book.book_author_name.author_name }}</span>
+                                        </div>
+                                        <div style="display:flex;">
+                                            <div class="average-rating">
+                                                {% if book.avg_rating == 0 or book.avg_rating == "N/A" %}
+                                                    <i data-star="0"></i>
+                                                {% else %}
+                                                    <i data-star="{{ book.avg_rating }}"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div style="margin-left: 17px; margin-top:7px;">
+                                                <span><b>user</b>: {{ book.num_users_rated }}</span>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex;">
+                                            <a href="{% url 'book_:book_detail_view' pk=book.id format_id=book.id %}"
+                                               class=" link"
+                                               style="margin-right: 11px">View</a>
+                                            <a href="{% url 'cart:add_to_cart' content_id=content_id product_id=book.id %}"
+                                               class="link">Cart</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="font-size: large; margin-top:300px; margin-left:101px;">
+                            <span style="font-size: 50px;"><strong>No product found</strong></span>
+                        </div>
                     {% endif %}
                 </div>
-            </strong>
-        </div>
-    </section>
-
-</body>
-
-</html>
+            </div>
+            <section>
+                <!-- pagination here -->
+                <div class="pagination"
+                     style="margin-top: 101px;
+                            margin-bottom:101px;
+                            margin-left:700px">
+                    <strong>
+                        <div>
+                            {% if item_list.has_previous %}
+                                <a href="?page=1">&laquo; First</a>
+                                <a href="?page={{ item_list.previous_page_number }}">Previous</a>
+                            {% endif %}
+                            <span>Page {{ item_list.number }} of {{ item_list.paginator.num_pages }}.</span>
+                            {% if item_list.has_next %}
+                                <a href="?page={{ item_list.next_page_number }}">Next</a>
+                                <a href="?page={{ item_list.paginator.num_pages }}">Last &raquo;</a>
+                            {% endif %}
+                        </div>
+                    </strong>
+                </div>
+            </section>
+        </body>
+    </html>
