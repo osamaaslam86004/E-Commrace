@@ -62,3 +62,14 @@ class CommentForm(forms.ModelForm):
     widgets = {
         "body": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     }
+
+
+class CommentFormAdmin(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = [
+            "active",
+            "comments_user",
+            "post",
+            "body",
+        ]

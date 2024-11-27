@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumbers import parse, is_valid_number, region_code_for_number
 
 
 class CustomUserManager(BaseUserManager):
@@ -14,20 +15,28 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+
+        # Set is_staff based on user_type
+        if extra_fields.get("user_type") != "CUSTOMER" and user.is_staff != True:
+            user.is_staff = True
+
         user.save(using=self._db)
 
         # Create a UserProfile for the user
-        UserProfile.objects.create(
-            user=user,
-            full_name="dummy_name",
-            age=18,
-            gender="Male",
-            phone_number="+923074649892",
-            city="dummy",
-            country="NZ",
-            postal_code="54400",
-            shipping_address="default",
-        )
+        try:
+            UserProfile.objects.create(
+                user=user,
+                full_name="dummy_name",
+                age=18,
+                gender="Male",
+                phone_number="+923074649892",
+                city="dummy",
+                country="NZ",
+                postal_code="54400",
+                shipping_address="default",
+            )
+        except Exception as e:
+            print(f"Error creating UserProfile for {user.email}: {e}")
 
         return user
 
@@ -72,10 +81,8 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
-    # do not use direct import strategy => circular imports error
-    # direct import meaning => import at the top of any file
-    # why circular imports?
-    #  we are importing ProductCategory to Homepage.models and Customuser to i.models
+    # def __str__(self):
+    #     return self.email
 
 
 class UserProfile(models.Model):
@@ -103,6 +110,24 @@ class UserProfile(models.Model):
             raise ValidationError("Valid age is required,")
         if self.age < 18 or self.age > 130:
             raise ValidationError("Valid age is required, Hint: 0 to 130")
+
+        # Parse the phone number
+        # try:
+        parsed_number = parse(str(self.phone_number), None)
+        # except Exception as e:
+        #     raise ValidationError("Invalid phone number format.")
+
+        # # Validate phone number and check country match
+        # if not is_valid_number(parsed_number):
+        #     raise ValidationError("The phone number is not valid.")
+        """country code PK for Pakistan from phonenumber field is matched 
+        with country.code == PK from django_countries"""
+
+        phone_country = region_code_for_number(parsed_number)
+        if phone_country != self.country.code:
+            raise ValidationError(
+                f"The phone number does not belong to the country {self.country.name}."
+            )
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -186,7 +211,7 @@ class CustomerServiceProfile(models.Model):
         if self.experience_years > 40:
             raise ValidationError("Experience must be 1 to 40 years.")
         if len(self.department) > 50:
-            raise ValidationError("Department must be 0 to 50 years.")
+            raise ValidationError("Department must be 0 to 50 characters")
 
     def save(self, *args, **kwargs):
         self.clean()

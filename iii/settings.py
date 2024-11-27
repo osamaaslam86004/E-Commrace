@@ -85,7 +85,7 @@ INSTALLED_APPS = [
     "ckeditor",
     "book_",
     "django_twilio",
-    "debug_toolbar",
+    # "debug_toolbar",
     "axes",
     "phonenumber_field",
     "django_countries",
@@ -110,7 +110,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "iii.urls"
@@ -146,7 +146,7 @@ if DEBUG:
             "HOST": "localhost",
             "PORT": "5432",
             "OPTIONS": {
-                "options": "-c statement_timeout=600000",
+                "options": "-c statement_timeout=1000",
             },
         }
     }
@@ -599,6 +599,13 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": True,
+        },
+        "loggers": {
+            "admin": {
+                "handlers": ["file"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
         },
         # "django": {
         #     "handlers": ["console"],
