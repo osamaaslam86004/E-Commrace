@@ -6,23 +6,15 @@ from django.contrib.contenttypes.models import ContentType
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from Homepage.models import (
-    AdministratorProfile,
-    CustomerProfile,
-    CustomerServiceProfile,
-    CustomSocialAccount,
-    CustomUser,
-    ManagerProfile,
-    SellerProfile,
-    UserProfile,
-)
-from tests.Homepage.Custom_Permissions import (
-    ADMIN_CUSTOM_PERMISSIONS,
-    CSR_CUSTOM_PERMISSIONS,
-    CUSTOMER_CUSTOM_PERMISSIONS,
-    MANAGER_CUSTOM_PERMISSIONS,
-    SELLER_CUSTOM_PERMISSIONS,
-)
+from Homepage.models import (AdministratorProfile, CustomerProfile,
+                             CustomerServiceProfile, CustomSocialAccount,
+                             CustomUser, ManagerProfile, SellerProfile,
+                             UserProfile)
+from tests.Homepage.Custom_Permissions import (ADMIN_CUSTOM_PERMISSIONS,
+                                               CSR_CUSTOM_PERMISSIONS,
+                                               CUSTOMER_CUSTOM_PERMISSIONS,
+                                               MANAGER_CUSTOM_PERMISSIONS,
+                                               SELLER_CUSTOM_PERMISSIONS)
 
 fake = Faker()
 

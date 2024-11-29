@@ -9,6 +9,14 @@ from tests.i.factory_classes import ProductCategoryFactory
 
 fake = Faker()
 
+import logging
+
+from django.db.utils import IntegrityError
+
+# Disable logging for factory_boy and Faker
+logging.getLogger("factory").setLevel(logging.ERROR)
+logging.getLogger("faker").setLevel(logging.ERROR)
+
 
 class BookAuthorNameFactory(DjangoModelFactory):
     class Meta:
@@ -48,6 +56,25 @@ class BookFormatFactory(DjangoModelFactory):
     image_1 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
     image_2 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
     image_3 = "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        # Ensure that each author can have only one book for each format
+        book_author_name = kwargs["book_author_name"]
+        format = kwargs["format"]
+
+        try:
+            return super()._create(model_class, *args, **kwargs)
+        except IntegrityError:
+            # If the combination of book_author_name and format exists, raise an error
+            raise IntegrityError(
+                f"Book '{book_author_name}' already has a '{format}' format. Each author can have only one book in each format."
+            )
+
+    @factory.lazy_attribute
+    def book_author_name(self):
+        # Ensure that each author can only have one book format of each type
+        return BookAuthorNameFactory()
 
 
 class ReviewFactory(DjangoModelFactory):

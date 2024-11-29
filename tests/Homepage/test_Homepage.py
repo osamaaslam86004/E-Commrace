@@ -1,6 +1,10 @@
 import io
+import json
+import random
 import logging
+from django.conf import settings
 from base64 import urlsafe_b64encode
+from typing import Any, Dict
 from unittest.mock import Mock, patch
 from urllib.parse import urlencode
 
@@ -9,6 +13,7 @@ import requests_mock
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.messages import get_messages
 from django.core import mail
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.response import TemplateResponse
 from django.test import Client, RequestFactory
@@ -16,13 +21,24 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from PIL import Image
+from pytest_django.fixtures import SettingsWrapper
+from Homepage.tasks import send_password_reset_email
 
+from celery.exceptions import MaxRetriesExceededError
 from Homepage.forms import (
     CustomerProfileForm,
     CustomUserImageForm,
+    CustomerServiceProfileForm,
+    E_MailForm_For_Password_Reset,
     LogInForm,
+    ManagerProfileForm,
+    OTPForm,
     SignUpForm,
     UserProfileForm,
+    SellerProfileForm,
+    ManagerProfile,
+    CustomerServiceProfile,
+    AdministratorProfileForm,
 )
 from Homepage.models import (
     CustomerProfile,
@@ -30,6 +46,9 @@ from Homepage.models import (
     CustomSocialAccount,
     CustomUser,
     UserProfile,
+    SellerProfile,
+    ManagerProfile,
+    AdministratorProfile,
 )
 from Homepage.views import (
     CustomerProfilePageView,
@@ -45,7 +64,15 @@ from tests.Homepage.Custom_Permissions import (
     MANAGER_CUSTOM_PERMISSIONS,
     SELLER_CUSTOM_PERMISSIONS,
 )
-from tests.Homepage.Homepage_factory import CustomUserFactory, CustomUserOnlyFactory
+from tests.Homepage.Homepage_factory import (
+    CustomUserFactory,
+    CustomUserOnlyFactory,
+    CustomerProfileFactory,
+)
+from faker import Faker
+
+fake = Faker()
+
 
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")
@@ -60,6 +87,13 @@ def request_factory():
 @pytest.fixture
 def client():
     return Client()
+
+
+@pytest.fixture
+def otp_form_data():
+    """Fixture to generate form data for OTPForm."""
+    otp = fake.random_int(min=100000, max=999999)  # Generate a 6-digit OTP
+    return {"otp": otp}
 
 
 @pytest.fixture
@@ -176,6 +210,10 @@ def group_user_logged_in(client, login_form_data):
         session["user_id"] = user.id
         session.save()
 
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
         assert response.status_code == 302
         assert response.url == "/"
         assert "user_id" in client.session
@@ -222,19 +260,29 @@ def uid_and_token(custom_user):
 
 @pytest.fixture
 def user_profile_form_data(faker):
-    import random
 
-    countries = ["US", "NZ"]
+    # Randomly select a country code for realistic data generation
+    countries = ["CA", "NZ"]
     chosen_country = random.choice(countries)
+
+    from phonenumbers import parse, format_number, PhoneNumberFormat
+
+    number = parse("6044011234", "CA")
+    formatted_number = format_number(number, PhoneNumberFormat.INTERNATIONAL)
+
+    # Generate a postal code with exactly 20 characters
+    postal_code = faker.bothify(text="?" * 20)
 
     return {
         "full_name": faker.name(),
-        "age": faker.random_int(min=18, max=80),
-        "gender": faker.random_element(elements=("Male", "Female", "Other")),
-        "phone_number": "+1-123-456-7890",  # Add this line
+        "age": faker.random_int(min=18, max=130),
+        "gender": faker.random_element(
+            elements=["Male", "Female", "Non-binary", "Other"]
+        ),
+        "phone_number": formatted_number,
         "city": faker.city(),
         "country": chosen_country,
-        "postal_code": faker.postcode(),
+        "postal_code": postal_code,
         "shipping_address": faker.address(),
     }
 
@@ -243,7 +291,44 @@ def user_profile_form_data(faker):
 def customer_profile_form_data(faker):
     return {
         "shipping_address": faker.address(),
-        "wishlist": faker.random_int(min=1, max=100),
+        "wishlist": faker.random_int(min=1, max=50),
+    }
+
+
+@pytest.fixture
+def seller_profile_form_data(faker):
+    # Generate address-like text with at most 100 characters
+    address = faker.text(max_nb_chars=100)
+    return {"address": address}
+
+
+@pytest.fixture
+def customer_service_profile_form_data(faker):
+    # Generate form data that respects model field constraints
+    return {
+        "department": faker.job()[:50],  # Job title, truncated to 50 characters
+        "bio": faker.text(max_nb_chars=100),  # Bio, limited to 500 characters
+        "experience_years": faker.random_int(min=1, max=40),
+    }
+
+
+@pytest.fixture
+def manager_profile_form_data(faker):
+    # Generate form data that respects model field constraints
+    return {
+        "team": faker.text(max_nb_chars=50),
+        "reports": faker.text(max_nb_chars=100),
+        "bio": faker.text(max_nb_chars=100),
+        "experience_years": faker.random_int(min=1, max=40),
+    }
+
+
+@pytest.fixture
+def admin_profile_form_data(faker):
+    # Generate form data that respects model field constraints
+    return {
+        "bio": faker.text(max_nb_chars=100),  # Bio, limited to 500 characters
+        "experience_years": faker.random_int(min=1, max=40),
     }
 
 
@@ -266,26 +351,9 @@ def create_image():
     return file_dict
 
 
-@pytest.fixture
-def mock_google_responses():
-    with patch("requests.post") as mock_post, patch("requests.get") as mock_get:
-        # Mock token response
-        mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {
-            "access_token": "test-access-token",
-            "refresh_token": "test-refresh-token",
-        }
-
-        # Mock user info response
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {"email": "testuser@example.com"}
-
-        return mock_post, mock_get
-
-
 @pytest.mark.django_db
 class Test_HomePageView:
-    def test_homepage_view(client):
+    def test_homepage_view(client: Client):
         # Mock Cloudinary image URLs
         cloudinary_images = {
             "box_7": "https://example.com/box_7.jpg",
@@ -342,9 +410,9 @@ class Test_HomePageView:
 
 
 @pytest.mark.django_db
-class TestSignupView:
+class Test_SignupView:
 
-    def test_signup_view_get(self, client):
+    def test_signup_view_get(self, client: Client):
         # Ensure the client is logged out (if necessary)
         client.logout()
 
@@ -360,7 +428,9 @@ class TestSignupView:
         # Assert that the form in the context is an instance of SignUpForm
         assert isinstance(response.context["form"], SignUpForm)
 
-    def test_signup_view_post_success(self, client, signup_form_data):
+    def test_signup_view_post_success(
+        self, client: Client, signup_form_data: dict[str, Any]
+    ):
         # Ensure the client is logged out
         client.logout()
         response = client.post(reverse("Homepage:signup"), signup_form_data)
@@ -373,9 +443,9 @@ class TestSignupView:
         assert user is not None
         assert user.username == signup_form_data["username"]
 
-    def test_signup_view_existing_user(self, client, signup_form_data):
+    def test_signup_view_existing_user(self, client: Client, signup_form_data):
         # Create a user with the same email
-        CustomUser.objects.create_user(
+        CustomUser.objects.create(
             username=signup_form_data["username"],
             email=signup_form_data["email"],
             password=signup_form_data["password1"],
@@ -399,7 +469,7 @@ class TestSignupView:
 
 
 @pytest.mark.django_db
-class TestCustomLoginView:
+class Test_CustomLoginView:
 
     def test_get_authenticated_user(self, client, custom_user):
         user, profile = custom_user()
@@ -473,10 +543,10 @@ class TestCustomLoginView:
         session.save()
 
         # Calling the View to confirm sessionid cookie already exist
-        view = CustomLoginView()
-        request = client.request().wsgi_request
-        view.setup(request)
-        assert view.check_existing_cookie_session(request) is True
+        response = client.get(reverse("Homepage:login"))
+        assert response.url == "/"
+        messages = list(response.wsgi_request._messages)
+        assert any("You are already logged in." in str(message) for message in messages)
 
     def test_check_non_existing_cookie_session(self, client):
         client.logout()
@@ -657,8 +727,8 @@ class Test_DeleteUserAccountView:
 
 
 @pytest.mark.django_db
-class TestGoogleLogin:
-    def test_google_login(self, client, settings):
+class Test_GoogleLogin:
+    def test_google_login(self, client: Client, settings: SettingsWrapper):
         # Setup the necessary settings for Google OAuth
         settings.GOOGLE_OAUTH_CLIENT_ID = "test-client-id"
         settings.GOOGLE_OAUTH_REDIRECT_URI = "http://localhost:8000/oauth2/callback"
@@ -686,7 +756,9 @@ class Test_GoogleOAuthCallback:
 
     @patch("requests.post")
     @patch("requests.get")
-    def test_google_callback_new_user(self, mock_get, mock_post, settings, client):
+    def test_google_callback_new_user(
+        self, mock_get, mock_post, settings: SettingsWrapper, client: Client
+    ):
         # Set up the necessary settings for Google OAuth
         settings.GOOGLE_OAUTH_CLIENT_ID = "test-client-id"
         settings.GOOGLE_OAUTH_CLIENT_SECRET = "test-client-secret"
@@ -712,16 +784,15 @@ class Test_GoogleOAuthCallback:
         )
 
         # # Check that the response is a redirect to the home page
-        assert response.status_code == 301
-        # assert response.url == reverse("Homepage:Home")
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:Home")
 
         # # Get the user to make sure a new User is created
         user = CustomUser.objects.get(email="testuser@example.com")
         assert user is not None
 
         # Check that the social account is created
-        social_account = user.customsocialaccount
-        assert social_account is not None
+        social_account = CustomSocialAccount.objects.get(user=user)
         assert social_account.access_token == "test-access-token"
 
         # Check that the user is logged in
@@ -729,16 +800,19 @@ class Test_GoogleOAuthCallback:
         assert len(messages) == 1
         assert str(messages[0]) == "Welcome! you are logged-in"
 
-    def test_google_callback_existing_user(
-        self, client, mock_google_responses, settings
-    ):
-        # Create an existing user and social account
-        user = CustomUser.objects.create(
-            email="testuser@example.com",
-            username="testuser",
-            password="testpass",
-            user_type="SELLER",
+    @patch("requests.post")
+    @patch("requests.get")
+    def test_google_callback_existing_user(self, mock_get, mock_post, client, settings):
+
+        user = CustomUserOnlyFactory.create(
+            email="testuser@example.com", user_type="SELLER", user_google_id=123456
         )
+
+        user = CustomUser.objects.filter(email="testuser@example.com")
+        assert user.count() == 1
+
+        user = CustomUser.objects.get(email="testuser@example.com")
+        assert not CustomSocialAccount.objects.filter(user=user).exists()
 
         # Create an existing social account for the user
         social_account = CustomSocialAccount.objects.create(
@@ -748,11 +822,20 @@ class Test_GoogleOAuthCallback:
             refresh_token="old-refresh-token",
             code={},
         )
-
-        mock_post, mock_get = mock_google_responses
-
+        assert CustomSocialAccount.objects.filter(user=user).exists()
         # Verify initial state
         assert social_account.access_token == "old-access-token"
+
+        # Mock the response for token exchange
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {
+            "access_token": "test-access-token",
+            "refresh_token": "test-refresh-token",
+        }
+
+        # Mock the response for user info
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {"email": "testuser@example.com"}
 
         # Set up the necessary settings for Google OAuth
         settings.GOOGLE_OAUTH_CLIENT_ID = "test-client-id"
@@ -765,7 +848,7 @@ class Test_GoogleOAuthCallback:
         )
 
         # Check that the response is a redirect to the home page
-        assert response.status_code == 301
+        assert response.status_code == 302
 
         # Refresh the social_account from the database
         social_account.refresh_from_db()
@@ -782,7 +865,49 @@ class Test_GoogleOAuthCallback:
 
 @pytest.mark.django_db
 class Test_PasswordReset:
-    def test_custom_password_reset_existing_user(client):
+
+    @pytest.mark.usefixtures("celery_session_app")
+    @pytest.mark.usefixtures("celery_session_worker")
+    @patch("Homepage.tasks.SendGridAPIClient.send")
+    def test_send_password_reset_email_success(self, mock_send):
+        # Arrange
+        mock_send.return_value.status_code = 202  # Simulate a successful email send
+        email = "test@example.com"
+        reset_url = "http://example.com/reset?uid=123&token=abc"
+
+        # Act
+        result = send_password_reset_email.delay(email, reset_url)
+        assert result.get(timeout=30) is None  # Increase timeout to 30 seconds
+
+        # Assert
+        assert result.successful()  # Check if the task was successful
+        assert mock_send.called
+
+    @pytest.mark.usefixtures("celery_session_app")
+    @pytest.mark.usefixtures("celery_session_worker")
+    @patch("Homepage.tasks.SendGridAPIClient.send")
+    def test_send_password_reset_email_retries(self, mock_send):
+        # Arrange
+        mock_send.side_effect = [
+            Exception("Failed to send email"),
+            Exception("Failed to send email"),
+            Exception("Failed to send email"),
+        ]
+        email = "test@example.com"
+        reset_url = "http://example.com/reset?uid=123&token=abc"
+
+        with pytest.raises(MaxRetriesExceededError):
+            # Act
+            result = send_password_reset_email.delay(email, reset_url)
+            # Assert
+            assert result.get()
+
+        assert mock_send.call_count == 4
+
+    @patch("Homepage.tasks.send_password_reset_email.delay")
+    def test_custom_password_reset_existing_user(
+        self, mock_send_password_reset_email_delay, client: Client
+    ):
         # Create a test user
         user = CustomUser.objects.create(email="test@example.com")
 
@@ -791,26 +916,27 @@ class Test_PasswordReset:
         assert response.status_code == 200
         assert "form" in response.context
 
-        with patch(
-            "sendgrid.SendGridAPIClient.send", return_value=Mock(status_code=202)
-        ):
-            # Test the POST request with a valid email
-            response = client.post(
-                reverse("Homepage:password_reset"), {"email": "test@example.com"}
-            )
-            assert response.status_code == 302
-            assert response.url == reverse("Homepage:password_reset_done")
+        # Set up the mock to return a successful response
+        mock_send_password_reset_email_delay.return_value = Mock(status_code=202)
 
-            # Test the password reset confirmation
-            uid = urlsafe_b64encode(force_bytes(user.pk)).decode()
-            token = default_token_generator.make_token(user)
-            response = client.get(
-                reverse(
-                    "Homepage:password_reset_confirm",
-                    kwargs={"uidb64": uid, "token": token},
-                )
+        # Test the POST request with a valid email
+        response = client.post(
+            reverse("Homepage:password_reset"), {"email": "test@example.com"}
+        )
+        assert response.status_code == 302
+        mock_send_password_reset_email_delay.called
+        assert response.url == reverse("Homepage:password_reset_done")
+
+        # Test the password reset confirmation
+        uid = urlsafe_b64encode(force_bytes(user.pk)).decode()
+        token = default_token_generator.make_token(user)
+        response = client.get(
+            reverse(
+                "Homepage:password_reset_confirm",
+                kwargs={"uidb64": uid, "token": token},
             )
-            assert response.status_code == 200
+        )
+        assert response.status_code == 200
 
     def test_password_reset_non_existing_user(self, client, settings):
         # Set up the necessary settings for SendGrid
@@ -838,7 +964,7 @@ class Test_PasswordReset:
 
 @pytest.mark.django_db
 class Test_CustomPasswordResetConfirmView:
-    def test_get_valid_link(self, client, custom_user):
+    def test_get_valid_link(self, client: Client, custom_user):
         user, _ = custom_user()
 
         uid = urlsafe_b64encode(force_bytes(user.pk)).decode()
@@ -879,60 +1005,41 @@ class Test_CustomPasswordResetConfirmView:
 
                 messages = list(get_messages(response.wsgi_request))
                 assert len(messages) == 1
-                assert str(messages[0]) == "The URL you received in e-mail is not valid"
+                assert str(messages[0]) == "The URL you recieved in e-mail is not valid"
 
-    # def test_post_valid_data(self, client, custom_user):
-    #     user, _ = custom_user()
+    def test_post_valid_data(self, client: Client, custom_user):
 
-    #     # Generate a token for the user
-    #     token = default_token_generator.make_token(user)
+        user, _ = custom_user()
+        # Generate a token for the user
+        token = default_token_generator.make_token(user)
+        # Encode the user's primary key to be used in the URL
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        # Prepare valid form data
+        form_data = {
+            "new_password1": "Newpassword1122334455_!",
+            "new_password2": "Newpassword1122334455_!",
+        }
 
-    #     # Encode the user's primary key to be used in the URL
-    #     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        from Homepage.forms import CustomPasswordResetForm
 
-    #     # Prepare valid form data
-    #     form_data = {
-    #         "new_password1": "new_secure_password",
-    #         "new_password2": "new_secure_password",
-    #     }
+        form = CustomPasswordResetForm(data=form_data)
+        assert form.is_valid()
 
-    #     url = reverse(
-    #         "Homepage:password_reset_confirm",
-    #         kwargs={"uidb64": uidb64, "token": token},
-    #     )
+        url = reverse(
+            "Homepage:password_reset_confirm",
+            kwargs={"uidb64": uidb64, "token": token},
+        )
 
-    #     # Mock the force_str and urlsafe_base64_decode to avoid actual database and encoding operations
-    #     with patch("django.utils.encoding.force_str", return_value=str(user.pk)):
-    #         with patch(
-    #             "django.utils.http.urlsafe_base64_decode",
-    #             return_value=force_bytes(user.pk),
-    #         ):
-    #             with patch.object(
-    #                 user, "set_password", return_value=None
-    #             ) as mock_set_password:
-    #                 with patch(
-    #                     "django.shortcuts.render", return_value=Mock(status_code=200)
-    #                 ):
-    #                     response = client.post(url, data=form_data, follow=True)
+        response = client.post(url, data=form_data)
+        assert response.url == reverse("Homepage:password_reset_complete")
 
-    #                     # Assert the response status code (should be a redirect for valid form)
-    #                     assert response.status_code == 200  # 200 for follow=True
+        # Assert no error messages are set
+        messages = list(get_messages(response.wsgi_request))
+        assert ["Password Reset Complete!"] == [message.message for message in messages]
 
-    #                     # Check the final redirect URL
-    #                     final_url, final_status_code = response.redirect_chain[-1]
-    #                     assert final_url == reverse("Homepage:password_reset_complete")
-    #                     assert final_status_code == 302
-
-    #                     # Assert that the set_password method was called with the new password
-    #                     mock_set_password.assert_called_once_with("new_secure_password")
-
-    #                     # Assert no error messages are set
-    #                     messages = list(get_messages(response.wsgi_request))
-    #                     assert len(messages) == 0
-
-    #                     # Assert that the user's password has been updated
-    #                     user.refresh_from_db()
-    #                     assert user.check_password(form_data["new_password1"])
+        # Assert that the user's password has been updated
+        user.refresh_from_db()
+        assert user.check_password(form_data["new_password1"])
 
     def test_post_invalid_data(
         self, client, uid_and_token, password_reset_invalid_form_data
@@ -946,43 +1053,31 @@ class Test_CustomPasswordResetConfirmView:
         assert response.status_code == 200
         assert "form" in response.context
 
-    # def test_post_password_save_exception(
-    #     self, client, password_reset_form_data, custom_user, mocker
-    # ):
-    #     # Create user
-    #     user, _ = custom_user()
-
-    #     uid = urlsafe_base64_encode(force_bytes(user.pk))
-    #     token = default_token_generator.make_token(user)
-
-    #     # Mock the token validation to always return True
-    #     mocker.patch.object(default_token_generator, "check_token", return_value=True)
-
-    #     # Patch the save method to raise an exception
-    #     with patch.object(CustomUser, "save", side_effect=Exception("save error")):
-    #         url = reverse(
-    #             "Homepage:password_reset_confirm",
-    #             kwargs={"uidb64": uid, "token": token},
-    #         )
-    #         response = client.post(url, password_reset_form_data, follow=True)
-
-    #         # Check that the response is a redirect to the expected URL
-    #         assert response.status_code == 302
-    #         assert response.url == reverse("Homepage:signup")
-
-    #         # Verify that the error message was added
-    #         messages = list(get_messages(response.wsgi_request))
-    #         assert len(messages) == 1
-    #         assert str(messages[0]) == "Something went wrong"
-
 
 @pytest.mark.django_db
-class TestCustomerProfilePageViewGet:
-    def test_get_authenticated(self, group_user_logged_in):
-        user = CustomUserFactory(
-            username="testuser", user_type="CUSTOMER", email="testuser@gmail.com"
+class Test_CustomerProfilePageViewGet:
+    def test_get_authenticated(self, client: Client):
+
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            password="Testpass123!",
+            user_type="CUSTOMER",
         )
-        client = group_user_logged_in(user)
+
+        customer_profile = UserProfile.objects.create(user=user)
+        CustomerProfile.objects.create(
+            customer_profile=customer_profile, customuser_type_1=user, wishlist=10
+        )
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
         response = client.get(reverse("Homepage:customer_profile_page"))
 
         assert response.status_code == 200
@@ -1018,21 +1113,30 @@ class TestCustomerProfilePageViewGet:
 
         assert len(SELLER_CUSTOM_PERMISSIONS) == len(pre_defined_user_permissions)
 
-    def test_form_rendering(self, client):
+    def test_form_rendering(self, client: Client):
         # Created a user with invald user type
-        user = CustomUserOnlyFactory(
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
             username="testuser",
-            email="testuser@gmail.com",
-            password="pass123",
+            password="Testpass123!",
             user_type="CUSTOMER",
         )
+
+        customer_profile = UserProfile.objects.create(user=user)
+        CustomerProfile.objects.create(
+            customer_profile=customer_profile, customuser_type_1=user, wishlist=10
+        )
         client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
 
         response = client.get(reverse("Homepage:customer_profile_page"))
-
-        # Check if the response is successful (status code 200)
         assert response.status_code == 200
-
         # Check that all necessary forms are present in the context
         assert "user_profile_form" in response.context
         assert "customer_profile_form" in response.context
@@ -1062,79 +1166,88 @@ class TestCustomerProfilePageViewGet:
         # Assert that the form is valid
         assert form.is_valid()
 
-    # @patch("Homepage.views.upload")
-    # @patch("Homepage.views.UserProfileForm")
-    # @patch("Homepage.views.CustomerProfileForm")
-    # @patch("Homepage.views.CustomUserImageForm")
-    # def test_customer_successful_profile_update(
-    #     self,
-    #     mock_upload,
-    #     mock_user_profile_form,
-    #     mock_customer_profile_form,
-    #     mock_image_form,
-    #     client,
-    #     user_profile_form_data,
-    #     customer_profile_form_data,
-    #     create_image,
-    # ):
-    #     # Configure the mock to return a successful response
-    #     mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
+    @patch("Homepage.views.upload")
+    @patch("Homepage.views.UserProfileForm")
+    @patch("Homepage.views.CustomerProfileForm")
+    @patch("Homepage.views.CustomUserImageForm")
+    def test_customer_successful_profile_update(
+        self,
+        mock_image_form,
+        mock_customer_profile_form,
+        mock_user_profile_form,
+        mock_upload,
+        client: Client,
+        user_profile_form_data,
+        customer_profile_form_data,
+        create_image,
+    ):
+        # Configure the mock to return a successful response
+        mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
 
-    #     user = CustomUserOnlyFactory(
-    #         email="testuser@example.com",
-    #         username="testuser",
-    #         user_type="CUSTOMER",
-    #     )
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            user_type="CUSTOMER",
+        )
 
-    #     customer_profile = UserProfile.objects.create(user=user)
-    #     CustomerProfile.objects.create(
-    #         customer_profile=customer_profile, customuser_type_1=user
-    #     )
+        customer_profile = UserProfile.objects.create(user=user)
+        CustomerProfile.objects.create(
+            customer_profile=customer_profile, customuser_type_1=user, wishlist=10
+        )
 
-    #     client.force_login(user)
-    #     session = client.session
-    #     session["user_id"] = user.id
-    #     session.save()
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
 
-    #     mock_user_profile_form.return_value.is_valid.return_value = True
-    #     mock_user_profile_form_instance = mock_user_profile_form.return_value
-    #     mock_user_profile_form_instance.save.return_value = Mock()
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
 
-    #     mock_customer_profile_form_instance = mock_customer_profile_form.return_value
-    #     mock_customer_profile_form_instance.is_valid.return_value = True
-    #     mock_customer_profile_form_instance.save.return_value = Mock()
+        mock_user_profile_form.return_value.is_valid.return_value = True
+        mock_user_profile_form_instance = mock_user_profile_form.return_value
+        mock_user_profile_form_instance.save.return_value = Mock()
 
-    #     mock_image_form_instance = mock_image_form.return_value
-    #     mock_image_form_instance.is_valid.return_value = True
-    #     mock_image_form_instance.save.return_value = Mock()
+        mock_customer_profile_form_instance = mock_customer_profile_form.return_value
+        mock_customer_profile_form_instance.is_valid.return_value = True
+        mock_customer_profile_form_instance.save.return_value = Mock()
 
-    #     assert CustomerProfileForm(customer_profile_form_data).is_valid()
+        mock_image_form_instance = mock_image_form.return_value
+        mock_image_form_instance.is_valid.return_value = True
+        mock_image_form_instance.save.return_value = Mock()
 
-    #     # Create the form data
-    #     data = {}
-    #     file_dict = create_image
+        userprofileform = UserProfileForm(data=user_profile_form_data)
+        print(f"form errors: {userprofileform.errors}")
+        assert userprofileform.is_valid()
 
-    #     CustomUserImageForm(data, file_dict).is_valid()
-    #     import json
+        assert CustomerProfileForm(customer_profile_form_data).is_valid()
 
-    #     # Convert the dictionaries to JSON strings
-    #     user_profile_form_data = json.dumps(user_profile_form_data)
-    #     customer_profile_form_data = json.dumps(customer_profile_form_data)
+        file_dic = create_image
 
-    #     response = client.post(
-    #         reverse("Homepage:customer_profile_page"),
-    #         user_profile_form_data,
-    #         customer_profile_form_data,
-    #         create_image,
-    #     )
+        from Homepage.forms import CustomUserImageForm
 
-    #     assert response.status_code == 302
-    #     assert user.image, "http://example.com/test_image.jpg"
-    #     assert response.url == "/?next=/"
+        image_form = CustomUserImageForm({"image": file_dic["image"]})
+        assert image_form.is_valid()
+
+        data = {
+            **user_profile_form_data,
+            **customer_profile_form_data,
+            "image": file_dic["image"],
+        }
+
+        response = client.post(
+            reverse("Homepage:customer_profile_page"),
+            data=data,
+            files=file_dic,
+        )
+
+        assert response.status_code == 302
+        assert user.image, "http://example.com/test_image.jpg"
+        assert response.url == "/"
 
 
 @pytest.mark.django_db
-class TestSellerProfilePageViewGet:
+class Test_SellerProfilePageViewGet:
     def test_get_authenticated(self, group_user_logged_in):
         user = CustomUserFactory(
             username="testuser", user_type="SELLER", email="testuser@gmail.com"
@@ -1219,16 +1332,115 @@ class TestSellerProfilePageViewGet:
         # Assert that the form is valid
         assert form.is_valid()
 
+    @patch("Homepage.views.upload")
+    @patch("Homepage.views.UserProfileForm")
+    @patch("Homepage.views.SellerProfileForm")
+    @patch("Homepage.views.CustomUserImageForm")
+    def test_seller_successful_profile_update(
+        self,
+        mock_image_form,
+        mock_seller_profile_form,
+        mock_user_profile_form,
+        mock_upload,
+        client: Client,
+        user_profile_form_data,
+        seller_profile_form_data,
+        create_image,
+    ):
+        client.logout()
+
+        # Configure the mock to return a successful response
+        mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
+
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            user_type="SELLER",
+        )
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        SellerProfile.objects.create(
+            seller_profile=user_profile_model_instance, customuser_type_2=user
+        )
+
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
+        mock_user_profile_form.return_value.is_valid.return_value = True
+        mock_user_profile_form_instance = mock_user_profile_form.return_value
+        mock_user_profile_form_instance.save.return_value = Mock()
+
+        mock_seller_profile_form.return_value.is_valid.return_value = True
+        mock_seller_profile_form_instance = mock_seller_profile_form.return_value
+        mock_seller_profile_form_instance.save.return_value = Mock()
+
+        mock_image_form.return_value.is_valid.return_value = True
+        mock_image_form_instance = mock_image_form.return_value
+        mock_image_form_instance.save.return_value = Mock()
+
+        userprofileform = UserProfileForm(data=user_profile_form_data)
+        print(f"form errors: {userprofileform.errors}")
+        assert userprofileform.is_valid()
+
+        assert SellerProfileForm(seller_profile_form_data).is_valid()
+
+        file_dic = create_image
+
+        from Homepage.forms import CustomUserImageForm
+
+        image_form = CustomUserImageForm({"image": file_dic["image"]})
+        assert image_form.is_valid()
+
+        data = {
+            **user_profile_form_data,
+            **seller_profile_form_data,
+            "image": file_dic["image"],
+        }
+
+        response = client.post(
+            reverse("Homepage:seller_profile_page"),
+            data=data,
+            files=file_dic,
+        )
+
+        assert response.status_code == 302
+        assert user.image, "http://example.com/test_image.jpg"
+        messages = list(get_messages(response.wsgi_request))
+        assert len(messages) == 1
+        assert str(messages[0]) == "Your profile is successfully updated!"
+        assert response.url == "/"
+
 
 @pytest.mark.django_db
-class TestCSRProfilePageViewGet:
-    def test_get_authenticated(self, group_user_logged_in):
-        user = CustomUserFactory(
+class Test_CSRProfilePageViewGet:
+    def test_get_authenticated(self, client: Client):
+
+        # Setup for test
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
             username="testuser",
+            password="Testpass123!",
             user_type="CUSTOMER REPRESENTATIVE",
-            email="testuser@gmail.com",
         )
-        client = group_user_logged_in(user)
+
+        customer_profile = UserProfile.objects.create(user=user)
+        CustomerServiceProfile.objects.create(
+            csr_profile=customer_profile, customuser_type_3=user, experience_years=10
+        )
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
         response = client.get(reverse("Homepage:csr_profile_page"))
 
         assert response.status_code == 200
@@ -1264,21 +1476,30 @@ class TestCSRProfilePageViewGet:
 
         assert len(CUSTOMER_CUSTOM_PERMISSIONS) == len(pre_defined_user_permissions)
 
-    def test_form_rendering(self, client):
-        # Created a user with invald user type
-        user = CustomUserOnlyFactory(
+    def test_form_rendering(self, client: Client):
+        # Setup for test
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
             username="testuser",
-            email="testuser@gmail.com",
-            password="pass123",
+            password="Testpass123!",
             user_type="CUSTOMER REPRESENTATIVE",
         )
+
+        customer_profile = UserProfile.objects.create(user=user)
+        CustomerServiceProfile.objects.create(
+            csr_profile=customer_profile, customuser_type_3=user, experience_years=10
+        )
         client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
 
         response = client.get(reverse("Homepage:csr_profile_page"))
-
-        # Check if the response is successful (status code 200)
         assert response.status_code == 200
-
         # Check that all necessary forms are present in the context
         assert "user_profile_form" in response.context
         assert "csr_profile_form" in response.context
@@ -1308,16 +1529,118 @@ class TestCSRProfilePageViewGet:
         # Assert that the form is valid
         assert form.is_valid()
 
+    @patch("Homepage.views.upload")
+    @patch("Homepage.views.UserProfileForm")
+    @patch("Homepage.views.CustomerServiceProfileForm")
+    @patch("Homepage.views.CustomUserImageForm")
+    def test_csr_successful_profile_update(
+        self,
+        mock_image_form,
+        mock_csr_profile_form,
+        mock_user_profile_form,
+        mock_upload,
+        client: Client,
+        user_profile_form_data,
+        customer_service_profile_form_data,
+        create_image,
+    ):
+        client.logout()
+
+        # Configure the mock to return a successful response
+        mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
+
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            user_type="CUSTOMER REPRESENTATIVE",
+        )
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        CustomerServiceProfile.objects.create(
+            csr_profile=user_profile_model_instance,
+            customuser_type_3=user,
+            experience_years=15,
+        )
+
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
+        mock_user_profile_form.return_value.is_valid.return_value = True
+        mock_user_profile_form_instance = mock_user_profile_form.return_value
+        mock_user_profile_form_instance.save.return_value = Mock()
+
+        mock_csr_profile_form.return_value.is_valid.return_value = True
+        mock_csr_profile_form_instance = mock_csr_profile_form.return_value
+        mock_csr_profile_form_instance.save.return_value = Mock()
+
+        mock_image_form.return_value.is_valid.return_value = True
+        mock_image_form_instance = mock_image_form.return_value
+        mock_image_form_instance.save.return_value = Mock()
+
+        userprofileform = UserProfileForm(data=user_profile_form_data)
+        print(f"form errors: {userprofileform.errors}")
+        assert userprofileform.is_valid()
+
+        assert CustomerServiceProfileForm(customer_service_profile_form_data).is_valid()
+
+        file_dic = create_image
+
+        from Homepage.forms import CustomUserImageForm
+
+        image_form = CustomUserImageForm({"image": file_dic["image"]})
+        assert image_form.is_valid()
+
+        data = {
+            **user_profile_form_data,
+            **customer_service_profile_form_data,
+            "image": file_dic["image"],
+        }
+
+        response = client.post(
+            reverse("Homepage:csr_profile_page"),
+            data=data,
+            files=file_dic,
+        )
+
+        assert response.status_code == 302
+        assert user.image, "http://example.com/test_image.jpg"
+        messages = list(get_messages(response.wsgi_request))
+        assert len(messages) == 1
+        assert str(messages[0]) == "Your profile is successfully updated!"
+        assert response.url == "/"
+
 
 @pytest.mark.django_db
-class TestManagerProfilePageViewGet:
-    def test_get_authenticated(self, group_user_logged_in):
-        user = CustomUserFactory(
+class Test_ManagerProfilePageViewGet:
+    def test_get_authenticated(self, client: Client):
+        # Setup for test
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
             username="testuser",
             user_type="MANAGER",
-            email="testuser@gmail.com",
         )
-        client = group_user_logged_in(user)
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        ManagerProfile.objects.create(
+            manager_profile=user_profile_model_instance,
+            customuser_type_4=user,
+            experience_years=15,
+        )
+
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
         response = client.get(reverse("Homepage:manager_profile_page"))
 
         assert response.status_code == 200
@@ -1353,21 +1676,32 @@ class TestManagerProfilePageViewGet:
 
         assert len(SELLER_CUSTOM_PERMISSIONS) == len(pre_defined_user_permissions)
 
-    def test_form_rendering(self, client):
-        # Created a user with invald user type
-        user = CustomUserOnlyFactory(
+    def test_form_rendering(self, client: Client):
+        # Setup for test
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
             username="testuser",
-            email="testuser@gmail.com",
-            password="pass123",
             user_type="MANAGER",
         )
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        ManagerProfile.objects.create(
+            manager_profile=user_profile_model_instance,
+            customuser_type_4=user,
+            experience_years=15,
+        )
+
         client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
 
         response = client.get(reverse("Homepage:manager_profile_page"))
-
-        # Check if the response is successful (status code 200)
         assert response.status_code == 200
-
         # Check that all necessary forms are present in the context
         assert "user_profile_form" in response.context
         assert "manager_profile_form" in response.context
@@ -1397,9 +1731,95 @@ class TestManagerProfilePageViewGet:
         # Assert that the form is valid
         assert form.is_valid()
 
+    @patch("Homepage.views.upload")
+    @patch("Homepage.views.UserProfileForm")
+    @patch("Homepage.views.ManagerProfileForm")
+    @patch("Homepage.views.CustomUserImageForm")
+    def test_manager_successful_profile_update(
+        self,
+        mock_image_form,
+        mock_manager_profile_form,
+        mock_user_profile_form,
+        mock_upload,
+        client: Client,
+        user_profile_form_data,
+        manager_profile_form_data,
+        create_image,
+    ):
+        client.logout()
+
+        # Configure the mock to return a successful response
+        mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
+
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            user_type="MANAGER",
+        )
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        ManagerProfile.objects.create(
+            manager_profile=user_profile_model_instance,
+            customuser_type_4=user,
+            experience_years=15,
+        )
+
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
+        mock_user_profile_form.return_value.is_valid.return_value = True
+        mock_user_profile_form_instance = mock_user_profile_form.return_value
+        mock_user_profile_form_instance.save.return_value = Mock()
+
+        mock_manager_profile_form.return_value.is_valid.return_value = True
+        mock_manager_profile_form_instance = mock_manager_profile_form.return_value
+        mock_manager_profile_form_instance.save.return_value = Mock()
+
+        mock_image_form.return_value.is_valid.return_value = True
+        mock_image_form_instance = mock_image_form.return_value
+        mock_image_form_instance.save.return_value = Mock()
+
+        userprofileform = UserProfileForm(data=user_profile_form_data)
+        print(f"form errors: {userprofileform.errors}")
+        assert userprofileform.is_valid()
+
+        assert ManagerProfileForm(manager_profile_form_data).is_valid()
+
+        file_dic = create_image
+
+        from Homepage.forms import CustomUserImageForm
+
+        image_form = CustomUserImageForm({"image": file_dic["image"]})
+        assert image_form.is_valid()
+
+        data = {
+            **user_profile_form_data,
+            **manager_profile_form_data,
+            "image": file_dic["image"],
+        }
+
+        response = client.post(
+            reverse("Homepage:manager_profile_page"),
+            data=data,
+            files=file_dic,
+        )
+
+        assert response.status_code == 302
+        assert user.image, "http://example.com/test_image.jpg"
+        messages = list(get_messages(response.wsgi_request))
+        assert len(messages) == 1
+        assert str(messages[0]) == "Your profile is successfully updated!"
+        assert response.url == "/"
+
 
 @pytest.mark.django_db
-class TestAdministratorProfilePageViewGet:
+class Test_AdministratorProfilePageViewGet:
     def test_get_authenticated(self, group_user_logged_in):
         user = CustomUserFactory(
             username="testuser",
@@ -1484,3 +1904,380 @@ class TestAdministratorProfilePageViewGet:
 
         # Assert that the form is valid
         assert form.is_valid()
+
+    @patch("Homepage.views.upload")
+    @patch("Homepage.views.UserProfileForm")
+    @patch("Homepage.views.AdministratorProfileForm")
+    @patch("Homepage.views.CustomUserImageForm")
+    def test_admin_successful_profile_update(
+        self,
+        mock_image_form,
+        mock_admin_profile_form,
+        mock_user_profile_form,
+        mock_upload,
+        client: Client,
+        user_profile_form_data,
+        admin_profile_form_data,
+        create_image,
+    ):
+        client.logout()
+
+        # Configure the mock to return a successful response
+        mock_upload.return_value = {"url": "http://example.com/test_image.jpg"}
+
+        user = CustomUser.objects.create(
+            email="testuser@example.com",
+            username="testuser",
+            user_type="ADMINISTRATOR",
+        )
+
+        user_profile_model_instance = UserProfile.objects.create(user=user)
+        AdministratorProfile.objects.create(
+            admin_profile=user_profile_model_instance,
+            user=user,
+            experience_years=15,
+        )
+
+        client.force_login(user)
+        session = client.session
+        session["user_id"] = user.id
+        session.save()
+
+        # Update session's cookie
+        session_cookie_name = settings.SESSION_COOKIE_NAME
+        client.cookies[session_cookie_name] = session.session_key
+
+        mock_user_profile_form.return_value.is_valid.return_value = True
+        mock_user_profile_form_instance = mock_user_profile_form.return_value
+        mock_user_profile_form_instance.save.return_value = Mock()
+
+        mock_admin_profile_form.return_value.is_valid.return_value = True
+        mock_admin_profile_form_instance = mock_admin_profile_form.return_value
+        mock_admin_profile_form_instance.save.return_value = Mock()
+
+        mock_image_form.return_value.is_valid.return_value = True
+        mock_image_form_instance = mock_image_form.return_value
+        mock_image_form_instance.save.return_value = Mock()
+
+        userprofileform = UserProfileForm(data=user_profile_form_data)
+        print(f"form errors: {userprofileform.errors}")
+        assert userprofileform.is_valid()
+
+        assert AdministratorProfileForm(admin_profile_form_data).is_valid()
+
+        file_dic = create_image
+
+        from Homepage.forms import CustomUserImageForm
+
+        image_form = CustomUserImageForm({"image": file_dic["image"]})
+        assert image_form.is_valid()
+
+        data = {
+            **user_profile_form_data,
+            **admin_profile_form_data,
+            "image": file_dic["image"],
+        }
+
+        response = client.post(
+            reverse("Homepage:admin_profile_page"),
+            data=data,
+            files=file_dic,
+        )
+
+        assert response.status_code == 302
+        assert user.image, "http://example.com/test_image.jpg"
+        messages = list(get_messages(response.wsgi_request))
+        assert len(messages) == 1
+        assert str(messages[0]) == "Your profile is successfully updated!"
+        assert response.url == "/"
+
+
+@pytest.mark.django_db()
+class Test_ValidateUserView:
+
+    def test_get_request_renders_form(self, client: Client):
+        # Test GET request to render the email form
+        response = client.get(reverse("Homepage:send_sms"))
+        assert response.status_code == 200
+        assert "password_reset_email.html" in [t.name for t in response.templates]
+        assert isinstance(response.context["form"], E_MailForm_For_Password_Reset)
+
+    @patch("Homepage.views.helper_function")
+    def test_post_request_valid_email_sends_otp(self, helper_function, custom_user):
+        # Make a client
+        client = Client(
+            HTTP_USER_AGENT="Mozilla/5.0",
+            HTTP_REFERER=reverse("Homepage:login"),
+        )
+
+        # Clear Cache
+        cache.clear()
+
+        user, user_profile = custom_user()
+        email = user.email
+
+        user_profile = UserProfile.objects.get(user__id=user.id)
+        user_profile.phone_number = "+923074649892"
+        user_profile.save()
+
+        # Test POST request with a valid email and phone number
+        helper_function.return_value = True  # Mock Twilio API call as success
+        response = client.post(reverse("Homepage:send_sms"), data={"email": email})
+
+        # Check OTP message success in response and redirection
+        assert response.status_code == 302
+
+        temporary_cookie = json.loads(response.cookies.get("temporary_cookie").value)
+
+        assert temporary_cookie["referer_url"] == reverse("Homepage:login")
+        assert response.url == reverse("Homepage:validate_otp_view")
+
+        # Tear Down Cookies and Cache
+        cache.clear()
+        response.delete_cookie("temporary_cookie")
+        assert response.cookies.get("temporary_cookie")["max-age"] == 0
+
+    @patch("Homepage.views.helper_function")
+    def test_post_request_invalid_email_redirects_signup(
+        self, helper_function, client: Client
+    ):
+        # Test with an invalid email (no associated user)
+        helper_function.return_value = True
+        response = client.post(
+            reverse("Homepage:send_sms"), data={"email": "nonexistent@example.com"}
+        )
+
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:signup")
+
+    def test_post_request_no_phone_number_redirects_password_reset(
+        self, client: Client, custom_user
+    ):
+        # Create a User with UserProfile object containing empty string as phone_number
+        user, user_profile = custom_user()
+
+        response = client.post(reverse("Homepage:send_sms"), data={"email": user.email})
+
+        messages = list(get_messages(response.wsgi_request))
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:password_reset")
+        assert any("Your profile is not updated" in str(msg) for msg in messages)
+
+    @patch("Homepage.views.helper_function")
+    def test_post_request_otp_sending_failure(
+        self, helper_function, client: Client, custom_user
+    ):
+        user, user_profile = custom_user()
+        email = user.email
+
+        user_profile = UserProfile.objects.get(user__id=user.id)
+        user_profile.phone_number = "+923074649892"
+        user_profile.save()
+
+        # Simulate OTP sending failure
+        helper_function.return_value = False
+
+        response = client.post(reverse("Homepage:send_sms"), data={"email": email})
+
+        messages = list(get_messages(response.wsgi_request))
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:login")
+        assert any("Failed to send SMS" in str(msg) for msg in messages)
+
+
+@pytest.mark.django_db
+class Test_ValidateOtpView:
+
+    def test_successful_otp_validation(
+        self,
+        client: Client,
+        custom_user,
+    ):
+
+        # 1. create user
+        user, user_profile = custom_user()
+        email = user.email
+        # 2. update user profile
+        user_profile = UserProfile.objects.get(user__id=user.id)
+        user_profile.phone_number = "+923074649892"
+        user_profile.save()
+
+        # clearing cache and cookie previously created
+        cache.clear()
+        if client.cookies.get("temporary_cookie"):
+            client.cookies.get("temporary_cookie")["max-age"] == 0
+
+        # Setup For POST request to "validate_otp_view"
+        client = Client()
+        client.cookies["temporary_cookie"] = json.dumps(
+            {
+                "email": email,
+                "id": user.id,
+                "generated_otp": str(123456),
+                "referer_url": reverse("Homepage:login"),
+            }
+        )
+        # Act
+        response = client.post(
+            reverse("Homepage:validate_otp_view"), data={"otp": 123456}
+        )
+        # Assertions
+        assert response.status_code == 302
+        assert response.url == "/"
+        messages = list(get_messages(response.wsgi_request))
+        assert any("Successfully Logged In" in str(msg) for msg in messages)
+
+        # Tear Down Cookies and Cache
+        cache.clear()
+        response.delete_cookie("temporary_cookie")
+        assert response.cookies.get("temporary_cookie")["max-age"] == 0
+
+    def test_invalid_otp(self, client: Client, custom_user):
+
+        # Create user
+        user, user_profile = custom_user()
+        email = user.email
+
+        invalid_otp = "654321"
+
+        client.cookies["temporary_cookie"] = json.dumps(
+            {
+                "email": email,
+                "id": user.id,
+                "generated_otp": "123456",
+                "referer_url": reverse("Homepage:login"),
+            }
+        )
+
+        response = client.post(
+            reverse("Homepage:validate_otp_view"), {"otp": invalid_otp}
+        )
+
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:validate_otp_view")
+        messages = list(get_messages(response.wsgi_request))
+        assert any("Invalid OTP. Please try again." in str(msg) for msg in messages)
+
+    def test_get_request_displays_otp_form(self, client: Client):
+        response = client.get(reverse("Homepage:validate_otp_view"))
+
+        assert response.status_code == 200
+        assert "otp.html" in [template.name for template in response.templates]
+        assert isinstance(response.context["form"], OTPForm)
+
+
+@pytest.mark.django_db
+class Test_CustomPasswordResetConfirmViaOTPView:
+
+    def test_password_reset_confirm_valid_form(self, client: Client, custom_user):
+        """Test valid form submission for password reset."""
+
+        # 1. create user
+        user, user_profile = custom_user()
+        email = user.email
+
+        # Setup For POST request to "validate_otp_view"
+        client.cookies["temporary_cookie"] = json.dumps(
+            {
+                "email": email,
+                "id": user.id,
+                "generated_otp": str(123456),
+                "referer_url": reverse("Homepage:login"),
+            }
+        )
+
+        url = reverse("Homepage:password_reset_confirm_via_otp")
+        data = {
+            "new_password1": "New_password123!",
+            "new_password2": "New_password123!",
+        }
+
+        response = client.post(url, data)
+
+        # Verify redirection to password reset complete page
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:password_reset_complete")
+        # Verify cookie is deleted
+        assert response.cookies.get("temporary_cookie")["max-age"] == 0
+
+    def test_password_reset_confirm_password_mismatch(
+        self, client: Client, custom_user
+    ):
+        """Test password mismatch scenario."""
+
+        # 1. create user
+        user, user_profile = custom_user()
+        email = user.email
+        # 2. update user profile
+        user_profile = UserProfile.objects.get(user__id=user.id)
+        user_profile.phone_number = "+923074649892"
+        user_profile.save()
+
+        # Setup For POST request to "validate_otp_view"
+        client.cookies["temporary_cookie"] = json.dumps(
+            {
+                "email": email,
+                "id": user.id,
+                "generated_otp": str(123456),
+                "referer_url": reverse("Homepage:login"),
+            }
+        )
+
+        url = reverse("Homepage:password_reset_confirm_via_otp")
+        data = {
+            "new_password1": "New_password123!",
+            "new_password2": "Different_password!",
+        }
+
+        response = client.post(url, data)
+
+        # Verify response renders the same template with an error message
+        assert response.status_code == 200
+        message = list(get_messages(response.wsgi_request))[0].message
+        assert "Passwords does not match" == message
+
+    def test_password_reset_confirm_invalid_form(self, client: Client, custom_user):
+        """Test invalid form submission (e.g., missing fields)."""
+
+        # 1. create user
+        user, user_profile = custom_user()
+        email = user.email
+        # 2. update user profile
+        user_profile = UserProfile.objects.get(user__id=user.id)
+        user_profile.phone_number = "+923074649892"
+        user_profile.save()
+
+        # Setup For POST request to "validate_otp_view"
+        client.cookies["temporary_cookie"] = json.dumps(
+            {
+                "email": email,
+                "id": user.id,
+                "generated_otp": str(123456),
+                "referer_url": reverse("Homepage:login"),
+            }
+        )
+
+        url = reverse("Homepage:password_reset_confirm_via_otp")
+        data = {
+            "new_password1": "new_password",
+            "new_password2": "new_password",
+        }
+
+        response = client.post(url, data)
+
+        # Verify response renders the same template with an error message
+        assert response.status_code == 200
+        message = list(get_messages(response.wsgi_request))[0].message
+        assert "Form Not Valid" == message
+
+    def test_password_reset_confirm_no_temporary_cookie(self, client: Client):
+        """Test view redirect when temporary cookie is missing."""
+
+        url = reverse("Homepage:password_reset_confirm_via_otp")
+        data = {"new_password1": "new_password123", "new_password2": "new_password123"}
+
+        response = client.post(url, data)
+
+        # Verify redirection to send_sms page
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:send_sms")

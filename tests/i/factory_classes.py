@@ -3,7 +3,7 @@ import random
 
 import factory
 import factory.django
-from django.core.files.base import ContentFile
+# from django.core.files.base import ContentFile
 from faker import Faker
 
 from i.models import (ComputerSubCategory, Monitors, ProductCategory, Review,
@@ -50,19 +50,16 @@ class MonitorsFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Monitors
 
-        # image_1 = factory.LazyAttribute(
-        #     lambda _: ContentFile(fake.binary(length=1024), "test_image.jpg")
-        # )
-        # image_2 = factory.LazyAttribute(
-        #     lambda _: ContentFile(fake.binary(length=1024), "test_image.jpg")
-        # )
-        # image_3 = factory.LazyAttribute(
-        #     lambda _: ContentFile(fake.binary(length=1024), "test_image.jpg")
-        # )
+    image_1 = factory.LazyAttribute(
+        lambda _: "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+    )
+    image_2 = factory.LazyAttribute(
+        lambda _: "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+    )
+    image_3 = factory.LazyAttribute(
+        lambda _: "https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+    )
 
-    image_1 = None
-    image_2 = None
-    image_3 = None
     name = factory.Faker("company")
     brand = factory.Faker(
         "random_element",
@@ -113,7 +110,11 @@ class MonitorsFactory(factory.django.DjangoModelFactory):
         ],
     )
     mounting_type = factory.Faker(
-        "random_element", elements=["Wall_Mount", "Desk_Mount"]
+        "random_element",
+        elements=[
+            ("WALL_MOUNT", "Wall Mount"),
+            ("DESK_MOUNT", "Desk Mount"),
+        ],
     )
     item_dimensions = factory.Faker("numerify", text="###x###x### mm")
     item_weight = factory.Faker("random_int", min=1, max=20)
@@ -131,6 +132,7 @@ class MonitorsFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def special_features(self, create, extracted, **kwargs):
+        # if Monitor instance is created
         if not create:
             return
 
@@ -139,10 +141,11 @@ class MonitorsFactory(factory.django.DjangoModelFactory):
             for choice in Special_Features.SPECIAL_FEATURES_CHOICES:
                 Special_Features.objects.create(name=choice[0])
 
-        # Ensure there are enough features to sample
+        # if developer provides the features, while creating Monitors instance
         if extracted:
             for feature in extracted:
                 self.special_features.add(feature)
+        # Assign features to Monitor if developer does not provides the features, while creating Monitors instance
         else:
             features = list(Special_Features.objects.all())
             if len(features) < 3:

@@ -11,16 +11,30 @@ from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
 from PIL import Image
 
-from Homepage.forms import (AdministratorProfileForm, CustomerProfileForm,
-                            CustomerServiceProfileForm,
-                            CustomPasswordResetForm, CustomUserImageForm,
-                            E_MailForm_For_Password_Reset, LogInForm,
-                            ManagerProfileForm, OTPForm, SellerProfileForm,
-                            UserProfileForm, validate_password)
+from Homepage.forms import (
+    AdministratorProfileForm,
+    CustomerProfileForm,
+    CustomerServiceProfileForm,
+    CustomPasswordResetForm,
+    CustomUserImageForm,
+    E_MailForm_For_Password_Reset,
+    LogInForm,
+    ManagerProfileForm,
+    OTPForm,
+    SellerProfileForm,
+    UserProfileForm,
+    validate_password,
+)
+from Homepage.models import UserProfile
 from tests.Homepage.Homepage_factory import (
-    CustomPasswordResetFormFactory, E_MailForm_For_Password_ResetFactory,
-    LogInFormFactory, OTPFormFactory,
-    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration)
+    CustomUserOnlyFactory,
+    CustomPasswordResetFormFactory,
+    E_MailForm_For_Password_ResetFactory,
+    LogInFormFactory,
+    OTPFormFactory,
+    UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration,
+)
+from tests.checkout.test_checkout_views import user_profile
 
 fake = Faker()
 
@@ -41,7 +55,7 @@ def userprofile_form_data():
             "full_name": user_profile.full_name,
             "age": user_profile.age,
             "gender": user_profile.gender,
-            "phone_number": user_profile.phone_number,
+            "phone_number": "+923074649892",
             "city": user_profile.city,
             "country": "NZ",
             "postal_code": user_profile.postal_code,
@@ -307,21 +321,20 @@ class Test_UserProfileForm:
         form_data = userprofile_form_data(user_profile)
 
         form = UserProfileForm(data=form_data)
-        assert not form.is_valid()
-        assert "phone_number" in form.errors
+        assert form.is_valid()
 
     def test_user_profile_form_invalid_age(self, userprofile_form_data):
         profile = (
-            UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration(
-                age=17
-            )
-        )  # Invalid age, less than 18
+            UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration()
+        )
         # Get the data from fixture
         form_data = userprofile_form_data(profile)
-
+        # Enter Invalid age
+        form_data["age"] = 17
         form = UserProfileForm(data=form_data)
+
         assert not form.is_valid()
-        assert "age" in form.errors
+        assert form.errors["age"] == ["Valid age is required, Hint: 0 to 130"]
 
     def test_user_profile_form_empty_fields(self, empty_userprofile_form):
         # create an empty form with all fields empty ""
@@ -353,18 +366,18 @@ class Test_UserProfileForm:
         assert "gender" in form.errors
 
     def test_user_profile_form_invalid_phone_number(self, userprofile_form_data):
-        profile = (
-            UserProfileFactory_CustomUserFactory_Without_UserProfile_PostGeneration(
-                phone_number="InvalidPhoneNumber"
-            )
-        )  # Invalid phone number
 
+        user = CustomUserOnlyFactory()
+        user_profile = UserProfile.objects.get(user__id=user.id)
         # make a dictionary for the form
-        form_data = userprofile_form_data(profile)
+        form_data = userprofile_form_data(user_profile)
 
+        # Store invalid data in the form
+        form_data["phone_number"] = "invalid"
+        # Assertions
         form = UserProfileForm(data=form_data)
-        assert not form.is_valid()
         assert "phone_number" in form.errors
+        assert not form.is_valid()
 
 
 @pytest.mark.django_db

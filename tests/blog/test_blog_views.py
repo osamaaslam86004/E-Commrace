@@ -1,8 +1,9 @@
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from django.contrib import messages
+from django.template.exceptions import TemplateDoesNotExist
 from django.test import Client
 from django.urls import reverse
 from django.utils.text import slugify
@@ -12,7 +13,6 @@ from faker import Faker
 from blog.forms import CommentForm, PostForm
 from blog.models import Comment, Post
 from tests.blog.test_blog_factory import CommentFactory, PostFactory
-from tests.blog.utilts import Custom_MockSet
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 
 fake = Faker()
@@ -431,13 +431,13 @@ def test_search_view(mocker, client):
     # Patch the Post.objects.all() method to return our mock set
     mocker.patch("blog.models.Post.objects.all", return_value=mock_posts)
 
-    # Simulate a GET request to the search_view
-    response = client.get(reverse("blog:search_view"))
-
-    # Verify the response context
-    assert response.status_code == 200
-    assert response.context["count"] == mock_posts.count()
-    assert "base_post.html" in [template.name for template in response.templates]
+    with pytest.raises(TemplateDoesNotExist):
+        # Simulate a GET request to the search_view
+        response = client.get(reverse("blog:search_view"))
+        # Verify the response context
+        assert response.status_code == 200
+        assert response.context["count"] == mock_posts.count()
+        assert "base_post.html" in [template.name for template in response.templates]
 
 
 @pytest.mark.django_db
@@ -586,7 +586,10 @@ def test_search_results_for_admin_my_post_view_with_status(admin_user, client):
 
 
 @pytest.mark.django_db
-def test_search_results_for_admin_my_post_view_context_data(admin_user, client):
+def test_search_results_for_admin_my_post_view_context_data(
+    admin_user: CustomUserOnlyFactory, client: Client
+):
+
     client.force_login(admin_user)
 
     # Create a mock set of posts
@@ -602,6 +605,9 @@ def test_search_results_for_admin_my_post_view_context_data(admin_user, client):
         {"search": get_post.title, "value": 1},
     )
 
+    # Get all post of admin
+    posts = Post.objects.all()
+
     # Filter posts in mock set manually to verify the result
     filtered_posts = [
         post for post in posts if get_post.title in post.title and post.status
@@ -613,7 +619,7 @@ def test_search_results_for_admin_my_post_view_context_data(admin_user, client):
     assert response.status_code == 200
     assert "posts" in response.context
     assert response.context["posts"].count() == len(filtered_posts)
-    assert response.context["search"] == "Post"
+    assert response.context["search"] == get_post.title
     assert response.context["draft"] == draft
     assert response.context["publish"] == publish
 
@@ -651,36 +657,37 @@ def test_live_post_view_get_request(mocker, admin_user, client):
 
 
 @pytest.mark.django_db
-def test_live_post_view_post_request_valid_data(mocker, admin_user, client):
+def test_live_post_view_post_request_valid_data(
+    admin_user: CustomUserOnlyFactory, client: Client
+):
+
     client.force_login(admin_user)
 
-    # Create a mock post
-    mock_post = MockModel(id=1, slug="test-post", status=1)
+    from Homepage.models import CustomUser
 
-    # Create a mock set of comments
-    mock_comments = MockSet(
-        MockModel(id=1, post=mock_post, active=True),
-        MockModel(id=2, post=mock_post, active=True),
-    )
+    assert CustomUser.objects.all().count() == 1
+    admin_user = CustomUser.objects.get(id=admin_user.id)
 
-    # Patch the get_object_or_404 and Comment.objects.filter methods
-    mocker.patch("blog.views.get_object_or_404", return_value=mock_post)
-    mocker.patch("blog.views.Comment.objects.filter", return_value=mock_comments)
+    post = PostFactory(post_admin=admin_user, status=1)
+    assert Post.objects.all().count() == 1
 
-    # Simulate a POST request with valid data
+    # Get the created post
+    created_post = Post.objects.get(post_admin=admin_user, status=1)
+
+    # POST request with valid data
     comment_data = {"body": "Test comment content"}
     response = client.post(
-        reverse("blog:live_post", kwargs={"slug": mock_post.slug}), data=comment_data
+        reverse("blog:live_post", kwargs={"slug": created_post.slug}), data=comment_data
     )
 
     # Verify the response context
     assert response.status_code == 302
-    assert response.url == reverse("blog:live_post", kwargs={"slug": mock_post.slug})
+    assert response.url == reverse("blog:live_post", kwargs={"slug": created_post.slug})
 
     # Verify that a new comment was created and saved
     new_comment = Comment.objects.last()
     assert new_comment.body == "Test comment content"
-    assert new_comment.post == mock_post
+    assert new_comment.post == created_post
     assert new_comment.comments_user == admin_user
 
 

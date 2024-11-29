@@ -16,18 +16,6 @@ faker_logger.setLevel(logging.WARNING)
 def create_user():
     def _create_user():
         user = CustomUserOnlyFactory()
-
-        # Create a UserProfile for the user
-        user_profile = UserProfile.objects.create(
-            user=user,
-            full_name="",
-            age=18,
-            gender="",
-            phone_number="",
-            city="",
-            country="",
-            postal_code="",
-        )
         return user
 
     return _create_user
@@ -35,18 +23,27 @@ def create_user():
 
 @pytest.mark.django_db
 def test_register_user(create_user):
+
+    # Setup for test
+    user = create_user()
+
     with patch("requests.post") as mock_post:
         mock_response = Mock()
         mock_response.status_code = 201
         mock_response.json.return_value = {
+            "id": user.id,
             "access": "access_token",
             "refresh": "refresh_token",
         }
         mock_post.return_value = mock_response
 
-        response = TokenUtils.register_user(create_user())
+        response = TokenUtils.register_user(user)
 
-        assert response == {"access": "access_token", "refresh": "refresh_token"}
+        assert response == {
+            "id": user.id,
+            "access": "access_token",
+            "refresh": "refresh_token",
+        }
         mock_post.assert_called_once()
 
 
