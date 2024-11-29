@@ -50,7 +50,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -244,11 +244,72 @@ SESSION_COOKIE_HTTPONLY = True
 
 
 # ------------------- django Content security protection------------------------
-CSP_BASE_URI = config("CSP_BASE_URI").split(", ")
-CSP_IMG_SRC = config("CSP_IMG_SRC").split(", ")
-CSP_STYLE_SRC = config("CSP_STYLE_SRC").split(", ")
-CSP_FONT_SRC = config("CSP_FONT_SRC").split(", ")
-CSP_SCRIPT_SRC = config("CSP_SCRIPT_SRC").split(", ")
+CSP_BASE_URI = (
+    "'self'",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://stackpath.bootstrapcdn.com",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",
+    "https://fontawesome.com/",
+)
+CSP_IMG_SRC = (
+    "'self'",  # Allow images from the same domain
+    "https://res.cloudinary.com",  # Current allowed sources fpr https
+    "http://res.cloudinary.com",  # Current allowed sources for http
+    "https://mdbcdn.b-cdn.net",
+    "https://dummyimage.com",
+    "https://fastly.picsum.photos",
+    "https://picsum.photos",  # Allow images from picsum.photos
+    "https://placekitten.com",
+)
+
+CSP_STYLE_SRC = (
+    "'self'",  # Allow styles from the same domain
+    "'unsafe-inline'",  # Allow inline styles (if required)
+    "https://cdn.jsdelivr.net",  # Allow styles from JSDelivr (for Bootstrap)
+    "https://stackpath.bootstrapcdn.com",  # Allow Bootstrap CDN
+    "https://fonts.googleapis.com",  # Allow Google Fonts
+    "https://maxcdn.bootstrapcdn.com",  # Allow MaxCDN (Bootstrap)
+    "https://cdnjs.cloudflare.com",  # Allow FontAwesome from Cloudflare
+)
+
+
+CSP_FONT_SRC = (
+    "'self'",
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",  # Allow FontAwesome from Cloudflare
+    "https://fontawesome.com",
+    "https://maxcdn.bootstrapcdn.com",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts",  # Allow versioned FontAwesome webfonts
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/webfonts",  # Allow any FontAwesome version's webfonts
+)
+
+
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "'unsafe-inline'",  # Allows inline scripts (consider removing if possible)
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js",
+    "https://unpkg.com/htmx.org@1.9.10",
+    "https://code.jquery.com",  # For jQuery CDN
+    "https://cdn.jsdelivr.net/npm/@popperjs",  # For Popper.js CDN
+    "https://stackpath.bootstrapcdn.com/bootstrap",  # For Bootstrap
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",  # FontAwesome
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js",
+    "https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js",  # Add Popper.js
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js",  # Add Bootstrap 4.4.1
+    "https://unpkg.com/htmx.org@1.9.10",
+    "https://code.jquery.com",
+    "https://cdn.jsdelivr.net/npm/@popperjs",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js",
+    "https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js",
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js",
+)
 
 
 ###############################Cloudinary Settings For Image Storage###########################
@@ -287,6 +348,7 @@ else:
         api_key=CLOUDINARY_API_KEY,
         api_secret=CLOUDINARY_API_SECRET,
         api_proxy="http://proxy.server:3128",
+        secure=True,  # Enforces HTTPS
     )
 MEDIA_URL = "/media/"
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
