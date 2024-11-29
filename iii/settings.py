@@ -97,6 +97,7 @@ SITE_ID = 1
 MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -212,18 +213,18 @@ COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
 COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`
 
 # Specify the backend to handle compression
-COMPRESS_ROOT = STATIC_ROOT
-COMPRESS_URL = STATIC_URL
+# COMPRESS_ROOT = STATIC_ROOT
+# COMPRESS_URL = STATIC_URL
 
-# Compress CSS and JS files
-COMPRESS_CSS_FILTERS = [
-    "compressor.filters.css_default.CssAbsoluteFilter",  # Handle relative paths
-    "compressor.filters.cssmin.CSSMinFilter",  # Minify CSS
-]
+# # Compress CSS and JS files
+# COMPRESS_CSS_FILTERS = [
+#     "compressor.filters.css_default.CssAbsoluteFilter",  # Handle relative paths
+#     "compressor.filters.cssmin.CSSMinFilter",  # Minify CSS
+# ]
 
-COMPRESS_JS_FILTERS = [
-    "compressor.filters.jsmin.JSMinFilter",  # Minify JS
-]
+# COMPRESS_JS_FILTERS = [
+#     "compressor.filters.jsmin.JSMinFilter",  # Minify JS
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
