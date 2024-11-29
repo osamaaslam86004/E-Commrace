@@ -29,6 +29,7 @@ urlpatterns = [
     path("", include(("Homepage.urls", "Homepage"))),
     path("", include(("i.urls", "i"))),
     path("admin/", admin.site.urls),
+    path("grappelli/", include("grappelli.urls")),  # grappelli URLS
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
