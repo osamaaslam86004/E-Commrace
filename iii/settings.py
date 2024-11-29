@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     "axes",
     "phonenumber_field",
     "django_countries",
+    "compressor",
 ]
 
 SITE_ID = 1
@@ -198,6 +199,31 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+# ------------Django compressor------------------------------
+STATICFILES_FINDERS = (
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    # other finders..
+    "compressor.finders.CompressorFinder",
+)
+COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
+
+# Default to False in development unless DEBUG=False
+COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`
+
+# Specify the backend to handle compression
+COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_URL = STATIC_URL
+
+# Compress CSS and JS files
+COMPRESS_CSS_FILTERS = [
+    "compressor.filters.css_default.CssAbsoluteFilter",  # Handle relative paths
+    "compressor.filters.cssmin.CSSMinFilter",  # Minify CSS
+]
+
+COMPRESS_JS_FILTERS = [
+    "compressor.filters.jsmin.JSMinFilter",  # Minify JS
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
