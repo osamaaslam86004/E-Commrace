@@ -215,6 +215,14 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 
 
+# ------------------- django Content security protection------------------------
+CSP_BASE_URI = config("CSP_BASE_URI").split(", ")
+CSP_IMG_SRC = config("CSP_IMG_SRC").split(", ")
+CSP_STYLE_SRC = config("CSP_STYLE_SRC").split(", ")
+CSP_FONT_SRC = config("CSP_FONT_SRC").split(", ")
+CSP_SCRIPT_SRC = config("CSP_SCRIPT_SRC").split(", ")
+
+
 ###############################Cloudinary Settings For Image Storage###########################
 
 # For cloudinary_storage library only
