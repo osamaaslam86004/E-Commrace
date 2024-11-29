@@ -332,7 +332,7 @@ class CustomerServiceProfileAdmin(admin.ModelAdmin):
         "customuser_type_3__email",
     ]
     # Add descriptive text for the search box
-    search_help_text = "Search by experience, full name, email."
+    search_help_text = "experience, full name, email."
     row_id_fields = ("customuser_type_3",)
     autocomplete_fields = ["customuser_type_3"]
 
@@ -350,6 +350,13 @@ class CustomerServiceProfileAdmin(admin.ModelAdmin):
                 "customuser_type_3",
             )  # Add customer_profile if obj exists
         return readonly_fields
+
+    from django.utils.translation import gettext_lazy as _
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["search_help_text"] = self.search_help_text
+        return super().changelist_view(request, extra_context=extra_context)
 
     def save_model(self, request, obj, form, change):
 
