@@ -1,4 +1,5 @@
 {% load static %}
+{% load compress %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,6 +9,9 @@
     <title>Payment Page</title>
     <!-- Include Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
+
+    
+    {% compress css inline %}
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -56,6 +60,8 @@
             cursor: not-allowed;
         }
     </style>
+    {% endcompress %}
+
 </head>
 
 <body>
@@ -70,6 +76,9 @@
         <div id="card-errors" role="alert"></div>
         <button type="submit">Submit Payment</button>
     </form>
+
+    
+    {% compress js inline %}
     <script>
         var stripe = Stripe("{{ stripe_publication_key }}");
         var elements = stripe.elements();
@@ -109,6 +118,8 @@
             form.submit();
         }
     </script>
+    {% endcompress %}
+
 </body>
 
 </html>

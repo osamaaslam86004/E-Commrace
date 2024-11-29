@@ -52,7 +52,8 @@
 
 
 
-
+{% load compress %}
+{% compress js inline %}
 {# Include CKEditor script #}
 <script>
     CKEDITOR.replace('form-content', {
@@ -60,5 +61,6 @@
         height: 1100, // Set the height of CKEditor
     });
 </script>
+{% endcompress %}
 
 {% endblock content %}
