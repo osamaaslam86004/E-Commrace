@@ -14,20 +14,28 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+
+        # Set is_staff based on user_type
+        if extra_fields.get("user_type") != "CUSTOMER" and user.is_staff != True:
+            user.is_staff = True
+
         user.save(using=self._db)
 
         # Create a UserProfile for the user
-        UserProfile.objects.create(
-            user=self,
-            full_name="dummy_name",
-            age=18,
-            gender="Male",
-            phone_number="+923074649892",
-            city="dummy",
-            country="NZ",
-            postal_code="54400",
-            shipping_address="default",
-        )
+        try:
+            UserProfile.objects.create(
+                user=user,
+                full_name="dummy_name",
+                age=18,
+                gender="Male",
+                phone_number="+923074649892",
+                city="dummy",
+                country="NZ",
+                postal_code="54400",
+                shipping_address="default",
+            )
+        except Exception as e:
+            print(f"Error creating UserProfile for {user.email}: {e}")
 
         return user
 
@@ -71,11 +79,6 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ["username"]
 
     objects = CustomUserManager()
-
-    # do not use direct import strategy => circular imports error
-    # direct import meaning => import at the top of any file
-    # why circular imports?
-    #  we are importing ProductCategory to Homepage.models and Customuser to i.models
 
 
 class UserProfile(models.Model):

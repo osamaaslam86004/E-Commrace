@@ -1,3 +1,4 @@
+from django.urls import reverse
 from ckeditor.fields import RichTextField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -228,6 +229,9 @@ class Monitors(models.Model):
 
     def __str__(self):
         return f"{self.name}- {self.max_display_resolution} Pixels- {self.mounting_type}- {self.monitor_type}- {self.screen_size}"
+
+    def get_absolute_url(self):
+        return reverse("i:add_review", kwargs={"product_id": self.monitor_id})
 
 
 class LaptopAccessories(models.Model):

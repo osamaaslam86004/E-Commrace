@@ -1,5 +1,6 @@
 from ckeditor.fields import RichTextField
 from django.db import models
+from django.urls import reverse
 
 from Homepage.models import CustomUser
 
@@ -35,6 +36,9 @@ class Post(models.Model):
         draft = Post.objects.filter(post_admin=user, status="0").count()
         total = publish + draft
         return [publish, draft, total]
+
+    def get_absolute_url(self):
+        return reverse("blog:live_post", kwargs={"slug": self.slug})
 
 
 class Comment(models.Model):
