@@ -7,9 +7,15 @@ from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomUser,
-                             ManagerProfile, SellerProfile, UserProfile)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
 
 
 class SignUpForm(UserCreationForm):
@@ -40,24 +46,24 @@ class SignUpForm(UserCreationForm):
             attrs={"placeholder": "Confirm Password"}
         )
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.user_type = self.cleaned_data["user_type"]
-        if commit:
-            user.save()
-            # Create UserProfile for the user
-            UserProfile.objects.create(
-                user=user,
-                full_name="",
-                age=18,
-                gender="",
-                phone_number="",
-                city="",
-                country="",
-                postal_code="",
-            )
+    # def save(self, commit=True):
+    #     user = super().save(commit=False)
+    #     user.user_type = self.cleaned_data["user_type"]
+    #     if commit:
+    #         user.save()
+    #         # Create UserProfile for the user
+    #         UserProfile.objects.create(
+    #             user=user,
+    #             full_name="",
+    #             age=18,
+    #             gender="",
+    #             phone_number="",
+    #             city="",
+    #             country="",
+    #             postal_code="",
+    #         )
 
-            return user
+    #         return user
 
 
 class CustomUserImageForm(forms.ModelForm):
@@ -141,6 +147,24 @@ class CustomPasswordResetForm(forms.Form):
 class UserProfileForm(forms.ModelForm):  # no need to validate max_length
     #  this model field will allow only max_character in the form
     # if user try, then django form rendering will prevent this
+
+    # phone number in GET: dict_items([('full_name', 'osama'), ('age', 18), ('gender', 'Male'),
+    # ('phone_number', PhoneNumber(country_code=92, national_number=3074649892, extension=None,
+    # italian_leading_zero=None, number_of_leading_zeros=None, country_code_source=1,
+    # preferred_domestic_carrier_code=None)), ('city', 'lahore'), ('country', Country(code='PK')),
+    # ('postal_code', '54000'), ('shipping_address', 'House no. 237 block G-4 Johar Town')])
+
+    phone_number = PhoneNumberField(
+        # Comment out Widget During Testing Phase
+        widget=PhoneNumberPrefixWidget(
+            attrs={"placeholder": "Enter your phone number"}
+        ),
+        help_text="Include country code. For example: +1 123-456-7890",
+        error_messages={
+            "invalid": "Enter a valid phone number with valid country code."
+        },
+    )
+
     GENDER_CHOICES = UserProfile.GENDER_CHOICES
     gender = forms.ChoiceField(
         choices=GENDER_CHOICES,
@@ -172,7 +196,6 @@ class UserProfileForm(forms.ModelForm):  # no need to validate max_length
             "full_name": "Full Name",
             "age": "Age",
             "gender": "Gender",
-            "phone_number": "Phone Number",
             "city": "City",
             "country": "Country",
             "postal_code": "Postal Code",
@@ -191,7 +214,6 @@ class UserProfileForm(forms.ModelForm):  # no need to validate max_length
             "shipping_address": forms.TextInput(
                 attrs={"placeholder": "Enter shipping address"}
             ),
-            "phone_number": PhoneNumberPrefixWidget(),
         }
         help_texts = {
             "full_name": "Enter your full name as it appears on official documents.",
@@ -362,3 +384,196 @@ class AdministratorProfileForm(forms.ModelForm):
         if experience_years < 1 or experience_years > 40:
             raise ValidationError("Experience must be 1 to 40 years.")
         return experience_years
+
+
+class CustomUserAdminForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = "__all__"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        user_type = cleaned_data.get("user_type")
+        is_staff = cleaned_data.get("is_staff")
+        is_superuser = cleaned_data.get("is_superuser")
+
+        if user_type == "CUSTOMER" and is_staff:
+            raise ValidationError("A CUSTOMER user must not have is_staff set to True.")
+
+        if user_type != "CUSTOMER" and not is_staff:
+            raise ValidationError(
+                " User other than CUSTOMER (CustomUser) must have is_staff set to True."
+            )
+
+        if user_type != "ADMINISTRATOR" and is_superuser:
+            raise ValidationError(" Only ADMINISTRATOR has Super User status")
+
+        return cleaned_data
+
+
+class UserProfileFormAdmin(forms.ModelForm):
+
+    phone_number = PhoneNumberField(
+        # Comment out Widget During Testing Phase
+        widget=PhoneNumberPrefixWidget(
+            attrs={"placeholder": "Enter your phone number"}
+        ),
+        help_text="Include country code. For example: +1 123-456-7890",
+        error_messages={
+            "invalid": "Enter a valid phone number with valid country code."
+        },
+    )
+
+    GENDER_CHOICES = UserProfile.GENDER_CHOICES
+    gender = forms.ChoiceField(
+        choices=GENDER_CHOICES,
+        label="Gender Type",
+        widget=forms.Select(attrs={"placeholder": "Select Gender Type"}),
+    )
+
+    def clean_age(self):
+        if self.cleaned_data["age"] is None:
+            raise ValidationError("Valid age is required,")
+        if self.cleaned_data["age"] < 18 or self.cleaned_data["age"] > 130:
+            raise ValidationError("Valid age is required, Hint: 0 to 130")
+        return self.cleaned_data["age"]
+
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
+        labels = {
+            "full_name": "Full Name",
+            "age": "Age",
+            "gender": "Gender",
+            "city": "City",
+            "country": "Country",
+            "postal_code": "Postal Code",
+            "shipping_address": "Shipping Address",
+        }
+        widgets = {
+            "full_name": forms.TextInput(attrs={"placeholder": "full name"}),
+            "age": forms.NumberInput(attrs={"placeholder": "age"}),
+            "city": forms.TextInput(attrs={"placeholder": "city name"}),
+            "country": CountrySelectWidget(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "postal_code": forms.TextInput(attrs={"placeholder": "postal code"}),
+            "shipping_address": forms.TextInput(
+                attrs={
+                    "placeholder": "Enter shipping address",
+                    "style": "width: 500px;",
+                }
+            ),
+        }
+        help_texts = {
+            "full_name": "Enter your full name as it appears on official documents.",
+            "age": "Enter your age in years (1-130).",
+            "gender": "Specify your gender (e.g., Male, Female, Other).",
+            "phone_number": "Provide a valid phone number for contact.",
+            "city": "Enter the name of your city of residence.",
+            "country": "Enter the name of your country of residence.",
+            "postal_code": "54440.",
+            "shipping_address": "House No/Apartment,  Block, Town",
+        }
+
+
+class CustomerProfileAdminForm(CustomerProfileForm):
+    class Meta(CustomerProfileForm.Meta):  # Inherit Meta from CustomerProfileForm
+        fields = [
+            "customuser_type_1",
+            "shipping_address",
+            "wishlist",
+        ]
+        widgets = {
+            "shipping_address": forms.TextInput(
+                attrs={
+                    "placeholder": "Enter your shipping address as it appears on official documents",
+                    "style": "width: 400px;",  # Set width to 400px
+                }
+            ),
+        }
+
+    def clean_customuser_type_1(self):
+        custom_user = self.cleaned_data["customuser_type_1"]
+
+        # Check if the CustomUser exists
+        if not isinstance(custom_user, CustomUser):
+            raise ValidationError("Invalid CustomUser instance.")
+
+        # Check if CustomerProfile already exists for this CustomUser
+        if hasattr(custom_user, "customerprofile"):
+            raise ValidationError(
+                f"CustomerProfile already exists for {custom_user.email}"
+            )
+
+        # Validate user type
+        if custom_user.user_type != "CUSTOMER":
+            raise ValidationError(
+                f"User {custom_user.email} is of {custom_user.user_type} type. Must be Customer."
+            )
+
+        return custom_user
+
+
+class SellerProfileAdminForm(SellerProfileForm):
+    class Meta(SellerProfileForm.Meta):
+        fields = ["customuser_type_2"]
+        widgets = {
+            "shipping_address": forms.TextInput(
+                attrs={
+                    "placeholder": "Enter your shipping address as it appears on official documents",
+                    "style": "width: 400px;",  # Set width to 400px
+                }
+            )
+        }
+
+    def clean_customuser_type_2(self):
+        custom_user = self.cleaned_data["customuser_type_2"]
+
+        # Check if the CustomUser exists
+        if not isinstance(custom_user, CustomUser):
+            raise ValidationError("Invalid CustomUser instance.")
+
+        # Check if CustomerProfile already exists for this CustomUser
+        if hasattr(custom_user, "customerprofile"):
+            raise ValidationError(
+                f"CustomerProfile already exists for {custom_user.email}"
+            )
+
+        # Validate user type
+        if custom_user.user_type != "SELLER":
+            raise ValidationError(
+                f"User {custom_user.email} is of {custom_user.user_type} type. Must be Seller."
+            )
+
+        return custom_user
+
+
+class CustomerServiceProfileAdminForm(CustomerServiceProfileForm):
+
+    class Meta(CustomerServiceProfileForm.Meta):
+        fields = ["customuser_type_3"]
+        widgets = {
+            "department": forms.TextInput(
+                attrs={
+                    "placeholder": "Department name (maximum 50 characters)",
+                    "style": "width: 500px;",  # Set width to 400px
+                }
+            ),
+            "bio": forms.Textarea(
+                attrs={
+                    "placeholder": "Bio here (maximum 500 characters)",
+                    "style": "width: 500px; height:250px",  # Set width to 400px
+                }
+            ),
+        }
+
+    def clean_customuser_type_3(self):
+        custom_user = self.cleaned_data["customuser_type_3"]
+
+        # Validate user type
+        if custom_user.user_type != "CUSTOMER REPRESENTATIVE":
+            raise ValidationError(
+                f"User is of {custom_user.user_type} type. Must be Customer Service Profile (CustomerServiceProfile)."
+            )
+        return custom_user
