@@ -365,6 +365,10 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
     SECURE_SSL_REDIRECT = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
+    SECURE_HSTS_SECONDS = 31536000  # Enable HSTS for 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to subdomains
+    SECURE_HSTS_PRELOAD = True  # Preload HSTS
 
 ###############################-----------Set Login rate limit For Users-------------#############################
 SILENCED_SYSTEM_CHECKS = ["axes.W003"]
