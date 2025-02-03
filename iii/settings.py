@@ -92,11 +92,13 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "django_countries",
     "compressor",
+    "django_prometheus",
 ]
 
 SITE_ID = 1
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
@@ -107,6 +109,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "iii.urls"
