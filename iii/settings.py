@@ -58,7 +58,7 @@ if DEBUG:
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.80.246.79"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "18.207.244.2"]
 
 # Application definition
 
