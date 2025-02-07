@@ -50,15 +50,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
+        "54.235.230.220",
+        "18.207.244.2",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "18.207.244.2"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "54.235.230.220", "18.207.244.2"]
 
 # Application definition
 
