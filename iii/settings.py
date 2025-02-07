@@ -55,12 +55,11 @@ if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        "54.235.230.220",
-        "18.207.244.2",
+        "3.87.212.136",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "54.235.230.220", "18.207.244.2"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.87.212.136"]
 
 # Application definition
 
@@ -299,6 +298,7 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://diverse-intense-whippet.ngrok-free.app",
     "https://osama11111.pythonanywhere.com",
+    "http://3.87.212.136",
 ]
 
 
@@ -462,23 +462,65 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+if not DEBUG:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
         },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "DEBUG",
-    },
-    "loggers": {
-        "axes": {
+        "root": {
             "handlers": ["console"],
-            "level": "ERROR",  # Set the level to ERROR to suppress AXES logs
-            "propagate": True,
+            "level": "DEBUG",
         },
-    },
-}
+        "loggers": {
+            "axes": {
+                "handlers": ["console"],
+                "level": "ERROR",  # Set the level to ERROR to suppress AXES logs
+                "propagate": True,
+            },
+        },
+    }
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {message}",
+                "style": "{",
+            },
+            "simple": {
+                "format": "{levelname} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "django_file": {
+                "level": "ERROR",
+                "class": "logging.FileHandler",
+                "filename": "/home/ubuntu/E-commrace/E-Commrace/logs/django.log",
+                "formatter": "verbose",
+            },
+            "axes_file": {
+                "level": "ERROR",
+                "class": "logging.FileHandler",
+                "filename": "/home/ubuntu/E-commrace/E-Commrace/logs/axes.log",
+                "formatter": "verbose",
+            },
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["django_file"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+            "axes": {
+                "handlers": ["axes_file"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+        },
+    }
