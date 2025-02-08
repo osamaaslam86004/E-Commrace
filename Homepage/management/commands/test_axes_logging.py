@@ -1,6 +1,6 @@
 import logging
 
-from axes.utils import get_user_attempts
+from axes.utils import reset
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
@@ -18,11 +18,11 @@ class Command(BaseCommand):
         if user:
             # Simulate a failed login attempt
             try:
-                attempts = get_user_attempts(user)
+                attempts = reset(user)
                 logger.error(
                     f"Simulated failed login attempt for user: {username}. Attempts: {attempts}"
                 )
             except Exception as e:
-                logger.error(f" Exception in get_user_attempts '{e}'")
+                logger.error(f" Exception in reset '{e}'")
         else:
             logger.error(f"User  '{username}' does not exist.")

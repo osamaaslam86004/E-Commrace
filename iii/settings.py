@@ -278,7 +278,8 @@ if not DEBUG:
 SILENCED_SYSTEM_CHECKS = ["axes.W003"]
 AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 15  # Number of login attempts allowed before blocking
-AXES_LOCK_OUT_AT_FAILURE = False
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_LOCKOUT_PARAMETERS = ["username", "ip"]
 AXES_COOLOFF_TIME = 0.001
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
@@ -286,7 +287,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 # AXES_CACHE = "default"
 # The number of reverse proxies in front of Django as an integer
-AXES_IPWARE_PROXY_COUNT = 0  # pythonanywhere.com only
+# AXES_IPWARE_PROXY_COUNT = 0  # pythonanywhere.com only
 AXES_IPWARE_PROXY_COUNT = 1
 # Use HTTP_X_REAL_IP only for pythonanywhere; Nginx is used as load balancer
 # AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP"]
