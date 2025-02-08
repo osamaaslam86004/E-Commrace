@@ -1,7 +1,7 @@
 import logging
 
 from axes.utils import reset
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 
@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
         # Simulate a failed login attempt
         username = "testuser"  # Replace with an actual username if needed
-        user = User.objects.filter(username=username).first()
+        user = get_user_model().objects.filter(username=username).first()
 
         if user:
             # Simulate a failed login attempt
