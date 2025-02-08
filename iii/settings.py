@@ -55,11 +55,11 @@ if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        "3.87.212.136",
+        "54.152.30.26",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.87.212.136"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "54.152.30.26"]
 
 # Application definition
 
@@ -149,6 +149,14 @@ else:
             },
         }
     }
+
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.redis.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379",
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -276,6 +284,13 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+# AXES_CACHE = "default"
+# The number of reverse proxies in front of Django as an integer
+AXES_IPWARE_PROXY_COUNT = 0  # pythonanywhere.com only
+AXES_IPWARE_PROXY_COUNT = 1
+# Use HTTP_X_REAL_IP only for pythonanywhere; Nginx is used as load balancer
+# AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP"]
+AXES_IPWARE_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
 
 ###################------------------- Google api-client library settings----------------############
 GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID")
