@@ -127,7 +127,7 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-if DEBUG:
+if not DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -227,7 +227,7 @@ SESSION_COOKIE_HTTPONLY = True
 ###############################Cloudinary Settings For Image Storage###########################
 
 # For cloudinary_storage library only
-if DEBUG:
+if not DEBUG:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
         "API_KEY": config("CLOUDINARY_API_KEY"),
@@ -248,7 +248,7 @@ import cloudinary
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
-if DEBUG:
+if not DEBUG:
     cloudinary.config(
         cloud_name=CLOUDINARY_CLOUD_NAME,
         api_key=CLOUDINARY_API_KEY,
@@ -480,7 +480,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-if DEBUG:
+if not DEBUG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
