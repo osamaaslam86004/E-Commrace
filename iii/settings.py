@@ -50,7 +50,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -59,7 +59,11 @@ if DEBUG:
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.83.216.156"]
+    ALLOWED_HOSTS = [
+        "osama11111.pythonanywhere.com",
+        "3.83.216.156",
+        "diverse-intense-whippet.ngrok-free.app",
+    ]
 
 # Application definition
 
@@ -127,7 +131,7 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-if not DEBUG:
+if DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -227,7 +231,7 @@ SESSION_COOKIE_HTTPONLY = True
 ###############################Cloudinary Settings For Image Storage###########################
 
 # For cloudinary_storage library only
-if not DEBUG:
+if DEBUG:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
         "API_KEY": config("CLOUDINARY_API_KEY"),
@@ -248,7 +252,7 @@ import cloudinary
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
-if not DEBUG:
+if DEBUG:
     cloudinary.config(
         cloud_name=CLOUDINARY_CLOUD_NAME,
         api_key=CLOUDINARY_API_KEY,
@@ -268,7 +272,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 ###########################----------Security Related Settings-----------########################################
 
 # Uncomment these settings only in production
-if not DEBUG:
+if DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
@@ -299,7 +303,7 @@ GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID")
 GOOGLE_OAUTH_CLIENT_SECRET = config("GOOGLE_OAUTH_CLIENT_SECRET")
 
 
-if not DEBUG:
+if DEBUG:
     GOOGLE_OAUTH_REDIRECT_URI = (
         "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
     )
@@ -478,7 +482,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-if not DEBUG:
+if DEBUG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
