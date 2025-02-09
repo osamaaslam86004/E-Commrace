@@ -206,9 +206,10 @@ class CustomLoginView(View):
             user = authenticate(request=request, email=email, password=password)
 
             if user is not None:
-                login(
-                    request, user, backend="django.contrib.auth.backends.ModelBackend"
-                )
+                # login(
+                #     request, user, backend="django.contrib.auth.backends.ModelBackend"
+                # )
+                login(request, user)
                 self.start_cookie_session(request)
                 messages.success(request, "Successfully Logged In")
                 return redirect(request.GET.get("next", "/"))

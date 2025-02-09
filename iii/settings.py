@@ -55,11 +55,11 @@ if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        "54.152.30.26",
+        "3.83.216.156",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "54.152.30.26"]
+    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com", "3.83.216.156"]
 
 # Application definition
 
@@ -127,7 +127,7 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-if not DEBUG:
+if DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -277,14 +277,16 @@ if not DEBUG:
 ###############################-----------Set Login rate limit For Users-------------#############################
 SILENCED_SYSTEM_CHECKS = ["axes.W003"]
 AXES_ENABLED = True
-AXES_FAILURE_LIMIT = 15  # Number of login attempts allowed before blocking
+AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
-AXES_LOCKOUT_PARAMETERS = ["username", "ip"]
-AXES_COOLOFF_TIME = 0.001
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_USE_USER_AGENT = True  # Use user agent for additional uniqueness
+AXES_COOLOFF_TIME = 1
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+AXES_USERNAME_FORM_FIELD = "email"
 # AXES_CACHE = "default"
 # The number of reverse proxies in front of Django as an integer
 # AXES_IPWARE_PROXY_COUNT = 0  # pythonanywhere.com only
@@ -478,7 +480,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-if not DEBUG:
+if DEBUG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
