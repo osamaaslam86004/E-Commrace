@@ -316,7 +316,8 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://diverse-intense-whippet.ngrok-free.app",
     "https://osama11111.pythonanywhere.com",
-    "http://3.83.216.156",
+    "http://127.0.0.1",
+    "http://localhost",
 ]
 
 
