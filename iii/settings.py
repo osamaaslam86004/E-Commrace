@@ -280,7 +280,6 @@ AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
-AXES_USE_USER_AGENT = True  # Use user agent for additional uniqueness
 AXES_COOLOFF_TIME = 1
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
