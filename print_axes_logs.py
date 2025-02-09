@@ -3,9 +3,7 @@ import os
 import django
 
 # Set up Django environment
-os.environ.setdefault(
-    "DJANGO_SETTINGS_MODULE", "iii"
-)  # Replace 'your_project_name' with your actual project name
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "iii")
 django.setup()
 
 from axes.models import AccessAttempt, AccessLog
