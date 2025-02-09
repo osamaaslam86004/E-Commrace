@@ -284,7 +284,7 @@ AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
-AXES_COOLOFF_TIME = 1
+AXES_COOLOFF_TIME = 0.05
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
