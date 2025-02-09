@@ -313,12 +313,11 @@ else:
 #################-------- csrf settings ----------------######################################
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = [
-    "https://diverse-intense-whippet.ngrok-free.app",
-    "https://osama11111.pythonanywhere.com",
-    "http://127.0.0.1",
-    "http://localhost",
-]
+CSRF_TRUSTED_ORIGINS = []
+#     "https://diverse-intense-whippet.ngrok-free.app",
+#     "https://osama11111.pythonanywhere.com",
+#     "http://127.0.0.1",
+# ]
 
 
 ####################---Allauth settings for social account login ----######################
