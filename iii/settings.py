@@ -55,13 +55,13 @@ if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        "3.83.216.156",
+        f"{config('EC2_PUBLIC_IPV4')}",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
     ALLOWED_HOSTS = [
         "osama11111.pythonanywhere.com",
-        "3.83.216.156",
+        f"{config('EC2_PUBLIC_IPV4')}",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 
@@ -284,6 +284,9 @@ AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_LOCKOUT_CALLABLE = "Homepage.views.LockoutView"
+AXES_LOCKOUT_URL = "/lock-account/"  # URL for the lockout view
+AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",

@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+from datetime import timedelta
 from typing import Any, Dict, Literal
 from urllib.parse import urlencode
 
@@ -8,6 +9,7 @@ import cloudinary
 import requests
 import stripe
 from axes.decorators import axes_dispatch
+from axes.models import AccessAttempt
 from cloudinary.uploader import upload
 from django.conf import settings
 from django.contrib import messages
@@ -29,6 +31,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -222,6 +225,70 @@ class CustomLoginView(View):
                     messages.error(request, f"{field}: {error}")
 
         return render(request, self.template_name, {"form": form})
+
+
+class LockoutView(TemplateView):
+    template_name = "lockout.html"  # Path to your lockout template
+
+    @method_decorator(axes_dispatch)
+    def dispatch(self, *args, **kwargs) -> HttpResponse:
+        return super().dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        access_log_time = None
+
+        # Get the user's last access log entry
+        if "user_id" in self.request.session:
+            user_id = self.request.session.get("user_id")
+            username = CustomUser.objects.filter(pk=user_id).values_list(
+                "attempt_time", flat=True
+            )
+            get_access_attempt_time_by_username = (
+                AccessAttempt.objects.filter(username=username)
+                .values_list("attempt_time", flat=True)
+                .first()
+            )
+
+            access_log_time = get_access_attempt_time_by_username
+
+        else:
+
+            x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(",")[0]
+            else:
+                ip = self.request.META.get("REMOTE_ADDR")
+
+            get_access_attempt_by_ip_address = (
+                AccessAttempt.objects.filter(ip_address=ip)
+                .values_list("attempt_time", flat=True)
+                .first()
+            )
+
+            access_log_time = get_access_attempt_by_ip_address
+
+        if access_log_time:
+            # Calculate the remaining time until the user is unblocked
+            lockout_time = access_log_time + timedelta(
+                minutes=settings.AXES_COOLOFF_TIME
+            )  # Assuming 3 minute lockout time
+
+            # Used max(..., 0) to prevent negative lockout times.
+            remaining_time = max(
+                (lockout_time - timezone.now()).total_seconds() / 60, 0
+            )
+
+            if remaining_time > 0:
+                context["remaining_time"] = round(remaining_time)
+            else:
+                context["remaining_time"] = 0  # User is unblocked
+
+        else:
+            context["remaining_time"] = 0
+
+        return context
 
 
 def custom_password_reset(
