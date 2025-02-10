@@ -227,6 +227,14 @@ class CustomLoginView(View):
         return render(request, self.template_name, {"form": form})
 
 
+from django.shortcuts import redirect
+
+
+def custom_lockout(request, credentials=None, *args, **kwargs):
+    """Custom lockout function to redirect blocked users."""
+    return redirect("Homepage:lockout")  # Uses the "lockout" view
+
+
 class LockoutView(TemplateView):
     template_name = "lockout.html"  # Path to your lockout template
 

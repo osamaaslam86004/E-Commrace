@@ -284,8 +284,10 @@ AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
-AXES_LOCKOUT_CALLABLE = "Homepage.views.LockoutView"
-AXES_LOCKOUT_URL = "/lock-account/"  # URL for the lockout view
+AXES_LOCKOUT_CALLABLE = "Homepage.views.custom_lockout"
+from django.urls import reverse
+
+AXES_LOCKOUT_URL = reverse("lockout")
 AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
 AUTHENTICATION_BACKENDS = [
