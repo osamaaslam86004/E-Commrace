@@ -287,7 +287,7 @@ AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
 AXES_LOCKOUT_CALLABLE = "Homepage.views.custom_lockout"
 from django.urls import reverse
 
-AXES_LOCKOUT_URL = reverse("lockout")
+AXES_LOCKOUT_URL = reverse("Homepage:lockout")
 AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
 AUTHENTICATION_BACKENDS = [
