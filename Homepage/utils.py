@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from axes.models import AccessAttempt
 from django.conf import settings
 from django.utils.timezone import now
 
@@ -40,3 +41,36 @@ def format_remaining_time(delta_seconds):
         time_parts.append(f"{int(seconds)} seconds")
 
     return " ".join(time_parts)
+
+
+class AccessLogTime:
+
+    @staticmethod
+    def access_log_time_by_username(username):
+        access_log_time = (
+            AccessAttempt.objects.filter(username=username)
+            .order_by("-attempt_time")
+            .values_list("attempt_time", flat=True)
+            .first()
+        )
+        return access_log_time
+
+    @staticmethod
+    def access_log_time_by_ip(ip):
+        access_log_time = (
+            AccessAttempt.objects.filter(ip_address=ip)
+            .order_by("-attempt_time")
+            .values_list("attempt_time", flat=True)
+            .first()
+        )
+        return access_log_time
+
+    @staticmethod
+    def access_log_time_by_user_agent(user_agent):
+        access_log_time = (
+            AccessAttempt.objects.filter(user_agent__icontains=user_agent)
+            .order_by("-attempt_time")
+            .values_list("attempt_time", flat=True)
+            .first()
+        )
+        return access_log_time

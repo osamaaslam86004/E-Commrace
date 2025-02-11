@@ -9,8 +9,7 @@ import cloudinary
 import requests
 import stripe
 from axes.decorators import axes_dispatch
-from axes.helpers import get_client_ip_address
-from axes.models import AccessAttempt
+from axes.helpers import get_client_ip_address, get_client_user_agent
 from cloudinary.uploader import upload
 from django.conf import settings
 from django.contrib import messages
@@ -72,7 +71,7 @@ from Homepage.models import (
     SellerProfile,
     UserProfile,
 )
-from Homepage.utils import format_remaining_time
+from Homepage.utils import AccessLogTime, format_remaining_time
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
@@ -261,12 +260,10 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
 
             if username:
                 # Get latest failed attempt time by username
-                access_log_time = (
-                    AccessAttempt.objects.filter(username=username)
-                    .order_by("-attempt_time")
-                    .values_list("attempt_time", flat=True)
-                    .first()
+                access_log_time_by_username = AccessLogTime.access_log_time_by_username(
+                    username
                 )
+                access_log_time = access_log_time_by_username
                 logger.info(
                     f"Lockout check for user {username}: Last failed attempt at {access_log_time}"
                 )
@@ -280,15 +277,18 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
                 ip = custom_get_client_ip_address(request, True)
 
             # Get latest failed attempt time by IP address
-            access_log_time = (
-                AccessAttempt.objects.filter(ip_address=ip)
-                .order_by("-attempt_time")
-                .values_list("attempt_time", flat=True)
-                .first()
-            )
+            access_log_time_by_ip = AccessLogTime.access_log_time_by_ip(ip)
+            access_log_time = access_log_time_by_ip
             logger.info(
                 f"Lockout check for IP {ip}: Last failed attempt at {access_log_time}"
             )
+
+            if not access_log_time_by_ip:
+                user_agent = get_client_user_agent(request)
+                access_log_time_by_user_agent = (
+                    AccessLogTime.access_log_time_by_user_agent(user_agent)
+                )
+                access_log_time = access_log_time_by_user_agent
 
         if access_log_time:
             print(f"access log time: {access_log_time}")
