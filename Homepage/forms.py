@@ -217,7 +217,7 @@ class CustomerProfileForm(forms.ModelForm):
         wishlist = self.cleaned_data["wishlist"]
 
         if wishlist < 0 or wishlist > 50:
-            raise ValidationError("Valid whishlist is required, Hint: 0 to 50")
+            raise ValueError("Valid whishlist is required, Hint: 0 to 50")
         return wishlist
 
     class Meta:
