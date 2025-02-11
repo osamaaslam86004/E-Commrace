@@ -286,11 +286,11 @@ SILENCED_SYSTEM_CHECKS = ["axes.W003"]
 AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 2  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
-AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
 AXES_LOCKOUT_CALLABLE = "Homepage.views.custom_lockout"
-# AXES_LOCKOUT_URL = "/lockout/"
 AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",

@@ -32,11 +32,12 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
-from django.utils.timezone import is_aware, make_aware, now
+from django.utils.timezone import is_aware, make_aware
 from django.views import View
 from django.views.generic import TemplateView
 from google.oauth2.credentials import Credentials
@@ -71,6 +72,7 @@ from Homepage.models import (
     SellerProfile,
     UserProfile,
 )
+from Homepage.utils import format_remaining_time
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
@@ -250,10 +252,6 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
     try:
         if "user_id" in request.session:
             # Get username from session user ID
-            from Homepage.models import (
-                CustomUser,  # Import inside to prevent circular imports
-            )
-
             user_id = request.session.get("user_id")
             username = (
                 CustomUser.objects.filter(pk=user_id)
@@ -275,8 +273,8 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
 
         else:
             ip = get_client_ip_address(request, True)
-            logger.info(f"Request META: {request.META}")
-            logger.info(f"ip: {ip}")
+            # logger.info(f"Request META: {request.META}")
+            # logger.info(f"ip: {ip}")
 
             if not ip:
                 ip = custom_get_client_ip_address(request, True)
@@ -293,23 +291,26 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
             )
 
         if access_log_time:
+            print(f"access log time: {access_log_time}")
 
             # Ensure `attempt_time` is timezone-aware
             if not is_aware(access_log_time):
                 access_log_time = make_aware(access_log_time)
+                print(f"make aware access log time: {access_log_time}")
 
             # Calculate remaining lockout time
-            lockout_time = access_log_time + timedelta(
-                minutes=settings.AXES_COOLOFF_TIME
-            )
-            remaining_time = max((lockout_time - now()).total_seconds() / 60, 0)
+            lockout_time = access_log_time + timedelta(hours=settings.AXES_COOLOFF_TIME)
+            print(f"lockout time: {lockout_time}")
 
-            context["remaining_time"] = round(remaining_time)
-            logger.info(
-                f"User lockout remaining time: {context['remaining_time']} minutes"
-            )
+            # Calculate remaining time in seconds
+            remaining_time_seconds = (lockout_time - timezone.now()).total_seconds()
+            print(f"Remaining time: {remaining_time_seconds} seconds")
 
-            if remaining_time == 0:
+            # Format the remaining time
+            context["remaining_time"] = format_remaining_time(remaining_time_seconds)
+            logger.info(f"User  lockout remaining time: {context['remaining_time']}")
+
+            if remaining_time_seconds <= 0:
                 return redirect("Homepage:login")
 
     except Exception as e:

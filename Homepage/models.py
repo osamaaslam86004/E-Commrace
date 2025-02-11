@@ -18,7 +18,7 @@ class CustomUserManager(BaseUserManager):
 
         # Create a UserProfile for the user
         UserProfile.objects.create(
-            user=self,
+            user=user,
             full_name="dummy_name",
             age=18,
             gender="Male",
