@@ -286,7 +286,8 @@ SILENCED_SYSTEM_CHECKS = ["axes.W003"]
 AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 2  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
-AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
+AXES_USERNAME_FORM_FIELD = "email"
+AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "user_agent"]]
 AXES_LOCKOUT_CALLABLE = "Homepage.views.custom_lockout"
 AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
@@ -295,7 +296,6 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-AXES_USERNAME_FORM_FIELD = "email"
 # AXES_CACHE = "default"
 
 # # For Django under Nginx on Amazon EC2 instance (VPC)
@@ -307,7 +307,7 @@ AXES_USERNAME_FORM_FIELD = "email"
 #     "HTTP_X_REAL_IP",
 # )
 
-# For Django under Ngrok Only
+# For Django under Ngrok and (Ngrok + VPN)
 # The number of reverse proxies in front of Django as an integer
 AXES_IPWARE_PROXY_COUNT = 0
 AXES_IPWARE_META_PRECEDENCE_ORDER = (

@@ -274,7 +274,7 @@ def custom_lockout(request, credentials=None, *args, **kwargs):
         else:
             ip = get_client_ip_address(request, True)
             # logger.info(f"Request META: {request.META}")
-            # logger.info(f"ip: {ip}")
+            logger.info(f"ip: {ip}")
 
             if not ip:
                 ip = custom_get_client_ip_address(request, True)

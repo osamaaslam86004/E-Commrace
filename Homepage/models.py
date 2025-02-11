@@ -117,13 +117,11 @@ class CustomerProfile(models.Model):
         CustomUser, on_delete=models.CASCADE, name="customuser_type_1", default=None
     )
     shipping_address = models.CharField(max_length=255, blank=True)
-    wishlist = models.IntegerField(blank=True)
+    wishlist = models.IntegerField(blank=True, default=0)
 
     def clean(self):
         super().clean()
-        if not self.wishlist:
-            raise ValidationError("Valid Whislist is required,")
-        if self.wishlist <= 0 or self.wishlist >= 50:
+        if self.wishlist < 0 or self.wishlist > 50:
             raise ValidationError("Valid whishlist is required, Hint: 0 to 50")
 
     def save(self, *args, **kwargs):

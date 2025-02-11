@@ -7,9 +7,15 @@ from django_countries.widgets import CountrySelectWidget
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
-from Homepage.models import (AdministratorProfile, CustomerProfile,
-                             CustomerServiceProfile, CustomUser,
-                             ManagerProfile, SellerProfile, UserProfile)
+from Homepage.models import (
+    AdministratorProfile,
+    CustomerProfile,
+    CustomerServiceProfile,
+    CustomUser,
+    ManagerProfile,
+    SellerProfile,
+    UserProfile,
+)
 
 
 class SignUpForm(UserCreationForm):
@@ -210,10 +216,8 @@ class CustomerProfileForm(forms.ModelForm):
     def clean_wishlist(self):
         wishlist = self.cleaned_data["wishlist"]
 
-        if not wishlist:
-            raise ValidationError("Valid Whislist is required,")
-        if wishlist <= 0 or wishlist >= 50:
-            raise ValueError("Valid whishlist is required, Hint: 0 to 50")
+        if wishlist < 0 or wishlist > 50:
+            raise ValidationError("Valid whishlist is required, Hint: 0 to 50")
         return wishlist
 
     class Meta:
