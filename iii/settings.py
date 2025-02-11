@@ -55,7 +55,7 @@ if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        f"{config('EC2_PUBLIC_IPV4')}",
+        # f"{config('EC2_PUBLIC_IPV4')}",
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
@@ -131,7 +131,7 @@ WSGI_APPLICATION = "iii.wsgi.application"
 
 
 # Database
-if DEBUG:
+if not DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -231,7 +231,7 @@ SESSION_COOKIE_HTTPONLY = True
 ###############################Cloudinary Settings For Image Storage###########################
 
 # For cloudinary_storage library only
-if DEBUG:
+if not DEBUG:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
         "API_KEY": config("CLOUDINARY_API_KEY"),
@@ -252,7 +252,7 @@ import cloudinary
 CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
-if DEBUG:
+if not DEBUG:
     cloudinary.config(
         cloud_name=CLOUDINARY_CLOUD_NAME,
         api_key=CLOUDINARY_API_KEY,
@@ -272,20 +272,23 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 ###########################----------Security Related Settings-----------########################################
 
 # Uncomment these settings only in production
-if DEBUG:
+if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
     SECURE_SSL_REDIRECT = True
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 ###############################-----------Set Login rate limit For Users-------------#############################
 SILENCED_SYSTEM_CHECKS = ["axes.W003"]
 AXES_ENABLED = True
-AXES_FAILURE_LIMIT = 5  # Number of login attempts allowed before blocking
+AXES_FAILURE_LIMIT = 2  # Number of login attempts allowed before blocking
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
 AXES_LOCKOUT_CALLABLE = "Homepage.views.custom_lockout"
-AXES_LOCKOUT_URL = "/lockout/"
+# AXES_LOCKOUT_URL = "/lockout/"
 AXES_RESET_ON_SUCCESS = True
 AXES_COOLOFF_TIME = 0.05
 AUTHENTICATION_BACKENDS = [
@@ -294,19 +297,36 @@ AUTHENTICATION_BACKENDS = [
 ]
 AXES_USERNAME_FORM_FIELD = "email"
 # AXES_CACHE = "default"
+
+# # For Django under Nginx on Amazon EC2 instance (VPC)
+# # The number of reverse proxies in front of Django as an integer
+# AXES_IPWARE_PROXY_COUNT = 1
+# AXES_IPWARE_META_PRECEDENCE_ORDER = (
+#     "HTTP_X_FORWARDED_FOR",
+#     "REMOTE_ADDR",
+#     "HTTP_X_REAL_IP",
+# )
+
+# For Django under Ngrok Only
 # The number of reverse proxies in front of Django as an integer
-# AXES_IPWARE_PROXY_COUNT = 0  # pythonanywhere.com only
-AXES_IPWARE_PROXY_COUNT = 1
-# Use HTTP_X_REAL_IP only for pythonanywhere; Nginx is used as load balancer
+AXES_IPWARE_PROXY_COUNT = 0
+AXES_IPWARE_META_PRECEDENCE_ORDER = (
+    "HTTP_X_FORWARDED_FOR",
+    "REMOTE_ADDR",
+    "HTTP_X_REAL_IP",
+)
+
+# # For Django under Pythonanywhere.com only
+# AXES_IPWARE_PROXY_COUNT = 0
+# # Use HTTP_X_REAL_IP only for pythonanywhere; Nginx is used as load balancer
 # AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP"]
-AXES_IPWARE_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
 
 ###################------------------- Google api-client library settings----------------############
 GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID")
 GOOGLE_OAUTH_CLIENT_SECRET = config("GOOGLE_OAUTH_CLIENT_SECRET")
 
 
-if DEBUG:
+if not DEBUG:
     GOOGLE_OAUTH_REDIRECT_URI = (
         "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
     )
@@ -322,6 +342,8 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://diverse-intense-whippet.ngrok-free.app",
     "https://osama11111.pythonanywhere.com",
+    "http://127.0.0.1",
+    "http://localhost",
 ]
 
 
@@ -485,7 +507,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-if DEBUG:
+if not DEBUG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -501,7 +523,7 @@ if DEBUG:
         "loggers": {
             "axes": {
                 "handlers": ["console"],
-                "level": "ERROR",  # Set the level to ERROR to suppress AXES logs
+                "level": "DEBUG",  # Set the level to ERROR to suppress AXES logs
                 "propagate": True,
             },
         },

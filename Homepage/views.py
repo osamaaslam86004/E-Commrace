@@ -9,6 +9,7 @@ import cloudinary
 import requests
 import stripe
 from axes.decorators import axes_dispatch
+from axes.helpers import get_client_ip_address
 from axes.models import AccessAttempt
 from cloudinary.uploader import upload
 from django.conf import settings
@@ -31,11 +32,11 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template import loader
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
+from django.utils.timezone import is_aware, make_aware, now
 from django.views import View
 from django.views.generic import TemplateView
 from google.oauth2.credentials import Credentials
@@ -73,12 +74,14 @@ from Homepage.models import (
 from i.browsing_history import your_browsing_history
 
 logger = logging.getLogger(__name__)
+logger = logging.getLogger("axes")
 
 
 class HomePageView(TemplateView):
     template_name = "store.html"
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
+
         context = super().get_context_data(**kwargs)
         obj_list = None  # Initialize obj_list with a default value
         images = [
@@ -186,7 +189,7 @@ class CustomLoginView(View):
                     login(
                         request,
                         user,
-                        backend="django.contrib.auth.backends.ModelBackend",
+                        # backend="django.contrib.auth.backends.ModelBackend",
                     )
 
                     messages.success(request, "Welcome back!")
@@ -227,76 +230,94 @@ class CustomLoginView(View):
         return render(request, self.template_name, {"form": form})
 
 
-from django.shortcuts import redirect
+def custom_get_client_ip_address(request, use_x_forwarded_for=True):
+    if use_x_forwarded_for:
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]  # Get the first IP in the list
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
 
 
 def custom_lockout(request, credentials=None, *args, **kwargs):
-    """Custom lockout function to redirect blocked users."""
-    return redirect("Homepage:lockout")  # Uses the "lockout" view
+    """Custom lockout function to render a lockout page with remaining lockout time."""
+    access_log_time = None
+    context = {}
 
-
-class LockoutView(TemplateView):
-    template_name = "lockout.html"  # Path to your lockout template
-
-    @method_decorator(axes_dispatch)
-    def dispatch(self, *args, **kwargs) -> HttpResponse:
-        return super().dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        access_log_time = None
-
-        # Get the user's last access log entry
-        if "user_id" in self.request.session:
-            user_id = self.request.session.get("user_id")
-            username = CustomUser.objects.filter(pk=user_id).values_list(
-                "attempt_time", flat=True
+    try:
+        if "user_id" in request.session:
+            # Get username from session user ID
+            from Homepage.models import (
+                CustomUser,  # Import inside to prevent circular imports
             )
-            get_access_attempt_time_by_username = (
-                AccessAttempt.objects.filter(username=username)
-                .values_list("attempt_time", flat=True)
+
+            user_id = request.session.get("user_id")
+            username = (
+                CustomUser.objects.filter(pk=user_id)
+                .values_list("username", flat=True)
                 .first()
             )
 
-            access_log_time = get_access_attempt_time_by_username
+            if username:
+                # Get latest failed attempt time by username
+                access_log_time = (
+                    AccessAttempt.objects.filter(username=username)
+                    .order_by("-attempt_time")
+                    .values_list("attempt_time", flat=True)
+                    .first()
+                )
+                logger.info(
+                    f"Lockout check for user {username}: Last failed attempt at {access_log_time}"
+                )
 
         else:
+            ip = get_client_ip_address(request, True)
+            logger.info(f"Request META: {request.META}")
+            logger.info(f"ip: {ip}")
 
-            x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(",")[0]
-            else:
-                ip = self.request.META.get("REMOTE_ADDR")
+            if not ip:
+                ip = custom_get_client_ip_address(request, True)
 
-            get_access_attempt_by_ip_address = (
+            # Get latest failed attempt time by IP address
+            access_log_time = (
                 AccessAttempt.objects.filter(ip_address=ip)
+                .order_by("-attempt_time")
                 .values_list("attempt_time", flat=True)
                 .first()
             )
-
-            access_log_time = get_access_attempt_by_ip_address
+            logger.info(
+                f"Lockout check for IP {ip}: Last failed attempt at {access_log_time}"
+            )
 
         if access_log_time:
-            # Calculate the remaining time until the user is unblocked
+
+            # Ensure `attempt_time` is timezone-aware
+            if not is_aware(access_log_time):
+                access_log_time = make_aware(access_log_time)
+
+            # Calculate remaining lockout time
             lockout_time = access_log_time + timedelta(
                 minutes=settings.AXES_COOLOFF_TIME
-            )  # Assuming 3 minute lockout time
+            )
+            remaining_time = max((lockout_time - now()).total_seconds() / 60, 0)
 
-            # Used max(..., 0) to prevent negative lockout times.
-            remaining_time = max(
-                (lockout_time - timezone.now()).total_seconds() / 60, 0
+            context["remaining_time"] = round(remaining_time)
+            logger.info(
+                f"User lockout remaining time: {context['remaining_time']} minutes"
             )
 
-            if remaining_time > 0:
-                context["remaining_time"] = round(remaining_time)
-            else:
-                context["remaining_time"] = 0  # User is unblocked
+            if remaining_time == 0:
+                return redirect("Homepage:login")
 
-        else:
-            context["remaining_time"] = 0
+    except Exception as e:
+        logger.error(f"Error in custom_lockout: {str(e)}", exc_info=True)
 
-        return context
+    return render(
+        request, "lockout.html", context
+    )  # Render lockout page with 403 status
 
 
 def custom_password_reset(

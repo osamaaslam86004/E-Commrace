@@ -10,7 +10,6 @@ from Homepage.views import (
     CustomLogoutView,
     DeleteUserAccount,
     HomePageView,
-    LockoutView,
     ManagerProfilePageView,
     SellerProfilePageView,
     SignupView,
@@ -24,7 +23,6 @@ urlpatterns = [
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", CustomLogoutView.as_view(), name="logout"),
-    path("lock-account/", LockoutView.as_view(), name="lockout"),
     path("delete-account/", DeleteUserAccount.as_view(), name="delete"),
     path(
         "customer_profile_page/",

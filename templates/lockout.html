@@ -1,4 +1,4 @@
-{% extends 'blog_base.html' %}
+{% extends 'store.html' %}
 {% load static %}
 {# Load the tag library #}
 {% load django_bootstrap5 %}
@@ -15,14 +15,12 @@
 <div class="container mt-5">
     <div class="alert alert-danger">
         <h1>Your account has been locked!</h1>
-        <p>Due to multiple failed login attempts, your account has been temporarily locked.</p>
-        {% if remaining_time %}
-            <p>You will be able to log-in again in {{ remaining_time }} minutes.</p>
-        {% else %}
-        <a href="{% url 'login' %}" class="btn btn-primary">Return to Login</a>
-        {% endif %}
-        <p>If you believe this is a mistake, please contact support.</p>
+        <p>Due to multiple failed login attempts, your account has been temporarily locked.</p>    
+        <p>You will be able to log-in again in {{ remaining_time }} minutes.</p>
+        <p>If you believe this is a mistake, please contact
+        <a href="{% url 'Homepage:login' %}" class="btn btn-primary">Support</a>
+        </p>
     </div>
-    <a href="{% url 'login' %}" class="btn btn-primary">Support</a>
+    
 </div>
 {% endblock content %}
