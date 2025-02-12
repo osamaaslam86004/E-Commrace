@@ -54,6 +54,7 @@ DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "127.0.0.1",
+        "localhost",
         # f"{config('EC2_PUBLIC_IPV4')}",
         "diverse-intense-whippet.ngrok-free.app",
     ]
