@@ -302,21 +302,21 @@ AUTHENTICATION_BACKENDS = [
 
 # # For Django under Nginx on Amazon EC2 instance (VPC)
 # # The number of reverse proxies in front of Django as an integer
-# AXES_IPWARE_PROXY_COUNT = 1
-# AXES_IPWARE_META_PRECEDENCE_ORDER = (
-#     "HTTP_X_FORWARDED_FOR",
-#     "REMOTE_ADDR",
-#     "HTTP_X_REAL_IP",
-# )
-
-# For Django under Ngrok and (Ngrok + VPN)
-# The number of reverse proxies in front of Django as an integer
-AXES_IPWARE_PROXY_COUNT = 0
+AXES_IPWARE_PROXY_COUNT = 1
 AXES_IPWARE_META_PRECEDENCE_ORDER = (
     "HTTP_X_FORWARDED_FOR",
     "REMOTE_ADDR",
     "HTTP_X_REAL_IP",
 )
+
+# For Django under Ngrok and (Ngrok + VPN)
+# The number of reverse proxies in front of Django as an integer
+# AXES_IPWARE_PROXY_COUNT = 0
+# AXES_IPWARE_META_PRECEDENCE_ORDER = (
+#     "HTTP_X_FORWARDED_FOR",
+#     "REMOTE_ADDR",
+#     "HTTP_X_REAL_IP",
+# )
 
 # # For Django under Pythonanywhere.com only
 # AXES_IPWARE_PROXY_COUNT = 0
