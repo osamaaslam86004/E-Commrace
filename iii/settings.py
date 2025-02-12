@@ -509,7 +509,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # provide error detail for django axes
-if DEBUG:
+if not DEBUG:
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -548,13 +548,13 @@ else:
             "django_file": {
                 "level": "ERROR",
                 "class": "logging.FileHandler",
-                "filename": "/home/ubuntu/E-commrace/E-Commrace/logs/django.log",
+                "filename": "/home/testuser/E-commrace/E-Commrace/logs/django.log",
                 "formatter": "verbose",
             },
             "axes_file": {
                 "level": "ERROR",
                 "class": "logging.FileHandler",
-                "filename": "/home/ubuntu/E-commrace/E-Commrace/logs/axes.log",
+                "filename": "/home/testuser/E-commrace/E-Commrace/logs/axes.log",
                 "formatter": "verbose",
             },
         },
