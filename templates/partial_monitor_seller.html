@@ -1,0 +1,83 @@
+{% if item_list %}
+<div class="card-container row row-cols-1 row-cols-md-3" style="margin-top: 21px;">
+    {% for monitor, avg_rating in item_ratings.items %}
+
+    <div class="col mb-4">
+        <div class="card">
+
+            {% if monitor.is_active %}
+            <span class="badge bg-success" style="width: 71px; margin-top:5px;
+                            margin-left:225px;">Active</span>
+            {% else %}
+            <span class="badge bg-warning" style="width: 71px; margin-top:5px;
+                            margin-left:225px;">In Active</span>
+            {% endif %}
+            </p>
+
+            <div class=" image-container" style="height: 150px; width: 150px;">
+                <img class="card-img-top" src="{{ monitor.image_2 }}" alt="Card image cap">
+            </div>
+            <div class="card-body">
+                <div>
+                    <h5 class="card-title">Name: {{ monitor.name }}</h5>
+                    <p class="card-text"><b>Price</b>: {{ monitor.price }}</p>
+                    <p class="card-text"><b>Mounting Type</b>: {{ monitor.mounting_type }}</p>
+                </div>
+
+                <div class="average-rating">
+                    {% if avg_rating == 0 or avg_rating == "N/A" %}
+                    <i data-star="0"></i>
+                    {% else %}
+                    <i data-star="{{avg_rating}}"></i>
+                    {% endif %}
+                </div>
+                <div style="margin-top: 11px;">
+                    <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
+                        <button class="btn btn-success">View</button></a>
+
+
+                    <a href="{% url 'i:add_review' product_id=monitor.monitor_id %}">
+                        <button class="btn btn-warning">Update</button></a>
+
+
+                    <!-- Button trigger modal -->
+                    <a class="link-muted" data-bs-toggle="modal" data-bs-target="#exampleModal{{ monitor.monitor_id }}">
+                        <button class="btn btn-danger">Delete</button>
+                    </a>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal{{ monitor.monitor_id }}" tabindex="-1" role="dialog"
+                        aria-labelledby="exampleModalLabel{{ monitor.monitor_id }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel{{ monitor.monitor_id }}">
+                                        Confirmation Required
+                                    </h5>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Confirmation message -->
+                                    <p>Are you sure you want to delete this comment?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                                    <a href="{% url 'i:delete_monitor' product_id=monitor.monitor_id %}"
+                                        class="btn btn-primary">Delete Comment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="font-size: large; margin-top:300px; margin-left:101px;">
+    <span style="font-size: 50px;"><strong>No product found</strong></span>
+</div>
+{% endif %}

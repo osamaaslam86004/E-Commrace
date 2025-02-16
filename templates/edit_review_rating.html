@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    {# Load the tag library #}
+    {% load django_bootstrap5 %}
+    {% load crispy_forms_tags %}
+    {# Load CSS and JavaScript #}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {# Display django.contrib.messages as Bootstrap alerts #}
+    {% bootstrap_messages %}
+    {# Display a form #}
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <style>
+        fieldset,
+        label {
+            margin: 0;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .rating {
+            border: none;
+            float: left;
+            font-size: 21px;
+            background-color: gray;
+        }
+
+        .rating>input {
+            display: none;
+        }
+
+        .rating>label:before {
+            margin: 5px;
+            font-size: 1.25em;
+            font-family: FontAwesome;
+            display: inline-block;
+            content: "\f005";
+        }
+
+        .rating>.half:before {
+            content: "\f089";
+            position: absolute;
+        }
+
+        .rating>label {
+            color: #ddd;
+            float: right;
+        }
+
+        .rating>input:checked~label,
+
+        /* show gold star when clicked */
+
+        .rating:not(:checked)>label:hover,
+
+        /* hover current star */
+
+        .rating:not(:checked)>label:hover~label {
+            color: #FFD700;
+        }
+
+
+        /* hover previous stars in list */
+
+        .rating>input:checked+label:hover,
+
+        /* hover current star when changing rating */
+
+        .rating>input:checked~label:hover,
+        .rating>label:hover~input:checked~label,
+
+        /* lighten current selection */
+
+        .rating>input:checked~label:hover~label {
+            color: #FFED85;
+        }
+    </style>
+</head>
+
+<body>
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+        <strong>Error:</strong>
+        <ul>
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            <li>{{field}}---{{ error }}</li>
+            {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+
+    <!-- navbar here-->
+    <section>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a style="padding-left:41px;" class="navbar-brand" href="{% url 'Homepage:Home' %}">E-Store</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <div class="Home-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:MonitorListView' %}">Monitor Home</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="my-post-list-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'blog:my_posts_list' %}">Your Monitor's </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="blog-post-create-container">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'i:select_product_category' %}">Create Monitor</a>
+                        </li>
+                    </ul>
+                </div>
+
+    </section>
+
+
+    <!-- form here -->
+    <section>
+        <div>
+            {% if review_form.errors %}
+            <div>
+                {% for error in errors %}
+                {{error}}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+        <div>
+            <form method="post" class="form" enctype="multipart/form-data"
+                style="width: 900px; margin-left: 150px; margin-top: 41px; margin-bottom: 41px;">
+                {% csrf_token %}
+                {{ review_form.media|safe }}
+
+
+                {% bootstrap_form review_form %}
+
+
+                <div style="display: flex; margin-top:41px;">
+                    <div style="font-size: large; margin-right:7px;"><b>Your Rating: </b></div>
+                    <div>
+                        <fieldset class="rating">
+                            <input type="radio" id="5star" name="rating" value="5" />
+                            <label class="full" for="5star" title="Excellent"></label>
+
+                            <input type="radio" id="4halfstar" name="rating" value="4.5" />
+                            <label class="half" for="4halfstar" title="Good"></label>
+
+                            <input type="radio" id="4star" name="rating" value="4" />
+                            <label class="full" for="4star" title="Pretty good"></label>
+
+                            <input type="radio" id="3halfstar" name="rating" value="3.5" />
+                            <label class="half" for="3halfstar" title="Nice"></label>
+
+                            <input type="radio" id="3star" name="rating" value="3" />
+                            <label class="full" for="3star" title="Ok"></label>
+
+                            <input type="radio" id="2halfstar" name="rating" value="2.5" />
+                            <label class="half" for="2halfstar" title="Kinda bad"></label>
+
+                            <input type="radio" id="2star" name="rating" value="2" />
+                            <label class="full" for="2star" title="Bad"></label>
+
+                            <input type="radio" id="1halfstar" name="rating" value="1.5" />
+                            <label class="half" for="1halfstar" title="Meh"></label>
+
+                            <input type="radio" id="1star" name="rating" value="1" />
+                            <label class="full" for="1star" title="Umm"></label>
+
+                            <input type="radio" id="halfstar" name="rating" value="0.5" />
+                            <label class="half" for="halfstar" title="Worst"></label>
+
+                        </fieldset>
+                    </div>
+                </div>
+
+                <!-- Submit button -->
+                <button class="btn btn-primary" style="width: 900px; margin-top: 41px; margin-bottom: 41px"
+                    type="submit">Submit</button>
+            </form>
+        </div>
+    </section>
+
+
+
+</body>
+
+
+</html>

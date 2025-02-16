@@ -1,0 +1,27 @@
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+<div style="margin-top: 101px; margin-left:101px; ">
+    <div style="padding-bottom: 101px;">
+        <span style="font-size: large;"> <strong>{{user_email}}</strong>: Your Product Has Been Added To E-Commrace
+            Store
+            Successfully</span>
+    </div>
+    <div style="display: flex;">
+        <form method="GET" action="{% url 'i:select_product_category' %}" style="margin-right: 11px;">
+            {% bootstrap_button type="submit" content="Go To Store Again" class="btn btn-primary" %}
+        </form>
+
+        <form method="GET" action="{% url 'Homepage:Home' %}">
+            {% bootstrap_button type="submit" content="Go To Home" class="btn btn-info" %}
+        </form>
+    </div>
+</div>

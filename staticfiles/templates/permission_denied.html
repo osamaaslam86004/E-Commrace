@@ -1,0 +1,37 @@
+{% extends 'main.html' %}
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+{% block content %}
+
+<div>
+   <div>
+      <h1>Page 404</h1>
+   </div>
+   <div>
+      <h3>
+         Sorry! The Query Does Not exist in database
+      </h3>
+   </div>
+
+</div>
+<div class="form" style="width:500px; margin-left:150px; margin-top:41px; 
+    margin-bottom:41px;">
+
+   <p style="font-size:larger"> The user <b>{{user_email}}</b> does not have <b>{{user_permission}}</b> permission</p>
+
+   <form method='GET' action="{% url 'Homepage:Home' %}">
+      {% bootstrap_button button_type="submit" content="Back To Home" style="width:500px;" %}
+   </form>
+
+
+
+</div>
+{% endblock content %}

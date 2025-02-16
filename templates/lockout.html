@@ -1,0 +1,26 @@
+{% extends 'store.html' %}
+{% load static %}
+{% load django_bootstrap5 %}
+
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% bootstrap_messages %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-danger">
+        <h1>Your account has been locked!</h1>
+        <p>Due to multiple failed login attempts, your account has been temporarily locked.</p>    
+
+        {% if remaining_time %}
+            <p>You will be able to log in again in <strong>{{ remaining_time }}</strong>.</p>
+        {% else %}
+            <p>Your lockout period has expired. You can try logging in again.</p>
+        {% endif %}
+
+        <p>If you believe this is a mistake, please contact
+            <a href="{% url 'Homepage:login' %}" class="btn btn-primary">Support</a>
+        </p>
+    </div>
+</div>
+{% endblock content %}

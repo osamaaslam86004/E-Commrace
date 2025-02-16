@@ -1,0 +1,120 @@
+{% extends 'blog_base.html' %}
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %} {# Ensure Bootstrap JavaScript is loaded #}
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+{# Display a form #}
+
+{% block content %}
+
+
+<nav class="navbar navbar-expand-lg navbar-light bg-dark">
+    <div class="blog-post-create-container">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <span style="color: white; margin-left:41px;">Search Bar For Admin</span>
+            </li>
+        </ul>
+    </div>
+
+
+
+
+    <div class="form-class" style="margin-left:150px;">
+        <form class="form-inline my-2 my-lg-0" style="display:flex;" hx-get="{% url 'blog:admin_search_results_view' %}"
+            hx-target="#htmx-container">
+
+            <div>
+                <input style=" width:300px;" class="form-control mr-sm-2" type="search" placeholder="Search"
+                    aria-label="Search" name="search" hx-get="{% url 'blog:admin_search_results_view' %}"
+                    hx-trigger="keyup changed delay:100ms" hx-target="#htmx-container">
+            </div>
+            <div style="margin-left: 7px;margin-right:7px;">
+                <select class="form-select" aria-label="Default select example" name="value">
+                    <option selected>choose The Post Status</option>
+                    <option value="1">Publish</option>
+                    <option value="0">Draft</option>
+                </select>
+            </div>
+
+
+            <div style="margin-left:11px;">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </div>
+        </form>
+    </div>
+
+    </div>
+</nav>
+
+
+<div id="htmx-container">
+    <div class="card-container row row-cols-1 row-cols-md-3" style="margin-left: 41px; margin-top: 41px;">
+        {% for post in posts %}
+        <div class="col mb-4">
+            <div class="card">
+                <div class="image-container" style="height: 100px; width: 100px;">
+                    <img class="card-img-top"
+                        src="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+                        alt="Card image cap">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h5 class="card-title">Post Title: {{ post.title }}</h5>
+                        <p class="card-text"><b>Post Meta</b>: {{ post.meta_description }}</p>
+                        <p class="card-text"><strong>Author</strong>: {{ post.post_admin }}</p>
+                    </div>
+                    <div style="margin-top: 3px; margin-bottom:15px;">
+                        <span><small class="text-muted" style="margin-right: 15px;"><strong>Created:</strong>
+                                {{post.created_on}}</small></span><br>
+                        <span><small class="text-muted"><strong>Last Modified:</strong>
+                                {{post.modified_on }}</small></span>
+                    </div>
+                    <div class="button-container" style="display: flex;">
+                        <a href="{% url 'blog:live_post' slug=post.slug %}" class="btn btn-primary">View</a>
+                        <a href="{% url 'blog:blog_post_update' slug=post.slug %}" class="btn btn-secondary"
+                            style="margin-left: 11px;">Edit</a>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#exampleModal{{ post.slug }}" style="margin-left: 11px;">
+                            Delete
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal{{ post.slug }}" tabindex="-1" role="dialog"
+                            aria-labelledby="exampleModalLabel{{ post.slug }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel{{ post.slug }}">Confirmation
+                                            Required
+                                        </h5>
+                                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Confirmation message -->
+                                        <p>Are you sure you want to delete this post?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <a href="{% url 'blog:blog_post_delete' slug=post.slug %}"
+                                            class="btn btn-primary">Delete Post</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

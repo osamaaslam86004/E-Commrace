@@ -1,0 +1,45 @@
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{%bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+
+
+{% if post %}
+
+
+<div class="post-count" style="margin-top: 41px; margin-bottom:41px; margin-left:41px;">
+    <span style="font-size: larger;">Total Search Results: <b>{{count}}</b></span>
+</div>
+
+
+<div class="card-container row row-cols-1 row-cols-md-3" style="margin-left:5px; margin-right:5px; margin-top:41px;">
+    {% for search_results in post %}
+    <div class="col mb-4">
+        <div class="card">
+            <div class="image-container" style="height: 100px; width:100px;">
+                <img class="card-img-top"
+                    src="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico"
+                    alt="Card image cap">
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Post Title: {{search_results.title}}</h5>
+                <p class="card-text"><b>Post Meta</b>: {{search_results.meta_description}}</p>
+                <p class="card-text">Author: {{search_results.post_admin}}</p>
+                <a href="{% url 'blog:live_post' slug=search_results.slug %}" class="btn btn-primary">View</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+
+<span style="width: 101px; height:101px;"><b>No blog post with this <strong>{{query}}</strong> query exist
+    </b></span>
+
+{% endif %}

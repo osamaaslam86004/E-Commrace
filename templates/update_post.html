@@ -1,0 +1,52 @@
+{% extends 'blog_base.html' %}
+
+{% load static %}
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{# Display django.contrib.messages asBootstrapalerts#}
+{% bootstrap_messages %}
+{# Display a form #}
+
+{% block content %}
+
+{% if form.errors %}
+<div class="alert alert-danger" role="alert">
+    <strong>Error:</strong>
+    <ul>
+        {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+        <li>{{field}}---{{ error }}</li>
+        {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+
+<form method="post" class="form" style="
+        width: 900px;
+        margin-left: 150px;
+        margin-top: 41px;
+        margin-bottom: 41px;
+    ">
+    {% csrf_token %}
+    {{ form.media }}
+
+    {% bootstrap_field form.title %}
+    {%bootstrap_field form.slug %}
+    {% bootstrap_field form.status %}
+    {% bootstrap_field form.meta_description %}
+    {% bootstrap_field form.content %}
+
+
+
+    <button class="btn btn-primary" style="width: 900px; margin-top: 41px; margin-bottom: 41px" type="submit">
+        Submit
+    </button>
+</form>
+
+
+{% endblock content %}

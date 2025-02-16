@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test</title>
+</head>
+
+<body>
+    <button onclick="makeRequest()">Make Request</button>
+
+    <script>
+        function makeRequest() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "https://osamaaslam.pythonanywhere.com/api/auth/crud-user/1/", true);
+            xhr.withCredentials = true; // Include cookies in the request
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.responseText);
+                }
+            };
+            xhr.send(null); // No request body for a GET request
+        }
+    </script>
+</body>
+
+</html>

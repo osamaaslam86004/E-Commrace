@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List of CVs</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+            color: #007bff;
+        }
+
+        .cv-container {
+            border: 1px solid #ccc;
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .cv-container h2 {
+            color: #007bff;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .cv-section {
+            margin-bottom: 20px;
+        }
+
+        .cv-section strong {
+            color: #555;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-update {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+    </style>
+</head>
+<body>
+
+{% if cv_data %}
+    <h1>List of CVs</h1>
+
+    {% for cv in cv_data %}
+    <div class="cv-container">
+        <h2>CV {{ forloop.counter }}</h2>
+
+        <div class="cv-section">
+            <strong>PERSONAL INFO:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key != 'overview' and key != 'education' and key != 'skill' and key != 'job' and key != 'programming_area' and key != 'projects'  %} 
+                    {{ key }}: {{ value }}<br>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>OVERVIEW:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'overview' %}
+                    {% for key, value_ in value.items %}
+                        {{ key }}: {{ value_ }}<br>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>EDUCATION:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'education' %}
+                    {% for item in value %}
+                        {% for key, value in item.items %}
+                            {{ key }}: {{ value }}<br>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>JOB:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'job' %}
+                    {% for key, value_ in value.items %}
+                        {% if key == 'accomplishment' %}
+                        <div>
+                            <strong>JOB ACCOMPLISHMENTS:</strong><br>
+                            {% for key, value__ in value_.items %}
+                                {{ key }}: {{ value__ }}<br>
+                            {% endfor %}
+                        </div>
+                        {% else %}     
+                        {{ key }}: {{ value_ }}<br>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>SKILL:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'skill' %}
+                    {% for item in value %}
+                        {% for key, value in item.items %}
+                            {{ key }}: {{ value }}<br>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>PROGRAMMING AREA:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'programming_area' %}
+                    {% for item in value %}
+                        {% for key, value in item.items %}
+                            {{ key }}: {{ value }}<br>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="cv-section">
+            <strong>PROJECTS:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'projects' %}
+                    {% for item in value %}
+                        {% for key, value in item.items %}
+                            {{ key }}: {{ value }}<br>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+
+        <div class="cv-section">
+            <strong>PUBLICATIONS:</strong><br>
+            {% for key, value in cv.items %}
+                {% if key == 'publications' %}
+                    {% if value %}
+                        {% for item in value %}
+                            {% for key, value in item.items %}
+                                {{ key }}: {{ value }}<br>
+                            {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div style="font-size: 20px; text-align: center; margin-top: 50px;">YOU HAVE NOT CREATED PUBLICATIONS!</div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+
+        <div class="cv-section">
+            <!-- Buttons for Update and Delete -->
+            <a href={% url 'cv_api:get_cv_to_update' personal_info_id=cv.id %} class="btn btn-update">Update</a>
+            <a href={% url 'cv_api:get_cv_to_delete' personal_info_id=cv.id %} class="btn btn-delete">Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+{%  else %}
+<div style="font-size: 20px; text-align: center; margin-top: 50px;">YOU HAVE NOT CREATED A CV YET!</div>
+{% endif %}
+</body>
+</html>
