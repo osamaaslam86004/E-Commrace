@@ -66,19 +66,19 @@ class BookFormat(models.Model):
     is_active = models.BooleanField(default=True, null=True)
     restock_threshold = models.PositiveIntegerField(default=9)
     image_1 = models.ImageField(
-        upload_to="images/",
+        upload_to="book_/book_format/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     image_2 = models.ImageField(
-        upload_to="images/",
+        upload_to="book_/book_format/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     image_3 = models.ImageField(
-        upload_to="images/",
+        upload_to="book_/book_format/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     def custom_string_representation_of_object(self):
@@ -102,15 +102,15 @@ class Review(models.Model):
     modified_on = models.DateTimeField(auto_now_add=True, null=True)
     status = models.BooleanField(default=True, null=True)
     image_1 = models.ImageField(
-        upload_to="images/",
+        upload_to="book_/review/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     image_2 = models.ImageField(
-        upload_to="images/",
+        upload_to="book_/review/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     def __str__(self):

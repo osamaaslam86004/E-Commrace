@@ -177,9 +177,9 @@ class Special_Features(models.Model):
 
 
 class Monitors(models.Model):
-    image_1 = models.ImageField(upload_to="images/", null=True)
-    image_2 = models.ImageField(upload_to="images/", null=True)
-    image_3 = models.ImageField(upload_to="images/", null=True)
+    image_1 = models.ImageField(upload_to="i/monitor/", null=True)
+    image_2 = models.ImageField(upload_to="i/monitor/", null=True)
+    image_3 = models.ImageField(upload_to="i/monitor/", null=True)
     is_active = models.BooleanField(default=True)
     name = models.CharField(max_length=255, blank=False)
     brand = models.CharField(max_length=255, blank=True)
@@ -713,15 +713,15 @@ class Review(models.Model):
     # text = RichTextField()
     text = models.TextField(max_length=5000)
     image_1 = models.ImageField(
-        upload_to="images/",
+        upload_to="i/review",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     image_2 = models.ImageField(
-        upload_to="images/",
+        upload_to="i/review/",
         null=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        # default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
