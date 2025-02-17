@@ -1,5 +1,9 @@
 from boto3.s3.transfer import TransferConfig
-from storages.backends.s3boto3 import S3ManifestStaticStorage, S3StaticStorage
+from storages.backends.s3boto3 import (
+    S3Boto3Storage,
+    S3ManifestStaticStorage,
+    S3StaticStorage,
+)
 
 GB = 1024 * 1024
 

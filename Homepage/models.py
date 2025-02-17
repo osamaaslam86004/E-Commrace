@@ -63,7 +63,7 @@ class CustomUser(AbstractUser):
     image = models.ImageField(
         upload_to="profile-photo/",
         blank=True,
-        default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
+        default="default-profile-photo/avataaars.png",
     )
     user_google_id = models.IntegerField(blank=True, null=True)
 
