@@ -200,9 +200,18 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
+if DEBUG:
+    # STATICFILES_DIRS is for directories where Django will search for additional static files
+    # that aren't tied to any specific app. These files can be served during development.
+    # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+    STATIC_URL = "/static/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-if not DEBUG:
-    AWS_ACCESS_KEY = config("AWS_ACCESS_KEY")
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    MEDIA_URL = "/media/"
+
+else:
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
     AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")
@@ -232,16 +241,6 @@ if not DEBUG:
             "BACKEND": "iii.custom_storage_backend.StaticStorage",
         },
     }
-
-else:
-    # STATICFILES_DIRS is for directories where Django will search for additional static files
-    # that aren't tied to any specific app. These files can be served during development.
-    # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-    STATIC_URL = "/static/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-    MEDIA_URL = "/media/"
 
 
 # Default primary key field type
@@ -317,27 +316,72 @@ AXES_IPWARE_META_PRECEDENCE_ORDER = (
 ###################------------------- Google api-client library settings----------------############
 GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID")
 GOOGLE_OAUTH_CLIENT_SECRET = config("GOOGLE_OAUTH_CLIENT_SECRET")
-
-
-if not DEBUG:
+if DEBUG:
     GOOGLE_OAUTH_REDIRECT_URI = (
-        "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
+        "https://diverse-intense-whippet.ngrok-free.app/accounts/google/login/callback/"
     )
 else:
     GOOGLE_OAUTH_REDIRECT_URI = (
-        "https://diverse-intense-whippet.ngrok-free.app/accounts/google/login/callback/"
+        "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
     )
 
 
 #################-------- csrf settings ----------------######################################
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = [
-    "https://diverse-intense-whippet.ngrok-free.app",
-    "https://osama11111.pythonanywhere.com",
-    "http://127.0.0.1",
-    "http://localhost",
-]
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://diverse-intense-whippet.ngrok-free.app",
+        "http://127.0.0.1",
+        "http://localhost",
+    ]
+else:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://diverse-intense-whippet.ngrok-free.app",
+        "https://osama11111.pythonanywhere.com",
+    ]
+
+
+###############################Cloudinary Settings For Image Storage###########################
+
+# For cloudinary_storage library only
+if DEBUG:
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": config("CLOUDINARY_API_KEY"),
+        "API_SECRET": config("CLOUDINARY_API_SECRET"),
+        # "API_PROXY": "http://proxy.server:3128",
+    }
+else:
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+        "API_KEY": config("CLOUDINARY_API_KEY"),
+        "API_SECRET": config("CLOUDINARY_API_SECRET"),
+        "API_PROXY": "http://proxy.server:3128",
+    }
+
+# For cloudinary python SDK
+import cloudinary
+
+CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET")
+if DEBUG:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+    )
+else:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        api_proxy="http://proxy.server:3128",
+        secure=True,  # Enforces HTTPS
+    )
+# MEDIA_URL = "/media/"
+# DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 ####################---Allauth settings for social account login ----######################

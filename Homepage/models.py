@@ -61,7 +61,7 @@ class CustomUser(AbstractUser):
     )
     user_type = models.CharField(max_length=50, choices=USER_TYPE_CHOICES)
     image = models.ImageField(
-        upload_to="images/",
+        upload_to="profile-photo/",
         blank=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
