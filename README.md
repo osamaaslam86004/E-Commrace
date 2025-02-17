@@ -156,8 +156,9 @@ python version : 3.11
  2. python manage.py flush
  3. python manage.py reset_db
  4. python manage.py clean_pyc
- 5. python manage.py makemigrations
- 6. python manage.py migrate 
- 7. python manage.py product_category 
- 8. python manage.py computersubcategory 
- 9. python manage.py Special_Features 
+ 5. python manage.py collectstatic --noinput
+ 6. python manage.py makemigrations
+ 7. python manage.py migrate 
+ 8. python manage.py product_category 
+ 9. python manage.py computersubcategory 
+ 10. python manage.py Special_Features 
