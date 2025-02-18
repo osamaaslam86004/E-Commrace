@@ -1,3 +1,4 @@
+import boto3
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -5,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class CustomUserManager(BaseUserManager):
@@ -63,7 +65,7 @@ class CustomUser(AbstractUser):
     image = models.ImageField(
         upload_to="profile-photo/",
         blank=True,
-        default="default-profile-photo/avataaars.png",
+        default=f"{settings.MEDIA_URL}profile-photo/avataaars.PNG",
     )
     user_google_id = models.IntegerField(blank=True, null=True)
 
@@ -76,6 +78,28 @@ class CustomUser(AbstractUser):
     # direct import meaning => import at the top of any file
     # why circular imports?
     #  we are importing ProductCategory to Homepage.models and Customuser to i.models
+
+    @property
+    def profile_image_url(self):
+        """Return the correct S3 URL for the image, or default if missing."""
+        s3_storage = S3Boto3Storage()
+        s3_client = boto3.client("s3")
+
+        if self.image and str(self.image) != self.image.field.default:
+            try:
+                bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+                file_key = str(self.image)
+
+                # Check if the file exists on S3
+                s3_client.head_object(Bucket=bucket_name, Key=file_key)
+
+                # Return the S3 URL if the file exists
+                return s3_storage.url(file_key)
+            except Exception:
+                pass  # If the file is missing, fall back to default
+
+        # Return the S3 URL of the default image
+        return f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/media/{self.image.field.default}"
 
 
 class UserProfile(models.Model):

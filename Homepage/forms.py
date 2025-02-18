@@ -73,10 +73,10 @@ class CustomUserImageForm(forms.ModelForm):
         model = CustomUser
         fields = ["image"]
 
-    def clean_image(self):
-        if self.cleaned_data["image"] is None:
-            return CustomUser._meta.get_field("image").get_default()
-        return self.cleaned_data["image"]
+    # def clean_image(self):
+    #     if self.cleaned_data["image"] is None:
+    #         return CustomUser._meta.get_field("image").get_default()
+    #     return self.cleaned_data["image"]
 
 
 class LogInForm(forms.Form):
