@@ -1,14 +1,13 @@
 from boto3.s3.transfer import TransferConfig
-from storages.backends.s3boto3 import (
+from storages.backends.s3boto3 import (  # S3StaticStorage,
     S3Boto3Storage,
     S3ManifestStaticStorage,
-    S3StaticStorage,
 )
 
 GB = 1024 * 1024
 
 
-class StaticStorage(S3StaticStorage):
+class StaticStorage(S3ManifestStaticStorage):
     location = "static"
     default_acl = None
     file_overwrite = True  # Allows overwriting old static files

@@ -1,5 +1,11 @@
 # from typing import Any
 # from django.db.models.query import QuerySet
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 from typing import Any
 
 from cloudinary.uploader import upload
@@ -9,8 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
-from django.http import (HttpResponseBadRequest, HttpResponseRedirect,
-                         JsonResponse)
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -20,25 +25,47 @@ from django.views.generic.edit import CreateView
 
 from book_.forms import CustomBookFormatFilterForm
 from book_.models import BookFormat
-from i.browsing_history import (add_product_to_browsing_history,
-                                your_browsing_history)
-from i.decorators import (user_add_product_permission_required,
-                          user_comment_permission_required)
+from i.browsing_history import add_product_to_browsing_history, your_browsing_history
+from i.decorators import (
+    user_add_product_permission_required,
+    user_comment_permission_required,
+)
 from i.filters import MonitorsFilter
-from i.forms import (AdaptorsForm, BagPacksForm, BriefCasesForm,
-                     ChargersAndadaptorsForm, ComputerAndTabletsForm,
-                     ComputerSubCategoryForm, DesktopForm, ElectronicsForm,
-                     FlexCablesForm, HardShellCasesForm,
-                     IsolatedTransformersForm, LaptopAccessoriesForm,
-                     LaptopBagsForm, LaptopBagSleevesForm, LaptopBattryForm,
-                     LaptopsForm, LcdDisplayReplacementPartsForm,
-                     LineConditionersForm, MessengerAndShoulderBagForm,
-                     MonitorsForm, PDUsForm, PowerAccessoriesForm,
-                     ProductCategoryForm, ReviewForm, ScreenFiltersForm,
-                     ScreenProtectorForm, ServersForm, Special_Features,
-                     SpecialFeaturesForm, TabletsForm,
-                     TabletsReplacementPartsForm)
+from i.forms import (
+    AdaptorsForm,
+    BagPacksForm,
+    BriefCasesForm,
+    ChargersAndadaptorsForm,
+    ComputerAndTabletsForm,
+    ComputerSubCategoryForm,
+    DesktopForm,
+    ElectronicsForm,
+    FlexCablesForm,
+    HardShellCasesForm,
+    IsolatedTransformersForm,
+    LaptopAccessoriesForm,
+    LaptopBagsForm,
+    LaptopBagSleevesForm,
+    LaptopBattryForm,
+    LaptopsForm,
+    LcdDisplayReplacementPartsForm,
+    LineConditionersForm,
+    MessengerAndShoulderBagForm,
+    MonitorsForm,
+    PDUsForm,
+    PowerAccessoriesForm,
+    ProductCategoryForm,
+    ReviewForm,
+    ScreenFiltersForm,
+    ScreenProtectorForm,
+    ServersForm,
+    Special_Features,
+    SpecialFeaturesForm,
+    TabletsForm,
+    TabletsReplacementPartsForm,
+)
 from i.models import ComputerSubCategory, Monitors, ProductCategory, Review
+from i.tasks import upload_images_to_s3
 from i.utils import Calculate_Ratings, RatingCalculator
 
 
@@ -357,28 +384,15 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
             }
 
             if self.all_images_uploaded_by_user(uploaded_images):
-                transformation_options = {
-                    "width": 75,
-                    "height": 75,
-                    "crop": "fill",
-                    "gravity": "face",
-                    "effect": "auto_contrast",
-                }
 
-                for key, image_file in uploaded_images.items():
-                    if image_file:
-                        image_data = upload(
-                            image_file,
-                            transformation=transformation_options,
-                            resource_type="image",
-                        )
-                        resized_image_url = image_data["url"]
-                        setattr(monitor, f"image_{key[-1]}", resized_image_url)
-                    else:
-                        messages.info(
-                            self.request, "images did not uploaded properly, Try again!"
-                        )
-                        return self.form_invalid(form)
+                # Call the Celery task to upload images
+                upload_task = upload_images_to_s3.delay(uploaded_images)
+
+                # Instead of waiting for completion, redirect or render a success message
+                messages.success(
+                    self.request,
+                    "Images are being uploaded. You will be notified when done.",
+                )
 
                 product_category_name = "COMPUTER"
                 sub_category_name = "MONITORS"
@@ -399,7 +413,9 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
                     "choose_special_features"
                 )
 
-                print(f"selected features ids------------: {selected_features_ids}")
+                logger.info(
+                    f"selected features ids------------: {selected_features_ids}"
+                )
 
                 # Fetch the Special_Features objects corresponding to the selected IDs
                 selected_features = Special_Features.objects.filter(
@@ -408,11 +424,11 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
 
                 # Assuming 'monitor' is your Monitors object
                 for feature in selected_features:
-                    print(f"Adding feature------------: {feature}")
+                    logger.info(f"Adding feature------------: {feature}")
                     monitor.special_features.add(feature)
 
                 # To confirm the features have been added correctly
-                print(
+                logger.info(
                     f"features added to monitor---------:{monitor.special_features.all().values_list('name', flat=True)}"
                 )
 
@@ -423,7 +439,6 @@ class Create_Monitors_Product(SuccessMessageMixin, CreateView):
         else:
             messages.error(self.request, "Form is not valid")
             return self.form_invalid(form)
-        # return super().form_valid(form)
 
 
 class Update_Monitor_Product(View):
