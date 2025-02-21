@@ -19,7 +19,7 @@
         crossorigin="anonymous"></script>
 
 
-    
+
     {% compress css inline %}
     <style>
         body {
@@ -310,7 +310,7 @@
 
             <!--  filter form here --->
             <div style="margin-left: 30px; width:75%; margin-top:41px;">
-                <form method='GET'>
+                <form method='post'>
 
                     {% csrf_token %}
                     {{ form|crispy }}

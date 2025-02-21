@@ -154,16 +154,19 @@ class UserProfileForm(forms.ModelForm):  # no need to validate max_length
     # preferred_domestic_carrier_code=None)), ('city', 'lahore'), ('country', Country(code='PK')),
     # ('postal_code', '54000'), ('shipping_address', 'House no. 237 block G-4 Johar Town')])
 
-    phone_number = PhoneNumberField(
-        # Comment out Widget During Testing Phase
-        widget=PhoneNumberPrefixWidget(
-            attrs={"placeholder": "Enter your phone number"}
-        ),
-        help_text="Include country code. For example: +1 123-456-7890",
-        error_messages={
-            "invalid": "Enter a valid phone number with valid country code."
-        },
-    )
+    from django.conf import settings
+
+    if settings.DEBUG == False:
+        phone_number = PhoneNumberField(
+            # Comment out Widget During Testing Phase
+            widget=PhoneNumberPrefixWidget(
+                attrs={"placeholder": "Enter your phone number"}
+            ),
+            help_text="Include country code. For example: +1 123-456-7890",
+            error_messages={
+                "invalid": "Enter a valid phone number with valid country code."
+            },
+        )
 
     GENDER_CHOICES = UserProfile.GENDER_CHOICES
     gender = forms.ChoiceField(

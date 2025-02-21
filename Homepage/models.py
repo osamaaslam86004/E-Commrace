@@ -101,30 +101,32 @@ class UserProfile(models.Model):
     postal_code = models.CharField(max_length=20, blank=False)
     shipping_address = models.CharField(max_length=1000, blank=False)
 
-    def clean(self):
-        super().clean()
-        if not self.age:
-            raise ValidationError("Valid age is required,")
-        if self.age < 18 or self.age > 130:
-            raise ValidationError("Valid age is required, Hint: 0 to 130")
+    if settings.DEBUG == False:
 
-        # Parse the phone number
-        # try:
-        parsed_number = parse(str(self.phone_number), None)
-        # except Exception as e:
-        #     raise ValidationError("Invalid phone number format.")
+        def clean(self):
+            super().clean()
+            if not self.age:
+                raise ValidationError("Valid age is required,")
+            if self.age < 18 or self.age > 130:
+                raise ValidationError("Valid age is required, Hint: 0 to 130")
 
-        # # Validate phone number and check country match
-        # if not is_valid_number(parsed_number):
-        #     raise ValidationError("The phone number is not valid.")
-        """country code PK for Pakistan from phonenumber field is matched 
-        with country.code == PK from django_countries"""
+            # Parse the phone number
+            # try:
+            parsed_number = parse(str(self.phone_number), None)
+            # except Exception as e:
+            #     raise ValidationError("Invalid phone number format.")
 
-        phone_country = region_code_for_number(parsed_number)
-        if phone_country != self.country.code:
-            raise ValidationError(
-                f"The phone number does not belong to the country {self.country.name}."
-            )
+            # # Validate phone number and check country match
+            # if not is_valid_number(parsed_number):
+            #     raise ValidationError("The phone number is not valid.")
+            """country code PK for Pakistan from phonenumber field is matched
+            with country.code == PK from django_countries"""
+
+            phone_country = region_code_for_number(parsed_number)
+            if phone_country != self.country.code:
+                raise ValidationError(
+                    f"The phone number does not belong to the country {self.country.name}."
+                )
 
     def save(self, *args, **kwargs):
         self.clean()

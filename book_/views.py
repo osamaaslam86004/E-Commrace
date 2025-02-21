@@ -9,18 +9,25 @@ from django.db.models import Avg, Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.generic import DetailView, ListView, View
+from django.views.generic import DetailView, View
+from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.edit import CreateView, UpdateView
 
-from book_.forms import (BookAuthorNameForm, BookFormatForm,
-                         CustomBookFormatFilterForm, ReviewForm)
+from book_.custom_mixins.filtered_books_mixin import FilteredBooksMixin
+from book_.forms import (
+    BookAuthorNameForm,
+    BookFormatForm,
+    CustomBookFormatFilterForm,
+    ReviewForm,
+)
 from book_.models import BookAuthorName, BookFormat, Rating, Review
 from book_.utils import RatingCalculator
-from i.browsing_history import (add_product_to_browsing_history,
-                                your_browsing_history)
-from i.decorators import (check_user_linked_to_comment,
-                          user_add_product_permission_required,
-                          user_comment_permission_required)
+from i.browsing_history import add_product_to_browsing_history, your_browsing_history
+from i.decorators import (
+    check_user_linked_to_comment,
+    user_add_product_permission_required,
+    user_comment_permission_required,
+)
 from i.models import ProductCategory
 
 
@@ -291,106 +298,42 @@ class Delete_Book_Format_View(View, PermissionRequiredMixin):
         return redirect("i:list_of_books_for_user")
 
 
-class FilteredBooksView(ListView):
-    model = BookFormat
+class FilteredBooksView(TemplateResponseMixin, View, FilteredBooksMixin):
+    """
+    Check the MRO
+    print(FilteredBooksView.mro())
+    """
+
     template_name = "book_list_view.html"
     paginate_by = 3
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # firstly, the template is rendered with a Form with self.request.GET=None ==> form=None ==>
-        # if form.is_valid()--> False ==> queryset=super().get_queryset()=Bookformat.objects.all()
+    def get(self, request, *args, **kwargs):
+        form = CustomBookFormatFilterForm()
+        queryset = self.get_queryset()
+        page_obj = self.paginate_queryset(queryset, self.request.GET.get("page"))
+        print(f"page number: {self.request.GET.get('page')}")
+        context = self.get_context_data(page_obj, form)
+        return self.render_to_response(context)
 
-        form = CustomBookFormatFilterForm(self.request.GET)
-        if form.is_valid():
-            filter_conditions = Q()
+    def post(self, request, *args, **kwargs):
+        form = CustomBookFormatFilterForm(self.request.POST)
+        queryset = self.get_queryset(form)
+        page_obj = self.paginate_queryset(queryset, self.request.POST.get("page", 1))
+        context = self.get_context_data(page_obj, form)
+        return self.render_to_response(context)
 
-            is_used_available = form.cleaned_data.get("is_used_available")
-            # we have leave "on" and "off" onuser choice
-            # we can set manually default to be either "on" or "off"
-            # if is_new_available_filter == "on"
-            if is_used_available == "on":
-                is_used_available = True
-            else:
-                is_used_available = False
+    def paginate_queryset(self, queryset, page_number):
+        paginator = Paginator(queryset, self.paginate_by)
+        return paginator.get_page(page_number)
 
-            is_new_available = form.cleaned_data.get("is_new_available")
-            if is_new_available == "on":
-                is_new_available = True
-            else:
-                is_new_available = False
-
-            format = form.cleaned_data.get("format")
-            if format:
-                filter_conditions |= Q(format=format)
-
-            book_name = form.cleaned_data.get("book_name")
-            if book_name:
-                filter_conditions &= Q(book_author_name__book_name__icontains=book_name)
-
-            author_name = form.cleaned_data.get("author_name")
-            if author_name:
-                filter_conditions &= Q(
-                    book_author_name__author_name__icontains=author_name
-                )
-
-            price_min = form.cleaned_data.get("price_min")
-            if price_min:
-                filter_conditions |= Q(price__gte=price_min)
-
-            price_max = form.cleaned_data.get("price_max")
-            if price_max:
-                filter_conditions &= Q(price__lte=price_max)
-
-            if is_new_available:
-                filter_conditions |= Q(is_new_available=is_new_available)
-
-            if is_used_available:
-                filter_conditions |= Q(is_used_available=is_used_available)
-
-            publisher_name = form.cleaned_data.get("publisher_name")
-            if publisher_name:
-                filter_conditions |= Q(publisher_name__icontains=publisher_name)
-
-            rating_min = form.cleaned_data.get("rating_min")
-            if rating_min:
-                filter_conditions |= Q(rating_format__rating__gte=rating_min)
-
-            rating_max = form.cleaned_data.get("rating_max")
-            if rating_max:
-                filter_conditions &= Q(rating_format__rating__lte=rating_max)
-
-            queryset = queryset.annotate(
-                avg_rating=Avg("rating_format__rating"),
-                num_users_rated=Count("rating_format__user", distinct=True),
-            ).filter(filter_conditions, is_active="1")
-            # order by lowest to highest price
-            # return queryset.order_by('price')
-            # order by lowest to highest price
-            return queryset.order_by("-price")
-        else:
-            return queryset.annotate(
-                avg_rating=Avg("rating_format__rating"),
-                num_users_rated=Count("rating_format__user", distinct=True),
-            ).filter(is_active="1")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        book_formats = self.get_queryset()
-
-        paginator = Paginator(book_formats, self.paginate_by)
-
-        page_number = self.request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-
+    def get_context_data(self, page_obj, form):
         content_id = ContentType.objects.get(app_label="book_", model="bookformat").id
-
-        context["content_id"] = content_id
-        context["item_list"] = page_obj
-        context["form"] = CustomBookFormatFilterForm()
-
-        return context
+        return {
+            "content_id": content_id,
+            "item_list": page_obj,
+            "form": form,
+            "request": self.request,
+        }
 
 
 class Book_Detail_View(DetailView):

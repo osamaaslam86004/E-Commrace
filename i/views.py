@@ -9,8 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
-from django.http import (HttpResponseBadRequest, HttpResponseRedirect,
-                         JsonResponse)
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -20,24 +19,45 @@ from django.views.generic.edit import CreateView
 
 from book_.forms import CustomBookFormatFilterForm
 from book_.models import BookFormat
-from i.browsing_history import (add_product_to_browsing_history,
-                                your_browsing_history)
-from i.decorators import (user_add_product_permission_required,
-                          user_comment_permission_required)
+from i.browsing_history import add_product_to_browsing_history, your_browsing_history
+from i.decorators import (
+    user_add_product_permission_required,
+    user_comment_permission_required,
+)
 from i.filters import MonitorsFilter
-from i.forms import (AdaptorsForm, BagPacksForm, BriefCasesForm,
-                     ChargersAndadaptorsForm, ComputerAndTabletsForm,
-                     ComputerSubCategoryForm, DesktopForm, ElectronicsForm,
-                     FlexCablesForm, HardShellCasesForm,
-                     IsolatedTransformersForm, LaptopAccessoriesForm,
-                     LaptopBagsForm, LaptopBagSleevesForm, LaptopBattryForm,
-                     LaptopsForm, LcdDisplayReplacementPartsForm,
-                     LineConditionersForm, MessengerAndShoulderBagForm,
-                     MonitorsForm, PDUsForm, PowerAccessoriesForm,
-                     ProductCategoryForm, ReviewForm, ScreenFiltersForm,
-                     ScreenProtectorForm, ServersForm, Special_Features,
-                     SpecialFeaturesForm, TabletsForm,
-                     TabletsReplacementPartsForm)
+from i.forms import (
+    AdaptorsForm,
+    BagPacksForm,
+    BriefCasesForm,
+    ChargersAndadaptorsForm,
+    ComputerAndTabletsForm,
+    ComputerSubCategoryForm,
+    DesktopForm,
+    ElectronicsForm,
+    FlexCablesForm,
+    HardShellCasesForm,
+    IsolatedTransformersForm,
+    LaptopAccessoriesForm,
+    LaptopBagsForm,
+    LaptopBagSleevesForm,
+    LaptopBattryForm,
+    LaptopsForm,
+    LcdDisplayReplacementPartsForm,
+    LineConditionersForm,
+    MessengerAndShoulderBagForm,
+    MonitorsForm,
+    PDUsForm,
+    PowerAccessoriesForm,
+    ProductCategoryForm,
+    ReviewForm,
+    ScreenFiltersForm,
+    ScreenProtectorForm,
+    ServersForm,
+    Special_Features,
+    SpecialFeaturesForm,
+    TabletsForm,
+    TabletsReplacementPartsForm,
+)
 from i.models import ComputerSubCategory, Monitors, ProductCategory, Review
 from i.utils import Calculate_Ratings, RatingCalculator
 
@@ -286,7 +306,7 @@ class List_Of_Monitors_For_User(ListView):
                 Monitors.objects.filter(user=user)
                 .annotate(avg_rating=Avg("product_review__rating"))
                 .annotate(num_users_rated=Count("product_review__user"))
-            )
+            ).order_by("price")
         except Monitors.DoesNotExist:
             messages.error(self.request, "You have not added a Monitor-type product")
             monitors = Monitors.objects.none()
@@ -574,7 +594,7 @@ class Delete_Monitors_Product(View):
 
 
 def List_View(request, model, filter_form, template_name):
-    item_list = model.objects.all()
+    item_list = model.objects.all().order_by("price")
     filter = filter_form(request.GET, queryset=item_list)
 
     item_ratings, rating_count = Calculate_Ratings.calculate_ratings(item_list)

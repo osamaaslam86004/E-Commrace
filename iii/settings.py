@@ -142,7 +142,6 @@ DATABASES = {
     }
 }
 
-
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql",
@@ -389,13 +388,14 @@ GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID")
 GOOGLE_OAUTH_CLIENT_SECRET = config("GOOGLE_OAUTH_CLIENT_SECRET")
 
 
-if not DEBUG:
-    GOOGLE_OAUTH_REDIRECT_URI = (
-        "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
-    )
-else:
+if DEBUG:
     GOOGLE_OAUTH_REDIRECT_URI = (
         "https://diverse-intense-whippet.ngrok-free.app/accounts/google/login/callback/"
+    )
+
+else:
+    GOOGLE_OAUTH_REDIRECT_URI = (
+        "https://osama11111.pythonanywhere.com/accounts/google/login/callback/"
     )
 
 
