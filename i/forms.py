@@ -1,6 +1,7 @@
+from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.core.exceptions import ValidationError
-from ckeditor.widgets import CKEditorWidget
+from django.core.files.images import get_image_dimensions
 
 from i.models import (
     PDUS,
@@ -395,23 +396,59 @@ class MonitorsForm(forms.ModelForm):
             )
         return price
 
-    # def clean_iamge_1(self):
-    #     image_1 = self.cleaned_data.get("image_1")
-    #     if image_1 is None:
-    #         return image_1
-    #     return image_1
+    def clean_image_1(self):
+        image_1 = self.cleaned_data.get("image_1")
+        if not image_1:
+            raise forms.ValidationError("Image 1 is required!")
+        else:
+            # w, h = get_image_dimensions(image_1)
+            # if w != 100:
+            #     raise forms.ValidationError(
+            #         f"The image is {w} pixels wide. It's supposed to be 100px"
+            #     )
+            # if h != 200:
+            #     raise forms.ValidationError(
+            #         f"The image is {h} pixels high. It's supposed to be 200px"
+            #     )
+            if image_1.size > 1 * 1024 * 1024:
+                raise ValidationError("File size must be less than 1MB.")
+        return image_1
 
-    # def clean_iamge_2(self):
-    #     image_2 = self.cleaned_data.get("image_2")
-    #     if image_2 is None:
-    #         return image_2
-    #     return image_2
+    def clean_image_2(self):
+        image_2 = self.cleaned_data.get("image_2")
+        if not image_2:
+            raise ValidationError("Image 2 is required!")
+        else:
+            # w, h = get_image_dimensions(image_2)
+            # if w != 100:
+            #     raise forms.ValidationError(
+            #         f"The image is {w} pixels wide. It's supposed to be 100px"
+            #     )
+            # if h != 200:
+            #     raise forms.ValidationError(
+            #         f"The image is {h} pixels high. It's supposed to be 200px"
+            #     )
+            if image_2.size > 1 * 1024 * 1024:
+                raise ValidationError("File size must be less than 1MB.")
+        return image_2
 
-    # def clean_iamge_3(self):
-    #     image_3 = self.cleaned_data.get("image_3")
-    #     if image_3 is None:
-    #         return image_3
-    #     return image_3
+    def clean_image_3(self):
+        image_3 = self.cleaned_data.get("image_3")
+        if not image_3:
+            raise ValidationError("Image 3 is required!")
+        else:
+            # w, h = get_image_dimensions(image_3)
+            # if w != 100:
+            #     raise forms.ValidationError(
+            #         f"The image is {w} pixels wide. It's supposed to be 100px"
+            #     )
+            # if h != 200:
+            #     raise forms.ValidationError(
+            #         f"The image is {h} pixels high. It's supposed to be 200px"
+            #     )
+            if image_3.size > 1 * 1024 * 1024:
+                raise ValidationError("File size must be less than 1MB.")
+        return image_3
 
 
 class LaptopAccessoriesForm(forms.ModelForm):

@@ -128,9 +128,9 @@ class UserProfile(models.Model):
                     f"The phone number does not belong to the country {self.country.name}."
                 )
 
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
+        def save(self, *args, **kwargs):
+            self.clean()
+            super().save(*args, **kwargs)
 
 
 class CustomerProfile(models.Model):

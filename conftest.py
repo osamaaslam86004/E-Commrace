@@ -1,10 +1,11 @@
 # conftest.py
 
+import logging
+
 import celery
 import celery.contrib
 import celery.contrib.pytest
 import pytest
-
 
 pytest_plugins = "celery.contrib.pytest"
 
@@ -29,6 +30,20 @@ def celery_config():
 @pytest.fixture(scope="session")
 def celery_enable_logging():
     return True
+
+
+# Disable Faker and Factory Boy DEBUG logging globally
+faker_logger = logging.getLogger("faker")
+factory_logger = logging.getLogger("factory")
+
+faker_logger.setLevel(logging.ERROR)
+factory_logger.setLevel(logging.ERROR)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_logging():
+    faker_logger.setLevel(logging.ERROR)
+    factory_logger.setLevel(logging.ERROR)
 
 
 # @pytest.fixture(scope="session", autouse=True)

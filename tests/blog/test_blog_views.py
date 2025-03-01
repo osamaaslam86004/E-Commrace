@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django_mock_queries.query import MockModel, MockSet
 from faker import Faker
+from pytest_mock import mocker
 
 from blog.forms import CommentForm, PostForm
 from blog.models import Comment, Post
@@ -18,7 +19,7 @@ from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 fake = Faker()
 # Disable Faker DEBUG logging
 faker_logger = logging.getLogger("faker")
-faker_logger.setLevel(logging.WARNING)
+faker_logger.setLevel(logging.ERROR)
 
 
 @pytest.fixture

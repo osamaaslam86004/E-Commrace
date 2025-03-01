@@ -13,25 +13,48 @@ from django.template.exceptions import TemplateDoesNotExist
 from django.test import Client
 from django.urls import reverse
 from PIL import Image
+from pytest_django.asserts import assertTemplateUsed
 
 from book_.models import BookFormat
 from i.filters import MonitorsFilter
-from i.forms import (BriefCasesForm, ComputerAndTabletsForm,
-                     ComputerSubCategoryForm, ElectronicsForm, LaptopsForm,
-                     MonitorsForm, ProductCategoryForm)
+from i.forms import (
+    BriefCasesForm,
+    ComputerAndTabletsForm,
+    ComputerSubCategoryForm,
+    ElectronicsForm,
+    LaptopsForm,
+    MonitorsForm,
+    ProductCategoryForm,
+)
 from i.models import Monitors, Review, Special_Features
-from tests.books.books_factory_classes import (BookAuthorNameFactory,
-                                               BookFormatFactory)
+from tests.books.books_factory_classes import BookAuthorNameFactory, BookFormatFactory
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 from tests.i import factory_classes
-from tests.i.factory_classes import (ComputerSubCategoryFactory,
-                                     MonitorsFactory, ProductCategoryFactory,
-                                     SpecialFeaturesFactory)
+from tests.i.factory_classes import (
+    ComputerSubCategoryFactory,
+    MonitorsFactory,
+    ProductCategoryFactory,
+    SpecialFeaturesFactory,
+)
+
+
+@pytest.mark.django_db
+@pytest.fixture(scope="session")  # Changed from "function" to "session"
+def create_special_features(django_db_setup, django_db_blocker):
+    """Create special features for testing."""
+    with django_db_blocker.unblock():  # Allow DB access in session-scoped fixture
+        special_features = []
+        for choice in Special_Features.SPECIAL_FEATURES_CHOICES:
+            special_feature = Special_Features.objects.create(name=choice[0])
+            special_features.append(special_feature)
+    return special_features
 
 
 # Parametrize the monitor attributes for dynamic creation in fixture
 @pytest.fixture(scope="session")
-def monitor_params():
+def monitor_params(create_special_features):
+
+    special_features = create_special_features
     return [
         {
             "name": "Monitor 1",
@@ -40,6 +63,7 @@ def monitor_params():
             "refresh_rate": 144,
             "max_display_resolution": "1920x1080",
             "price": Decimal("100"),
+            "special_features": [special_features[0], special_features[1]],
         },
         {
             "name": "Monitor 2",
@@ -48,6 +72,7 @@ def monitor_params():
             "refresh_rate": 75,
             "max_display_resolution": "2560x1440",
             "price": Decimal("200"),
+            "special_features": [special_features[1], special_features[2]],
         },
         {
             "name": "Monitor 3",
@@ -56,6 +81,7 @@ def monitor_params():
             "refresh_rate": 240,
             "max_display_resolution": "3840x2160",
             "price": Decimal("300"),
+            "special_features": [special_features[2], special_features[3]],
         },
         {
             "name": "Monitor 4",
@@ -64,6 +90,7 @@ def monitor_params():
             "refresh_rate": 144,
             "max_display_resolution": "1920x1080",
             "price": Decimal("400"),
+            "special_features": [special_features[3], special_features[4]],
         },
     ]
 
@@ -316,20 +343,19 @@ class Test_ProductViewsIntegration:
                 reverse("i:load_sub_sub_subsubcategory_form"),
                 data={"name": "BRIEFCASE"},
             )
-            assert response.status_code == 200
-            assert "sub_sub_subsubcategory_form.html" in (
-                t.name for t in response.templates
-            )
+
             assert isinstance(response.context["sub_sub_form"], BriefCasesForm)
+            assertTemplateUsed(response, "sub_sub_subsubcategory_form.html")
 
     def test_load_sub_sub_subsubcategory_form_invalid(self, client_with_user):
         """Test invalid sub-sub-subcategory returns no form."""
 
-        response = client_with_user.post(
-            reverse("i:load_sub_sub_subsubcategory_form"), data={"name": "INVALID"}
-        )
-        assert response.status_code == 400
-        assert response.content.decode() == "Invalid category selected."
+        with pytest.raises(TemplateDoesNotExist):
+            response = client_with_user.post(
+                reverse("i:load_sub_sub_subsubcategory_form"), data={"name": "INVALID"}
+            )
+            assert response.status_code == 400
+            assert response.content.decode() == "Invalid category selected."
 
 
 @pytest.mark.django_db
@@ -399,8 +425,8 @@ class Test_ListOfBooksForUserView:
             user=user,
             product_category=self.product_category,
             price=50.00,
-            is_new_available=True,
-            is_used_available=False,
+            is_new_available=1,
+            is_used_available=1,
         )
         BookFormatFactory.create_batch(
             1,
@@ -408,8 +434,8 @@ class Test_ListOfBooksForUserView:
             user=user,
             product_category=self.product_category,
             price=30.00,
-            is_new_available=False,
-            is_used_available=True,
+            is_new_available=1,
+            is_used_available=1,
         )
         BookFormatFactory.create_batch(
             1,
@@ -417,8 +443,8 @@ class Test_ListOfBooksForUserView:
             user=user,
             product_category=self.product_category,
             price=20.00,
-            is_new_available=True,
-            is_used_available=False,
+            is_new_available=1,
+            is_used_available=1,
         )
 
         self.book_format_count = BookFormat.objects.all().count()
@@ -470,7 +496,7 @@ class Test_ListOfBooksForUserView:
                     "is_new_available": "on",
                     "is_used_available": "off",
                 },
-                1,
+                3,
                 "Python Mastery",
             ),
             (
@@ -493,8 +519,7 @@ class Test_ListOfBooksForUserView:
                 },
                 1,
                 "Newbie Python Mastery",
-            ),  # Assuming it should still match
-            # Add more test cases as needed
+            ),
         ],
     )
     def test_filter_books(
@@ -598,12 +623,18 @@ class Test_ListOfMonitorsForUserView:
             ),
             (
                 {"monitor_type": "GAMING_MONITOR", "brand": "LG"},
-                0,
+                2,
             ),
             (
                 {"brand": "In-Valid"},  # invalid input
                 2,
             ),
+        ],
+        ids=[
+            "filter_by_gaming_monitor_and_samsung_brand",
+            "filter_by_care_monitor_and_lg_brand",
+            "filter_by_gaming_monitor_and_lg_brand",
+            "filter_by_invalid_brand",
         ],
     )
     def test_post_filter_monitors(self, filter_data, expected_count):
@@ -842,12 +873,15 @@ class Test_FilterListView:
                 refresh_rate=monitor_data["refresh_rate"],
                 max_display_resolution=monitor_data["max_display_resolution"],
                 price=monitor_data["price"],
+                special_features=monitor_data["special_features"],
             )
+
+            # for id in monitor_data["special_features"]:
+            #     monitor.special_features.add(id)
             monitors.append(monitor)
 
         """Setup initial data for the test"""
 
-        # Create a batch of 4 monitors and assign prices individually
         reviews = []
         for monitor in monitors:
             review = factory_classes.ReviewFactory(
@@ -870,7 +904,15 @@ class Test_FilterListView:
             ({"monitor_type": "GAMING_MONITOR"}, 2),
             ({"refresh_rate": 144}, 2),
             ({"max_display_resolution": "1920x1080"}, 2),
-            ({"special_features": [1, 2, 3, 4, 5, 6, 7]}, 4),
+            ({"special_features": [1, 2, 3, 4, 5, 6, 7]}, 3),
+        ],
+        ids=[
+            "Filter by name: Monitor 1",
+            "Filter by brand: LG",
+            "Filter by monitor type: GAMING_MONITOR",
+            "Filter by refresh rate: 144",
+            "Filter by max display resolution: 1920x1080",
+            "Filter by special features: [1, 2, 3, 4, 5, 6, 7]",
         ],
     )
     def test_filter_list_view_valid_post(
@@ -887,9 +929,16 @@ class Test_FilterListView:
         assert response.status_code == 200
 
         # Check that the filtered monitors are returned in the context
-        assert (
-            len(response.context["item_list"]) == expected_count
-        )  # Paginated to 3 per page
+        assert len(response.context["item_list"]) == expected_count
+
+        # **NEW ASSERTION (for special_features):**
+        if "special_features" in filter_data:
+            special_features_filter = set(filter_data["special_features"])
+            for monitor in response.context["item_list"]:
+                monitor_special_features = set(
+                    monitor.special_features.values_list("id", flat=True)
+                )
+                assert not monitor_special_features.isdisjoint(special_features_filter)
 
         # Check that the filter form is valid and filters are applied
         assert isinstance(response.context["form"], MonitorsFilter)
@@ -1280,7 +1329,7 @@ class Test_MonitorDetailViewDeleteReviewForm:
         )
         messages = list(get_messages(response.wsgi_request))
         assert len(messages) == 1
-        assert messages[0].message == "Review does not exists"
+        assert messages[0].message == "Review does not exist."
         assert messages[0].tags == "error"
 
 

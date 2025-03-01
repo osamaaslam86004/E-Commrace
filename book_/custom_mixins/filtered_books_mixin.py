@@ -1,12 +1,11 @@
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, OuterRef, Q, Subquery
 
-from book_.forms import CustomBookFormatFilterForm
-from book_.models import BookFormat
+from book_.models import BookFormat, Rating
 
 
 class FilteredBooksMixin:
     def get_queryset(self, form=None):
-        queryset = BookFormat.objects.all().order_by("price")
+
         if form and form.is_valid():
             filter_conditions = Q()
 
@@ -15,7 +14,7 @@ class FilteredBooksMixin:
 
             format = form.cleaned_data.get("format")
             if format:
-                filter_conditions |= Q(format=format)
+                filter_conditions &= Q(format=format)
 
             book_name = form.cleaned_data.get("book_name")
             if book_name:
@@ -29,33 +28,58 @@ class FilteredBooksMixin:
 
             price_min = form.cleaned_data.get("price_min")
             if price_min:
-                filter_conditions |= Q(price__gte=price_min)
+                filter_conditions &= Q(price__gte=price_min)
 
             price_max = form.cleaned_data.get("price_max")
             if price_max:
                 filter_conditions &= Q(price__lte=price_max)
 
             if is_new_available:
-                filter_conditions |= Q(is_new_available=is_new_available)
+                filter_conditions &= Q(is_new_available=is_new_available)
 
             if is_used_available:
-                filter_conditions |= Q(is_used_available=is_used_available)
+                filter_conditions &= Q(is_used_available=is_used_available)
 
             publisher_name = form.cleaned_data.get("publisher_name")
             if publisher_name:
-                filter_conditions |= Q(publisher_name__icontains=publisher_name)
+                filter_conditions &= Q(publisher_name__icontains=publisher_name)
 
             rating_min = form.cleaned_data.get("rating_min")
             if rating_min:
-                filter_conditions |= Q(rating_format__rating__gte=rating_min)
+                filter_conditions &= Q(rating_format__rating__gte=rating_min)
 
             rating_max = form.cleaned_data.get("rating_max")
             if rating_max:
                 filter_conditions &= Q(rating_format__rating__lte=rating_max)
 
-            queryset = queryset.annotate(
+                # Subquery for average rating
+            avg_rating_subquery = (
+                Rating.objects.filter(book_format=OuterRef("id"))
+                .annotate(avg_rating=Avg("rating"))
+                .values("avg_rating")[:1]
+            )
+
+            # Subquery for number of users rated
+            num_users_rated_subquery = (
+                Rating.objects.filter(book_format=OuterRef("id"))
+                .annotate(num_users_rated=Count("user", distinct=True))
+                .values("num_users_rated")[:1]
+            )
+
+            # Apply the combined filter conditions
+            queryset = (
+                BookFormat.objects.filter(filter_conditions)
+                .annotate(
+                    avg_rating=Subquery(avg_rating_subquery),
+                    num_users_rated=Subquery(num_users_rated_subquery),
+                )
+                .order_by("-price")
+            )
+
+        else:
+            queryset = BookFormat.objects.annotate(
                 avg_rating=Avg("rating_format__rating"),
                 num_users_rated=Count("rating_format__user", distinct=True),
-            ).filter(filter_conditions, is_active="1")
+            ).order_by("-price")
 
-        return queryset.order_by("-price")
+        return queryset

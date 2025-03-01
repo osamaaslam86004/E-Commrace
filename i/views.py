@@ -158,6 +158,7 @@ def load_sub_sub_subsubcategory_form(request):
     if request.method == "POST":
         selected_category = request.POST.get("name")
         subcategory_form = None
+        sub_sub_subcategory_form = None
 
         if selected_category == "BRIEFCASE":
             sub_sub_subcategory_form = BriefCasesForm()
@@ -218,6 +219,8 @@ class List_Of_Books_For_User(ListView):
 
     def post(self, request):
         item_list = BookFormat.objects.filter(user=self.request.user)
+        context = {}
+        queryset = None
 
         if self.request.method == "POST":
             requested_user = self.request.user
@@ -288,7 +291,9 @@ class List_Of_Books_For_User(ListView):
                     .annotate(num_users_rated=Count("rating_format__user"))
                 )
 
-                context = {"item_list": queryset}
+                context["item_list"] = queryset
+            else:
+                context["item_list"] = None
         return render(self.request, "partial_book_seller.html", context)
 
 
@@ -323,6 +328,9 @@ class List_Of_Monitors_For_User(ListView):
 
     def post(self, request):
         item_list = Monitors.objects.filter(user=self.request.user)
+        item_ratings = {}
+        rating_count = {}
+        context = None
 
         if self.request.method == "POST":
             filter_form = MonitorsFilter(self.request.POST, queryset=item_list)
@@ -919,15 +927,22 @@ class Monitor_Detail_View_Delete_Review_Form(View):
         comment_id = kwargs["review_id"]
         monitor_id = kwargs["product_id"]
 
-        monitor = Monitors.objects.get(monitor_id=monitor_id)
-        comment = Review.objects.get(id=comment_id, product=monitor)
+        try:
+            monitor = Monitors.objects.get(monitor_id=monitor_id)
+            comment = Review.objects.get(id=comment_id, product=monitor)
 
-        if comment.user == self.request.user:
-            comment.delete()
-            messages.success(self.request, "Your comment has been deleted.")
-            return redirect("i:add_review", product_id=monitor_id)
-        else:
+            if comment.user == self.request.user:
+                comment.delete()
+                messages.success(self.request, "Your comment has been deleted.")
+            else:
+                messages.error(
+                    self.request, "You do not have permission to delete this comment."
+                )
+        except Monitors.DoesNotExist:
+            messages.error(self.request, "Monitor does not exist.")
+        except Review.DoesNotExist:
             messages.error(
-                self.request, "You do not have permission to delete this comment."
-            )
-            return redirect("i:add_review", product_id=monitor_id)
+                self.request, "Review does not exist."
+            )  # Handling missing review
+
+        return redirect("i:add_review", product_id=monitor_id)

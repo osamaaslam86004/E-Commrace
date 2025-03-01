@@ -13,9 +13,12 @@ from pytest_django.asserts import assertTemplateUsed
 
 from book_.forms import BookAuthorNameForm, BookFormatForm
 from book_.models import BookFormat
-from tests.books.books_factory_classes import (BookAuthorNameFactory,
-                                               BookFormatFactory,
-                                               RatingFactory, ReviewFactory)
+from tests.books.books_factory_classes import (
+    BookAuthorNameFactory,
+    BookFormatFactory,
+    RatingFactory,
+    ReviewFactory,
+)
 from tests.Homepage.Homepage_factory import CustomUserOnlyFactory
 from tests.i.factory_classes import ProductCategoryFactory
 
@@ -325,7 +328,8 @@ class Test_FilteredBooksViewIntegration:
             product_category=self.product_category,
             price=20.00,
             is_active=True,
-            is_new_available=True,
+            is_new_available=1,
+            is_used_available=1,
         )
         BookFormatFactory.create_batch(
             2,
@@ -334,7 +338,8 @@ class Test_FilteredBooksViewIntegration:
             product_category=self.product_category,
             price=35.00,
             is_active=True,
-            is_used_available=True,
+            is_new_available=1,
+            is_used_available=1,
         )
 
         self.book_format_count = BookFormat.objects.all().count()
@@ -354,7 +359,7 @@ class Test_FilteredBooksViewIntegration:
 
     def test_filter_by_author_name(self):
         """Test that filtering by author name returns the correct results."""
-        response = self.client.get(self.url, {"author_name": "John Doe"})
+        response = self.client.post(self.url, {"author_name": "John Doe"})
 
         assert response.status_code == 200
         books = response.context["item_list"]
@@ -366,7 +371,7 @@ class Test_FilteredBooksViewIntegration:
 
     def test_filter_by_price_range(self):
         """Test that filtering by a price range returns the correct results."""
-        response = self.client.get(self.url, {"price_min": 25, "price_max": 40})
+        response = self.client.post(self.url, {"price_min": 25, "price_max": 40})
 
         assert response.status_code == 200
         books = response.context["item_list"]
@@ -396,7 +401,7 @@ class Test_FilteredBooksViewIntegration:
 
     def test_filter_by_multiple_conditions(self):
         """Test filtering with multiple conditions (author name + price + is_new_available)."""
-        response = self.client.get(
+        response = self.client.post(
             self.url,
             {
                 "author_name": "John Doe",
