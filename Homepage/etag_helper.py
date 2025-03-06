@@ -2,6 +2,8 @@ import hashlib
 import json
 from decimal import Decimal
 
+from django.utils.timezone import now
+
 from i.browsing_history import your_browsing_history
 
 
@@ -22,3 +24,8 @@ def generate_etag_HomepageView(request):
     ).encode()
 
     return f'"{hashlib.md5(data).hexdigest()}"'  # Return quoted ETag
+
+
+def generate_Last_Modified_HomepageView(request):
+    """Returns a timezone-aware datetime for Last-Modified header."""
+    return now()  # Returns current UTC time with timezone info

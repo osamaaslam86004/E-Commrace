@@ -44,7 +44,10 @@ from sendgrid.helpers.mail import Mail
 from twilio.rest import Client
 
 from checkout.models import Payment
-from Homepage.etag_helper import generate_etag_HomepageView
+from Homepage.etag_helper import (
+    generate_etag_HomepageView,
+    generate_Last_Modified_HomepageView,
+)
 from Homepage.forms import (
     AdministratorProfileForm,
     CustomerProfileForm,
@@ -76,7 +79,13 @@ logger = logging.getLogger(__name__)
 
 
 @method_decorator(vary_on_cookie, name="dispatch")
-@method_decorator(condition(etag_func=generate_etag_HomepageView), name="dispatch")
+@method_decorator(
+    condition(
+        etag_func=generate_etag_HomepageView,
+        last_modified_func=generate_Last_Modified_HomepageView,
+    ),
+    name="dispatch",
+)
 class HomePageView(TemplateView):
     template_name = "store.html"
 
