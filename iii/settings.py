@@ -224,7 +224,7 @@ if DEBUG == False:
 
     # Default to False in development unless DEBUG=False
     COMPRESS_OFFLINE = False  # Pre-compress files during `collectstatic`
-
+    COMPRESS_DEBUG_TOGGLE = "compress"  # Allows debug mode toggle
     # Specify the backend to handle compression
     COMPRESS_ROOT = STATIC_ROOT
     COMPRESS_URL = STATIC_URL
