@@ -1,5 +1,6 @@
 import json
-from email import message
+
+# from email import message
 from unittest.mock import patch
 
 import pytest
@@ -225,7 +226,7 @@ class Test_CheckoutView:
 
         # Assertions
         assert response.status_code == 302
-        assert response.url == reverse("checkout:check_out")
+        assert response.url == reverse("Homepage:Home")
         payment = Payment.objects.get(cart=cart)
         assert payment.cart.cartitem_set.all().count() == 1
         assert payment.stripe_charge_id == "ch_test_charge_id"
@@ -271,7 +272,7 @@ class Test_CheckoutView:
 
         # Assertions
         assert response.status_code == 302  # Redirect after success
-        assert response.url == reverse("checkout:check_out")  # Redirect URL
+        assert response.url == reverse("Homepage:Home")  # Redirect URL
         payment = Payment.objects.get(cart=cart)
         assert payment.cart.cartitem_set.all().count() == 1
         assert payment.stripe_customer_id == "cus_existing_customer_id"
@@ -294,9 +295,10 @@ class Test_CheckoutView:
         # Mock Stripe customer search to return an existing customer
         mock_customer_search.return_value = {"data": []}
         # Mock Stripe's Customer.create to raise an error
+
         mocker.patch(
             "checkout.views.stripe.Customer.create",
-            side_effect=Exception("Stripe error"),
+            side_effect=stripe.error.StripeError("Stripe error"),
         )
 
         response = client.post(
@@ -316,8 +318,8 @@ class Test_CheckoutView:
         response = client.post(
             reverse("checkout:check_out"), {"stripeToken": "test_token"}
         )
-        assert response.status_code == 400
-        assert response.json() == {"error": "No active cart found"}
+        assert response.status_code == 302
+        assert response.url == reverse("Homepage:Home")
 
 
 @pytest.mark.django_db
@@ -361,7 +363,7 @@ class Test_StripeWebHook:
         # Assert response status code and content
         assert response.status_code == 200
         response_content = response.json()
-        assert response_content["message"] == "stripe created"
+        assert response_content["message"] == "Stripe charge processed"
         payment_object = Payment.objects.get(id=payment_object.id)
         assert payment_object.payment_status == "SUCCESSFUL"
 

@@ -6,20 +6,36 @@ import celery
 import celery.contrib
 import celery.contrib.pytest
 import pytest
+from celery.contrib.testing.tasks import ping
+from django.conf import settings
 
 pytest_plugins = "celery.contrib.pytest"
 
 
-@pytest.fixture(scope="session")
+# @pytest.fixture(scope="session")
+# def celery_config():
+#     return {
+#         "broker_url": "redis://localhost:6379/0",  # Redis as broker
+#         "result_backend": "redis://localhost:6379/0",  # Redis as result backend
+#         "task_always_eager": False,  # Ensure tasks are executed by the worker
+#         "accept_content": ["json"],
+#         "task_serializer": "json",
+#         "result_serializer": "json",
+#     }
+
+
+@pytest.fixture(scope="session", autouse=True)
 def celery_config():
-    return {
-        "broker_url": "redis://localhost:6379/0",  # Redis as broker
-        "result_backend": "redis://localhost:6379/0",  # Redis as result backend
-        "task_always_eager": False,  # Ensure tasks are executed by the worker
-        "accept_content": ["json"],
-        "task_serializer": "json",
-        "result_serializer": "json",
-    }
+
+    settings.CELERY_TASK_ALWAYS_EAGER = True  # Runs tasks synchronously
+    settings.CELERY_TASK_EAGER_PROPAGATES = (
+        True  # Ensures exceptions are raised immediately
+    )
+    settings.BROKER_BACKEND = (
+        "memory"  # Use in-memory backend to avoid needing a broker
+    )
+
+    ping.delay()  # Ensure Celery is working
 
 
 # @pytest.fixture(scope="session")

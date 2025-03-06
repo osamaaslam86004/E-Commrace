@@ -3,12 +3,13 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.http import JsonResponse
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 
 from cart.cart_items import add_product_to_cart_history, your_cart_items
 from cart.models import Cart, CartItem
-from checkout.models import Payment
+
+# from checkout.models import Payment
 
 
 def add_to_cart(request, content_id, product_id):
@@ -39,6 +40,7 @@ def remove_from_cart(request, content_id, product_id):
             )
             if cart_item.quantity > 1:
                 cart_item.quantity = cart_item.quantity - 1
+                cart_item.save()
             else:
                 cart_item.delete()
 
@@ -46,12 +48,11 @@ def remove_from_cart(request, content_id, product_id):
             cart.subtotal = cart.subtotal - cart_item.price
             cart.total = cart.total - cart_item.price
             cart.save()
-            cart_item.save()
 
             # delete product and content type from the cookie
             cookie_cart = request.session.get("cart_items")
             prompted_list = [content_id, product_id]
-            print(f"&&&&&&&&&&&&&&&{prompted_list}")
+            print(f"prompted_list from session: {prompted_list}")
 
             # 2. Identify the index of the list that matches the prompted list
             index_to_remove = None
@@ -63,70 +64,77 @@ def remove_from_cart(request, content_id, product_id):
             # 3. If found, remove that list from the cart_items list
             if index_to_remove is not None:
                 del cookie_cart[index_to_remove]
-            print(f"%%%%%%%%%%%%5{cookie_cart}")
+            print(f"cookie-cart: {cookie_cart}")
 
             response = redirect("cart:cart_view")
             # response.set_cookie("sessionid", {"cart_items": cookie_cart}, httponly=True)
             request.session["cart_items"] = cookie_cart
-            print(f"^^^^^^^^^^^^^^^6{request.session.get('cart_items')}")
+            print(f"cart_items in session: {request.session.get('cart_items')}")
             return response
+        else:
+            return redirect("cart:cart_view")
 
     else:
-        return JsonResponse({"message": "Invalid request"})
+        return HttpResponseNotAllowed(["POST"])
 
 
 def cart_view(request):
-    if "user_id" in request.session and "cart_items" in request.session:
-        cart_items = your_cart_items(request)
+    if request.method == "GET":
+        if "user_id" in request.session and "cart_items" in request.session:
+            cart_items = your_cart_items(request)
 
-        # cart = Cart.objects.get(user=request.user)
-        # if cart:
-        #     cart_items_ = cart.cartitem_set.all()
+            # cart = Cart.objects.get(user=request.user)
+            # if cart:
+            #     cart_items_ = cart.cartitem_set.all()
 
-        Content_Type_id = []
-        product_id = []
+            Content_Type_id = []
+            product_id = []
 
-        for items in cart_items:
-            Content_Type_id.append(items[0])
-            product_id.append(items[1])
+            for items in cart_items:
+                Content_Type_id.append(items[0])
+                product_id.append(items[1])
 
-        # Combine content_type_id and product_id into tuples
-        combined_data = list(zip(Content_Type_id, product_id))
-        # Count occurrences using Counter
-        counted_data = Counter(combined_data)
-        # Create a list of tuples with count, content_type_id, and product_id
+            # Combine content_type_id and product_id into tuples
+            combined_data = list(zip(Content_Type_id, product_id))
+            # Count occurrences using Counter
+            counted_data = Counter(combined_data)
+            # Create a list of tuples with count, content_type_id, and product_id
 
-        results = []
+            results = []
 
-        for key, count in counted_data.items():
-            content_type = ContentType.objects.get_for_id(id=key[0])
-            if content_type.app_label == "i":
-                product = content_type.get_object_for_this_type(monitor_id=key[1])
-            else:
-                product = content_type.get_object_for_this_type(id=key[1])
-            results.append((count, key[0], key[1], product))
-        print(results)
+            for key, count in counted_data.items():
+                content_type = ContentType.objects.get_for_id(id=key[0])
+                if content_type.app_label == "i":
+                    product = content_type.get_object_for_this_type(monitor_id=key[1])
+                else:
+                    product = content_type.get_object_for_this_type(id=key[1])
+                results.append((count, key[0], key[1], product))
+            print(results)
 
-        cart_total = 0
-        for item in results:
-            product = item[3]
-            cart_total += product.price * item[0]  # item[0] is the count of the product
+            cart_total = 0
+            for item in results:
+                product = item[3]
+                cart_total += (
+                    product.price * item[0]
+                )  # item[0] is the count of the product
 
-        return render(
-            request,
-            "cart.html",
-            {
-                # "cart_items": cart_items_,
-                # "cart": cart,
-                "cart_items": len(results),
-                "sub_total": cart_total,
-                "total_amount": cart_total + 53,
-                "results": results,
-                "tax": 53.99,
-            },
-        )
+            return render(
+                request,
+                "cart.html",
+                {
+                    # "cart_items": cart_items_,
+                    # "cart": cart,
+                    "cart_items": len(results),
+                    "sub_total": cart_total,
+                    "total_amount": cart_total + 53,
+                    "results": results,
+                    "tax": 53.99,
+                },
+            )
+        else:
+            return render(request, "cart.html", {"results": None})
     else:
-        return render(request, "cart.html", {"results": None})
+        return HttpResponseNotAllowed(["POST"])
 
 
 def add_to_cart_helper(request, content_type_id, product_id):

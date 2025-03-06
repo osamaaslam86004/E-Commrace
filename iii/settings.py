@@ -223,7 +223,7 @@ if DEBUG == False:
     COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
 
     # Default to False in development unless DEBUG=False
-    COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`
+    COMPRESS_OFFLINE = False  # Pre-compress files during `collectstatic`
 
     # Specify the backend to handle compression
     COMPRESS_ROOT = STATIC_ROOT
@@ -238,6 +238,13 @@ if DEBUG == False:
     COMPRESS_JS_FILTERS = [
         "compressor.filters.jsmin.JSMinFilter",  # Minify JS
     ]
+
+
+if DEBUG:
+    CELERY_TASK_ALWAYS_EAGER = True  # Runs tasks synchronously
+    CELERY_TASK_EAGER_PROPAGATES = True  # Ensures exceptions are raised immediately
+    BROKER_BACKEND = "memory"  # Use in-memory backend to avoid needing a broker
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
