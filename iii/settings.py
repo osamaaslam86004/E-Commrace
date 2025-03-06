@@ -213,7 +213,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # ------------Django compressor------------------------------
 
-if DEBUG == False:
+if DEBUG == True:
     STATICFILES_FINDERS = (
         "django.contrib.staticfiles.finders.FileSystemFinder",
         "django.contrib.staticfiles.finders.AppDirectoriesFinder",
@@ -223,7 +223,7 @@ if DEBUG == False:
     COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
 
     # Default to False in development unless DEBUG=False
-    COMPRESS_OFFLINE = False  # Pre-compress files during `collectstatic`
+    COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`
     COMPRESS_DEBUG_TOGGLE = "compress"  # Allows debug mode toggle
     # Specify the backend to handle compression
     COMPRESS_ROOT = STATIC_ROOT
