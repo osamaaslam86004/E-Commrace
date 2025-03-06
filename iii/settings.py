@@ -101,7 +101,10 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
-    "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
+    # "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
+    # "django_brotli.middleware.BrotliMiddleware",  # Add Brotli Compression Middleware here
+    # The middleware will choose the best compression method supported by the client as indicated in the request's Accept-Encoding header. In order of preference: Zstd, Brotli, Gzip
+    "compression_middleware.middleware.CompressionMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
