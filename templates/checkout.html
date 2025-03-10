@@ -78,7 +78,6 @@
     </form>
 
     
-    {% compress js inline %}
     <script>
         var stripe = Stripe("{{ stripe_publication_key }}");
         var elements = stripe.elements();
@@ -118,7 +117,6 @@
             form.submit();
         }
     </script>
-    {% endcompress %}
 
 </body>
 
