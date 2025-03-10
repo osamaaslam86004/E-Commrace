@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
-from phonenumbers import parse, region_code_for_number
+from phonenumbers import carrier, parse, region_code_for_number, timezone
+from phonenumbers.geocoder import description_for_number
 
 
 class CustomUserManager(BaseUserManager):
@@ -118,7 +119,7 @@ class UserProfile(models.Model):
 
             # Parse the phone number
             parsed_number = parse(str(self.phone_number), None)
-            print(parsed_number, self.country.code)
+            print(parsed_number)
 
             # Validate phone number and check country match
             # if not is_valid_number(parsed_number):
@@ -128,10 +129,24 @@ class UserProfile(models.Model):
             with country.code == PK from django_countries"""
 
             phone_country = region_code_for_number(parsed_number)
+            print(f" phone Number field country: {phone_country}")
+            print(f" country field country: {self.country.code}")
+
             if phone_country != self.country.code:
                 raise ValidationError(
                     f"The phone number does not belong to the country {self.country.name}."
                 )
+
+            # Get region (state or province)
+            self.region = description_for_number(parsed_number, "en")
+            print(f"Region: {self.region}")
+
+            # Get time zones)
+            time_zones = timezone.time_zones_for_number(parsed_number)
+            print(time_zones)  # Example: ('America/Los_Angeles',)
+
+            carrier_name = carrier.name_for_number(parsed_number, "en")
+            print(carrier_name)  # Example: "AT&T" or "Verizon"
 
         def save(self, *args, **kwargs):
             self.clean()
