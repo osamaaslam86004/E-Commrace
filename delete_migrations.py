@@ -3,21 +3,29 @@ import os
 
 # Get the current working directory
 BASE_DIR = os.getcwd()
-ENV_PATH = os.path.join(BASE_DIR, "env")  # Path to the virtual environment
-ENV_PRESENT = os.path.exists(ENV_PATH)  # Check if env exists
+
+# Dynamically find a virtual environment folder (for local and PythonAnywhere)
+POSSIBLE_ENV_FOLDERS = ["env", "venv", ".virtualenvs"]
+ENV_PATH = None
+
+for env_folder in POSSIBLE_ENV_FOLDERS:
+    possible_path = os.path.join(BASE_DIR, env_folder)
+    if os.path.exists(possible_path):
+        ENV_PATH = possible_path
+        break
 
 
 def get_installed_apps_migration_folders():
     """
     Finds migration folders for installed apps inside the Django project.
-    Excludes 'env' (virtual environment).
+    Excludes the virtual environment directory if present.
     """
     migration_folders = []
 
     for root, dirs, files in os.walk(BASE_DIR):
         if "migrations" in dirs:
-            # Exclude 'migrations' inside 'env'
-            if ENV_PRESENT and root.startswith(ENV_PATH):
+            # Exclude migrations inside the virtual environment
+            if ENV_PATH and root.startswith(ENV_PATH):
                 continue
             migration_folders.append(os.path.join(root, "migrations"))
 
@@ -26,8 +34,7 @@ def get_installed_apps_migration_folders():
 
 def delete_migration_files(migration_folders):
     """
-    Deletes migration files from the given migration folders,
-    keeping __init__.py.
+    Deletes all migration files except __init__.py.
     """
     for migration_dir in migration_folders:
         migration_files = glob.glob(os.path.join(migration_dir, "*.py"))
@@ -46,22 +53,9 @@ if __name__ == "__main__":
         for folder in migration_folders:
             print(f"  - {folder}")
 
-        if ENV_PRESENT:
-            proceed = (
-                input(
-                    "\n⚠️ 'env' folder is present. Do you want to delete migration files from installed apps? (y/n): "
-                )
-                .strip()
-                .lower()
-            )
-        else:
-            proceed = (
-                input(
-                    "\n❗ 'env' folder is NOT present. Do you want to DELETE migration files? (y/n): "
-                )
-                .strip()
-                .lower()
-            )
+        proceed = (
+            input("\n❗ Do you want to DELETE migration files? (y/n): ").strip().lower()
+        )
 
         if proceed == "y":
             delete_migration_files(migration_folders)
