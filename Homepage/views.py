@@ -33,6 +33,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.views import View
+from django.views.decorators.http import condition
+from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import TemplateView
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -42,6 +44,10 @@ from sendgrid.helpers.mail import Mail
 from twilio.rest import Client
 
 from checkout.models import Payment
+from Homepage.etag_helper import (
+    generate_etag_HomepageView,
+    generate_Last_Modified_HomepageView,
+)
 from Homepage.forms import (
     AdministratorProfileForm,
     CustomerProfileForm,
@@ -72,6 +78,14 @@ from i.browsing_history import your_browsing_history
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(vary_on_cookie, name="dispatch")
+@method_decorator(
+    condition(
+        etag_func=generate_etag_HomepageView,
+        last_modified_func=generate_Last_Modified_HomepageView,
+    ),
+    name="dispatch",
+)
 class HomePageView(TemplateView):
     template_name = "store.html"
 

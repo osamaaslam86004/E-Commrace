@@ -37,3 +37,5 @@ redis==5.0.4
 sendgrid==6.11.0
 stripe==9.8.0
 twilio==7.17.0
+django-brotli==0.3.0
+django-compression-middleware==0.5.0
