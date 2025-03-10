@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "django_countries",
     "compressor",
     "django_prometheus",
+    "grappelli",
 ]
 
 SITE_ID = 1
