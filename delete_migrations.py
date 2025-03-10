@@ -1,23 +1,74 @@
 import glob
 import os
 
-"""
-Fixes and Improvements:
-Excludes the virtual environment (env) – Prevents deletion of migrations in site-packages.
-Keeps __init__.py files – Avoids breaking the migration package structure.
-Ensures only Django apps' migrations are deleted – Won't mistakenly remove critical Django files.
-"""
+# Get the current working directory
+BASE_DIR = os.getcwd()
+ENV_PATH = os.path.join(BASE_DIR, "env")  # Path to the virtual environment
+ENV_PRESENT = os.path.exists(ENV_PATH)  # Check if env exists
 
-# Get the root directory of the Django project
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# List all directories inside the project (assumed to be Django apps)
-for root, dirs, files in os.walk(BASE_DIR):
-    if "migrations" in dirs and "env" not in root:  # Exclude the virtual environment
-        migration_path = os.path.join(root, "migrations")
-        migration_files = glob.glob(os.path.join(migration_path, "*.py"))
+def get_installed_apps_migration_folders():
+    """
+    Finds migration folders for installed apps inside the Django project.
+    Excludes 'env' (virtual environment).
+    """
+    migration_folders = []
+
+    for root, dirs, files in os.walk(BASE_DIR):
+        if "migrations" in dirs:
+            # Exclude 'migrations' inside 'env'
+            if ENV_PRESENT and root.startswith(ENV_PATH):
+                continue
+            migration_folders.append(os.path.join(root, "migrations"))
+
+    return migration_folders
+
+
+def delete_migration_files(migration_folders):
+    """
+    Deletes migration files from the given migration folders,
+    keeping __init__.py.
+    """
+    for migration_dir in migration_folders:
+        migration_files = glob.glob(os.path.join(migration_dir, "*.py"))
 
         for file in migration_files:
             if not file.endswith("__init__.py"):  # Keep __init__.py
                 os.remove(file)
-                print(f"Deleted: {file}")
+                print(f"🗑️ Deleted: {file}")
+
+
+if __name__ == "__main__":
+    migration_folders = get_installed_apps_migration_folders()
+
+    if migration_folders:
+        print("\n📂 Found migration folders in installed apps:")
+        for folder in migration_folders:
+            print(f"  - {folder}")
+
+        if ENV_PRESENT:
+            proceed = (
+                input(
+                    "\n⚠️ 'env' folder is present. Do you want to delete migration files from installed apps? (y/n): "
+                )
+                .strip()
+                .lower()
+            )
+        else:
+            proceed = (
+                input(
+                    "\n❗ 'env' folder is NOT present. Do you want to DELETE migration files? (y/n): "
+                )
+                .strip()
+                .lower()
+            )
+
+        if proceed == "y":
+            delete_migration_files(migration_folders)
+            print(
+                "\n✅ All migration files (except __init__.py) have been deleted from installed apps."
+            )
+        else:
+            print("❌ Deletion aborted.")
+    else:
+        print("✅ No migrations folders found in installed apps.")
