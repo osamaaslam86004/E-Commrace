@@ -662,7 +662,7 @@ class CustomerProfilePageView(PermissionRequiredMixin, TemplateView):
         current_user = get_object_or_404(CustomUser, id=request.user.id)
 
         image_form = CustomUserImageForm(instance=current_user)
-        user_profile = UserProfile.objects.get(user=current_user)
+        user_profile = UserProfile.objects.get_or_create(user=current_user)
         customer_profile = CustomerProfile.objects.get(customer_profile=user_profile)
 
         user_profile_form = self.user_profile_form_class(
@@ -826,7 +826,7 @@ class SellerProfilePageView(PermissionRequiredMixin, TemplateView):
         current_user = get_object_or_404(CustomUser, id=request.user.id)
 
         image_form = CustomUserImageForm(instance=current_user)
-        user_profile = UserProfile.objects.get(user=current_user)
+        user_profile = UserProfile.objects.get_or_create(user=current_user)
         seller_profile = SellerProfile.objects.get(seller_profile=user_profile)
 
         user_profile_form = UserProfileForm(request.POST, instance=user_profile)
@@ -985,7 +985,7 @@ class CSRProfilePageView(PermissionRequiredMixin, TemplateView):
         current_user = get_object_or_404(CustomUser, id=request.user.id)
 
         image_form = CustomUserImageForm(instance=current_user)
-        user_profile = UserProfile.objects.get(user=current_user)
+        user_profile = UserProfile.objects.get_or_create(user=current_user)
         csr_profile = CustomerServiceProfile.objects.get(csr_profile=user_profile)
 
         user_profile_form = UserProfileForm(request.POST, instance=user_profile)
@@ -1146,7 +1146,7 @@ class ManagerProfilePageView(PermissionRequiredMixin, TemplateView):
         current_user = get_object_or_404(CustomUser, id=request.user.id)
 
         image_form = CustomUserImageForm(instance=current_user)
-        user_profile = UserProfile.objects.get(user=current_user)
+        user_profile = UserProfile.objects.get_or_create(user=current_user)
         manager_profile = ManagerProfile.objects.get(manager_profile=user_profile)
 
         user_profile_form = UserProfileForm(request.POST, instance=user_profile)

@@ -1,23 +1,23 @@
 import glob
 import os
 
+"""
+Fixes and Improvements:
+Excludes the virtual environment (env) – Prevents deletion of migrations in site-packages.
+Keeps __init__.py files – Avoids breaking the migration package structure.
+Ensures only Django apps' migrations are deleted – Won't mistakenly remove critical Django files.
+"""
 
-def delete_migration_files():
-    base_dir = os.getcwd()  # Get current working directory
-    for root, dirs, files in os.walk(base_dir):
-        if "migrations" in dirs:  # Look for 'migrations' folder
-            migration_dir = os.path.join(root, "migrations")
-            migration_files = glob.glob(
-                os.path.join(migration_dir, "*.py")
-            )  # Find all .py files
+# Get the root directory of the Django project
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-            # Delete all migration files except '__init__.py'
-            for file in migration_files:
-                if not file.endswith("__init__.py"):
-                    os.remove(file)
-                    print(f"Deleted: {file}")
+# List all directories inside the project (assumed to be Django apps)
+for root, dirs, files in os.walk(BASE_DIR):
+    if "migrations" in dirs and "env" not in root:  # Exclude the virtual environment
+        migration_path = os.path.join(root, "migrations")
+        migration_files = glob.glob(os.path.join(migration_path, "*.py"))
 
-
-if __name__ == "__main__":
-    delete_migration_files()
-    print("\n✅ All migration files (except __init__.py) have been deleted.")
+        for file in migration_files:
+            if not file.endswith("__init__.py"):  # Keep __init__.py
+                os.remove(file)
+                print(f"Deleted: {file}")

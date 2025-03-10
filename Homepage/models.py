@@ -31,7 +31,7 @@ class CustomUserManager(BaseUserManager):
                 gender="Male",
                 phone_number="+923074649892",
                 city="dummy",
-                country="NZ",
+                country="PK",
                 postal_code="54400",
                 shipping_address="default",
             )
@@ -93,10 +93,16 @@ class UserProfile(models.Model):
     full_name = models.CharField(max_length=50, blank=False)
     age = models.IntegerField(blank=False, default=18)
     gender = models.CharField(max_length=15, blank=False, choices=GENDER_CHOICES)
-    phone_number = PhoneNumberField(blank=False, unique=False)
+    phone_number = PhoneNumberField(
+        blank=False, unique=True, null=False, default="+923074649892"
+    )
     city = models.CharField(max_length=100, blank=False)
     country = CountryField(
-        multiple=False, blank_label="(select country)", blank=False, null="NZ"
+        multiple=False,
+        blank_label="(select country)",
+        blank=False,
+        null=False,
+        default="PK",
     )
     postal_code = models.CharField(max_length=20, blank=False)
     shipping_address = models.CharField(max_length=1000, blank=False)
@@ -111,14 +117,13 @@ class UserProfile(models.Model):
                 raise ValidationError("Valid age is required, Hint: 0 to 130")
 
             # Parse the phone number
-            # try:
             parsed_number = parse(str(self.phone_number), None)
-            # except Exception as e:
-            #     raise ValidationError("Invalid phone number format.")
+            print(parsed_number, self.country.code)
 
-            # # Validate phone number and check country match
+            # Validate phone number and check country match
             # if not is_valid_number(parsed_number):
-            #     raise ValidationError("The phone number is not valid.")
+            #     raise ValidationError("Parsing Error: Invalid phone number format.")
+
             """country code PK for Pakistan from phonenumber field is matched
             with country.code == PK from django_countries"""
 

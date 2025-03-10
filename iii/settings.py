@@ -359,7 +359,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 ###########################----------Security Related Settings-----------########################################
 
 # Uncomment these settings only in production
-if DEBUG:
+if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
@@ -402,6 +402,7 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     "https://diverse-intense-whippet.ngrok-free.app",
     "https://osama11111.pythonanywhere.com",
+    "http://127.0.0.1",
 ]
 
 

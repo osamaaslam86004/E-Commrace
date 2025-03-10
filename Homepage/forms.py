@@ -1,6 +1,7 @@
 import re
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django_countries.widgets import CountrySelectWidget
@@ -144,17 +145,12 @@ class CustomPasswordResetForm(forms.Form):
     #         })
 
 
-class UserProfileForm(forms.ModelForm):  # no need to validate max_length
-    #  this model field will allow only max_character in the form
-    # if user try, then django form rendering will prevent this
-
+class UserProfileForm(forms.ModelForm):
     # phone number in GET: dict_items([('full_name', 'osama'), ('age', 18), ('gender', 'Male'),
     # ('phone_number', PhoneNumber(country_code=92, national_number=3074649892, extension=None,
     # italian_leading_zero=None, number_of_leading_zeros=None, country_code_source=1,
     # preferred_domestic_carrier_code=None)), ('city', 'lahore'), ('country', Country(code='PK')),
     # ('postal_code', '54000'), ('shipping_address', 'House no. 237 block G-4 Johar Town')])
-
-    from django.conf import settings
 
     if settings.DEBUG == False:
         phone_number = PhoneNumberField(
