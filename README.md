@@ -87,6 +87,9 @@ python version : 3.11
  1. python manage.py flush
  2. python manage.py reset_db
  3. python manage.py clean_pyc
+
+ ## Delete migration files if present:
+ 1. python delete_migrations.py
  
 ## Apply migrations:
  1. python manage.py makemigrations
