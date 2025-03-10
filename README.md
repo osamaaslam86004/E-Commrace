@@ -88,8 +88,9 @@ python version : 3.11
  2. python manage.py reset_db
  3. python manage.py clean_pyc
  
- 2. python manage.py makemigrations
- 3. python manage.py migrate 
+## Apply migrations:
+ 1. python manage.py makemigrations
+ 2. python manage.py migrate 
 
  ## Populate initial data for creating product categories (mandaotory):
  1. python manage.py product_category 
