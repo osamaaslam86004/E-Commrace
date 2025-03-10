@@ -82,11 +82,16 @@ Reference : [GitHub Repo](https://github.com/osamaaslam86004/Resume-API-Backend.
 python version : 3.11
 
  1. python -m pip install -r requirements.txt
+ 
+ ## Populate initial data:
  2. python manage.py flush
  3. python manage.py reset_db
  4. python manage.py clean_pyc
+ 
  5. python manage.py makemigrations
  6. python manage.py migrate 
+
+ ## Populate initial data for creating product categories (mandaotory):
  7. python manage.py product_category 
  8. python manage.py computersubcategory 
  9. python manage.py Special_Features 
