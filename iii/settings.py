@@ -57,7 +57,10 @@ if DEBUG:
         "diverse-intense-whippet.ngrok-free.app",
     ]
 else:
-    ALLOWED_HOSTS = ["osama11111.pythonanywhere.com"]
+    ALLOWED_HOSTS = [
+        "osama11111.pythonanywhere.com",
+        "diverse-intense-whippet.ngrok-free.app",
+    ]
 
 # Application definition
 
@@ -356,7 +359,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 ###########################----------Security Related Settings-----------########################################
 
 # Uncomment these settings only in production
-if not DEBUG:
+if DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
