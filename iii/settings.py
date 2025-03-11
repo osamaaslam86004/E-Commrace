@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -221,7 +221,7 @@ STATICFILES_FINDERS = (
     # other finders..
     "compressor.finders.CompressorFinder",
 )
-COMPRESS_ENABLED = False  # compress in Debug=True + Debug =Flase
+COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
 
 # Default to False in development unless DEBUG=False
 COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`
@@ -364,7 +364,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
-    SECURE_SSL_REDIRECT = False
+    # SECURE_SSL_REDIRECT = False
     SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
     SECURE_HSTS_SECONDS = 31536000  # Enable HSTS for 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to subdomains

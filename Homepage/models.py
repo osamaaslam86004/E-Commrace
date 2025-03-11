@@ -137,7 +137,7 @@ class UserProfile(models.Model):
             "Could not generate a unique phone number after multiple attempts."
         )
 
-    if settings.DEBUG == False:
+    if settings.DEBUG == True:
 
         def clean(self):
             super().clean()
@@ -178,13 +178,12 @@ class UserProfile(models.Model):
             print(carrier_name)  # Example: "AT&T" or "Verizon"
 
     def save(self, *args, **kwargs):
-        if settings.DEBUG == False:
-            self.clean()
-
         """Assign a unique phone number if not provided."""
         if not self.phone_number:
             self.phone_number = UserProfile.generate_unique_phone_number()
 
+        if settings.DEBUG == True:
+            self.clean()
         super().save(*args, **kwargs)
 
 

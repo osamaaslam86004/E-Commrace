@@ -1,4 +1,5 @@
 import re
+from random import randint
 
 from django import forms
 from django.conf import settings
@@ -47,24 +48,34 @@ class SignUpForm(UserCreationForm):
             attrs={"placeholder": "Confirm Password"}
         )
 
-    # def save(self, commit=True):
-    #     user = super().save(commit=False)
-    #     user.user_type = self.cleaned_data["user_type"]
-    #     if commit:
-    #         user.save()
-    #         # Create UserProfile for the user
-    #         UserProfile.objects.create(
-    #             user=user,
-    #             full_name="",
-    #             age=18,
-    #             gender="",
-    #             phone_number="",
-    #             city="",
-    #             country="",
-    #             postal_code="",
-    #         )
+    def generate_unique_phone_number(self):
+        while True:
+            random_number = f"+92307{randint(1000000, 9999999)}"
+            if not UserProfile.objects.filter(phone_number=random_number).exists():
+                return random_number
 
-    #         return user
+    def save(self, commit=True):
+        user = super().save(commit=False)
+
+        # user.user_type = self.cleaned_data["user_type"]
+        if commit:
+            user.save()
+
+            phone_number = self.generate_unique_phone_number()
+
+            UserProfile.objects.create(
+                user=user,
+                full_name="dummy_name",
+                age=18,
+                gender="Male",
+                phone_number=phone_number,
+                city="dummy",
+                country="PK",
+                postal_code="54400",
+                shipping_address="default",
+            )
+
+            return user
 
 
 class CustomUserImageForm(forms.ModelForm):

@@ -34,7 +34,7 @@ class TokenUtils:
         user_data = {
             "email": user.email,
             "username": user.username,
-            "password": "password123",
+            "password": "testpass5",
         }
 
         try:
@@ -71,7 +71,7 @@ class TokenUtils:
         user_data = {
             "email": user.email,
             "username": user.username,
-            "password": "password123",
+            "password": "testpass5",
         }
 
         try:
@@ -90,7 +90,6 @@ class TokenUtils:
 
                 print(f"user_get_____{json_response}")
 
-                print(f"json_response________________{json_response}")
                 if json_response and "id" in json_response:
                     print(f"json_response________________{json_response}")
                     return json_response
@@ -122,7 +121,7 @@ class TokenUtils:
         user_data = {
             "email": user.email,
             "username": user.username,
-            "password": "password123",
+            "password": "testpass5",
         }
 
         try:

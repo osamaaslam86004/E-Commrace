@@ -74,8 +74,12 @@ if cookie is present in the browser. Otherwise, cart items are retrieved from da
 
 # Integration With Resume API
 
+## Pros:
 1. One User can Create, Update, Delete and Read many Resume / CV
 Reference : [GitHub Repo](https://github.com/osamaaslam86004/Resume-API-Backend.git)
+
+## Cons:
+use `testpass5` as your account password if you want to use Resume API, when registering for E-Commrace
 
 # How to run this web app:
 
