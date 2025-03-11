@@ -78,8 +78,6 @@ if cookie is present in the browser. Otherwise, cart items are retrieved from da
 1. One User can Create, Update, Delete and Read many Resume / CV
 Reference : [GitHub Repo](https://github.com/osamaaslam86004/Resume-API-Backend.git)
 
-## Cons:
-use `testpass5` as your account password if you want to use Resume API, when registering for E-Commrace
 
 # How to run this web app:
 
@@ -103,3 +101,9 @@ python version : 3.11
  1. python manage.py product_category 
  2. python manage.py computersubcategory 
  3. python manage.py Special_Features 
+
+ ## Create User
+
+Recommended Credentials to checkout all features of E-Commerce:
+`email:osama.aslam.86004@gmail.com
+ password: testpass5`
