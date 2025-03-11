@@ -1,8 +1,9 @@
 import logging
-from random import randint
 
 import requests
 from django.conf import settings
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Email, Mail, Personalization
 
 logger = logging.getLogger(__name__)
 
@@ -46,4 +47,31 @@ def delete_temporary_cookies(response):
     # Delete the otp_cookie
     response.delete_cookie("otp_cookie", path="/")
 
+    return response
+
+
+def send_dynamic_mail_template_in_production(email, reset_url):
+    message = Mail(
+        from_email=settings.CLIENT_EMAIL,
+        to_emails=email,
+        subject="Reset your password",
+    )
+
+    # Initialize SendGrid API client
+    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+
+    # Use SendGrid Dynamic Template
+    message.template_id = (
+        settings.PASSWORD_RESET_TEMPLATE_ID
+    )  # Add template ID in settings.py
+
+    # Personalization with dynamic variables
+    personalization = Personalization()
+    personalization.add_to(Email(email))
+
+    personalization.dynamic_template_data = {"reset_url": reset_url}
+    message.add_personalization(personalization)
+
+    # Send the email
+    response = sg.send(message)
     return response

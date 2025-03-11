@@ -20,7 +20,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.http import (
-    HttpRequest,
     HttpResponse,
     HttpResponseNotFound,
     HttpResponsePermanentRedirect,
@@ -41,7 +40,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Email, Mail, Personalization
+from sendgrid.helpers.mail import Mail
 from twilio.rest import Client
 
 from checkout.models import Payment
@@ -63,7 +62,11 @@ from Homepage.forms import (
     SignUpForm,
     UserProfileForm,
 )
-from Homepage.helper_functions import delete_temporary_cookies, helper_function
+from Homepage.helper_functions import (
+    delete_temporary_cookies,
+    helper_function,
+    send_dynamic_mail_template_in_production,
+)
 from Homepage.models import (
     AdministratorProfile,
     CustomerProfile,
@@ -257,31 +260,28 @@ def custom_password_reset(
                     )
                 )
 
-                message = Mail(
-                    from_email=settings.CLIENT_EMAIL,
-                    to_emails=email,
-                    subject="Reset your password",
-                    # html_content=f'Click the link to reset your password: <a href="{reset_url}">{reset_url}</a>',
-                )
-                # Initialize SendGrid API client
-                sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                # mail_json = message.get()
+                response = None
+                if settings.DEBUG:
 
-                # Use SendGrid Dynamic Template
-                message.template_id = (
-                    settings.PASSWORD_RESET_TEMPLATE_ID
-                )  # Add template ID in settings.py
+                    message = Mail(
+                        from_email=settings.CLIENT_EMAIL,
+                        to_emails=email,
+                        subject="Reset your password",
+                        html_content=f'Click the link to reset your password: <a href="{reset_url}">{reset_url}</a>',
+                    )
 
-                # Personalization with dynamic variables
-                personalization = Personalization()
-                personalization.add_to(Email(email))
+                    mail_json = message.get()
 
-                personalization.dynamic_template_data = {"reset_url": reset_url}
-                message.add_personalization(personalization)
+                    # Initialize SendGrid API client
+                    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
 
-                # Send the email
-                # response = sg.client.mail.send.post(request_body=mail_json)
-                response = sg.send(message)
+                    # Send the email
+                    response = sg.client.mail.send.post(request_body=mail_json)
+                else:
+                    response = send_dynamic_mail_template_in_production(
+                        email, reset_url
+                    )
+
                 logger.info("Email send response status: %d", response.status_code)
                 logger.debug("Email send response headers: %s", response.headers)
 
