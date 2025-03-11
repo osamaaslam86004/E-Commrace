@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -111,7 +111,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "iii.maintainance_middleware.MaintenanceModeMiddleware",
+    # "iii.maintainance_middleware.MaintenanceModeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
@@ -209,10 +209,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "/static/"
-# STATICFILES_DIRS is for directories where Django will search for additional static files
-# that aren't tied to any specific app. These files can be served during development.
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 
 # MEDIA_URLS = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -224,7 +221,7 @@ STATICFILES_FINDERS = (
     # other finders..
     "compressor.finders.CompressorFinder",
 )
-COMPRESS_ENABLED = True  # compress in Debug=True + Debug =Flase
+COMPRESS_ENABLED = False  # compress in Debug=True + Debug =Flase
 
 # Default to False in development unless DEBUG=False
 COMPRESS_OFFLINE = True  # Pre-compress files during `collectstatic`

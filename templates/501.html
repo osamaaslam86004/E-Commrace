@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>501 Not Implemented</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f8f9fa;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 80px;
+            margin: 0;
+            font-weight: 600;
+            color: #ff6b6b;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #333;
+            animation: fadeIn 1.8s ease-in-out;
+        }
+
+        p {
+            font-size: 18px;
+            color: #666;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 350px;
+            margin: 20px auto;
+            animation: float 3s infinite ease-in-out alternate;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 20px;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>501</h1>
+        <h2>Not Implemented</h2>
+        <p>Oops! The server does not support the functionality required to fulfill the request.</p>
+        <img class="illustration" src="https://cdn-icons-png.flaticon.com/512/5647/5647412.png"
+            alt="501 Error Illustration">
+        <p>It seems like this feature is not available right now. Please check back later or contact support.</p>
+        <a href="/" class="btn">Go to Homepage</a>
+    </div>
+</body>
+
+</html>

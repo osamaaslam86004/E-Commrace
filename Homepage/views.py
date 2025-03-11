@@ -20,6 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.cache import cache
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseNotFound,
     HttpResponsePermanentRedirect,
