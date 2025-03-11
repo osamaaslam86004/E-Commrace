@@ -41,7 +41,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Email, Mail, Personalization
 from twilio.rest import Client
 
 from checkout.models import Payment
@@ -261,14 +261,27 @@ def custom_password_reset(
                     from_email=settings.CLIENT_EMAIL,
                     to_emails=email,
                     subject="Reset your password",
-                    html_content=f'Click the link to reset your password: <a href="{reset_url}">{reset_url}</a>',
+                    # html_content=f'Click the link to reset your password: <a href="{reset_url}">{reset_url}</a>',
                 )
                 # Initialize SendGrid API client
                 sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-                mail_json = message.get()
+                # mail_json = message.get()
+
+                # Use SendGrid Dynamic Template
+                message.template_id = (
+                    settings.PASSWORD_RESET_TEMPLATE_ID
+                )  # Add template ID in settings.py
+
+                # Personalization with dynamic variables
+                personalization = Personalization()
+                personalization.add_to(Email(email))
+
+                personalization.dynamic_template_data = {"reset_url": reset_url}
+                message.add_personalization(personalization)
 
                 # Send the email
-                response = sg.client.mail.send.post(request_body=mail_json)
+                # response = sg.client.mail.send.post(request_body=mail_json)
+                response = sg.send(message)
                 logger.info("Email send response status: %d", response.status_code)
                 logger.debug("Email send response headers: %s", response.headers)
 
@@ -563,17 +576,6 @@ class CustomLogoutView(View, SuccessMessageMixin):
         except requests.exceptions.RequestException as e:
             logger.error("Google logout failed: %s", e)
             return False
-
-
-# def custom_csrf_failure(request, reason="") -> HttpResponseForbidden:
-#     # Your custom logic for handling CSRF failures
-#     # Mark the reason as safe to render HTML
-#     reason_message = mark_safe(reason)
-#     context = {
-#         "reason": reason_message
-#     }  # Pass any additional context data needed for the template
-#     template = loader.get_template("custom_csrf_failure.html")
-#     return HttpResponseForbidden(template.render(context, request))
 
 
 @method_decorator(login_required, name="dispatch")
@@ -1574,7 +1576,7 @@ def validate_user(request, *args, **kwargs):
             if phone_number:
 
                 if helper_function(generated_otp, phone_number):
-                    messages.success(request, "An OTP is to your mobile number")
+                    messages.success(request, "An OTP is sent to your mobile number")
                     response = redirect(reverse("Homepage:validate_otp_view"))
 
                     # Create OTP Cookie for storing generated otp
@@ -1594,7 +1596,10 @@ def validate_user(request, *args, **kwargs):
                     )
                     return response
                 else:
-                    messages.error(request, "Failed to send SMS, Try Again")
+                    messages.error(
+                        request,
+                        "OTP service is currently unavailable. Please reset your password via email.",
+                    )
                     return redirect("Homepage:login")
             else:
                 messages.warning(

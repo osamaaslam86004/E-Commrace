@@ -26,6 +26,7 @@ FROM_ = config("from_")
 SENDGRID_API_KEY = config("SENDGRID_API_KEY")
 CLIENT_EMAIL = config("client_email_address")
 TEMPLATE_ID = config("template_id")
+PASSWORD_RESET_TEMPLATE_ID = config("password_reset_template_id")
 EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
 SENDGRID_SANDBOX_MODE_IN_DEBUG = True
 SENDGRID_ECHO_TO_STDOUT = True

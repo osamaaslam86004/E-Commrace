@@ -1,9 +1,10 @@
+import logging
 from random import randint
 
 import requests
 from django.conf import settings
 
-from Homepage.models import UserProfile
+logger = logging.getLogger(__name__)
 
 
 def helper_function(generated_otp, phone_number) -> bool:
@@ -28,7 +29,11 @@ def helper_function(generated_otp, phone_number) -> bool:
     # Check if request was successful
     if response.status_code == 201:
         return True
+    elif response.status_code == 403:
+        logger.warning("Twilio service unavailable: Test plan max usage reached.")
+        return False
     else:
+        logger.error(f"Twilio API error: {response.status_code} - {response.text}")
         return False
 
 
