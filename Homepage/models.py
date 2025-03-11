@@ -1,3 +1,5 @@
+from random import randint
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -8,7 +10,12 @@ from phonenumber_field.modelfields import PhoneNumberField
 from phonenumbers import carrier, parse, region_code_for_number, timezone
 from phonenumbers.geocoder import description_for_number
 
-from Homepage.helper_functions import generate_unique_phone_number
+
+def generate_unique_phone_number():
+    while True:
+        random_number = f"+92307{randint(1000000, 9999999)}"
+        if not UserProfile.objects.filter(phone_number=random_number).exists():
+            return random_number
 
 
 class CustomUserManager(BaseUserManager):

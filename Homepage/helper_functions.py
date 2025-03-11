@@ -42,10 +42,3 @@ def delete_temporary_cookies(response):
     response.delete_cookie("otp_cookie", path="/")
 
     return response
-
-
-def generate_unique_phone_number():
-    while True:
-        random_number = f"+92307{randint(1000000, 9999999)}"
-        if not UserProfile.objects.filter(phone_number=random_number).exists():
-            return random_number
