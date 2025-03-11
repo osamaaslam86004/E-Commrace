@@ -104,12 +104,7 @@ class UserProfile(models.Model):
     full_name = models.CharField(max_length=50, blank=False)
     age = models.IntegerField(blank=False, default=18)
     gender = models.CharField(max_length=15, blank=False, choices=GENDER_CHOICES)
-    phone_number = PhoneNumberField(
-        blank=False,
-        unique=True,
-        null=False,
-        default=self.generate_unique_phone_number(),
-    )
+    phone_number = PhoneNumberField(blank=False, unique=True, null=False)
     city = models.CharField(max_length=100, blank=False)
     country = CountryField(
         multiple=False,
