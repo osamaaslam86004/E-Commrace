@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -101,7 +101,6 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "iii.maintainance_middleware.MaintenanceModeMiddleware",
     "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
     # "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
@@ -112,6 +111,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "iii.maintainance_middleware.MaintenanceModeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",  # comment it if X-FRAME OPTION is None
     "axes.middleware.AxesMiddleware",
@@ -283,13 +283,14 @@ CSP_IMG_SRC = (
 )
 
 CSP_STYLE_SRC = (
-    "'self'",  # Allow styles from the same domain
-    "'unsafe-inline'",  # Allow inline styles (if required)
-    "https://cdn.jsdelivr.net",  # Allow styles from JSDelivr (for Bootstrap)
-    "https://stackpath.bootstrapcdn.com",  # Allow Bootstrap CDN
-    "https://fonts.googleapis.com",  # Allow Google Fonts
-    "https://maxcdn.bootstrapcdn.com",  # Allow MaxCDN (Bootstrap)
-    "https://cdnjs.cloudflare.com",  # Allow FontAwesome from Cloudflare
+    "'self'",
+    "'unsafe-inline'",
+    "https://cdn.jsdelivr.net",
+    "https://stackpath.bootstrapcdn.com",
+    "https://fonts.googleapis.com",
+    "https://maxcdn.bootstrapcdn.com",
+    "https://cdnjs.cloudflare.com",
+    "https://fonts.gstatic.com/",
 )
 
 
@@ -299,7 +300,8 @@ CSP_FONT_SRC = (
     "https://fonts.gstatic.com",
     "https://fontawesome.com",
     "https://maxcdn.bootstrapcdn.com",
-    "https://cdnjs.cloudflare.com",  # Allow versioned FontAwesome webfonts
+    "https://cdnjs.cloudflare.com",
+    "https://fonts.gstatic.com/",
 )
 
 
@@ -365,7 +367,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False
     SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
     SECURE_HSTS_SECONDS = 31536000  # Enable HSTS for 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to subdomains

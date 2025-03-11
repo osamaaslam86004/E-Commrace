@@ -22,6 +22,7 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 
 from iii.sitemap import sitemaps  # Adjust to your app's location
+from iii.views import maintenance
 
 urlpatterns = [
     path("blog/", include(("blog.urls", "blog"))),
@@ -40,6 +41,8 @@ urlpatterns = [
         name="django.contrib.sitemaps.views.sitemap",
     ),
     path("", include(("django_prometheus.urls", "django_prometheus"))),
+    # Maintainance Mode
+    path("maintenance/", maintenance, name="maintenance"),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

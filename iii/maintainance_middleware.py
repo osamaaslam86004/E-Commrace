@@ -1,5 +1,8 @@
+import re
+
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import redirect
+from django.urls import reverse
 
 
 class MaintenanceModeMiddleware:
@@ -9,21 +12,25 @@ class MaintenanceModeMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        # Allow staff or superusers to bypass maintenance mode
+
+        # Use this validation only if This Middleware is
+        # placed after AuthenticationMiddleware in settings.py
+        """
+        if getattr(request, "user", None):
+            if request.user.is_authenticated and (
+                request.user.is_staff or request.user.is_superuser
+            ):
+                return self.get_response(request)
 
         # Check if maintenance mode is enabled in settings
-        if getattr(settings, "MAINTENANCE_MODE", False):
-            # Allow staff or superusers to bypass maintenance mode
+        path = request.META.get("PATH_INFO", "")
 
-            """
-            Use this validation inly if This Middleware is
-            after AuthenticationMiddleware in settings.py
-            """
-            # if request.user.is_authenticated and (
-            #     request.user.is_staff or request.user.is_superuser
-            # ):
-            #     return self.get_response(request)
-
-            # Render a maintenance page
-            return render(request, "503.html", status=503)
+        if getattr(settings, "MAINTENANCE_MODE", False) and path != reverse(
+            "maintenance"
+        ):
+            response = redirect(reverse("maintenance"), permanent=True)
+            return response
 
         return self.get_response(request)

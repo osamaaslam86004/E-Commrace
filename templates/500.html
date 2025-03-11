@@ -1,0 +1,256 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* latin-ext */
+        @font-face {
+            font-family: 'Oxygen';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Oxygen Regular'), local('Oxygen-Regular'), url(https://fonts.gstatic.com/s/oxygen/v9/2sDfZG1Wl4LcnbuKgE0mV0Q.woff2) format('woff2');
+            unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+
+        /* latin */
+        @font-face {
+            font-family: 'Oxygen';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Oxygen Regular'), local('Oxygen-Regular'), url(https://fonts.gstatic.com/s/oxygen/v9/2sDfZG1Wl4LcnbuKjk0m.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            height: 40px;
+            border-top-color: #33333342;
+            border-top-style: solid;
+            border-top-width: 1px;
+            width: 100%;
+        }
+
+        p.copyright {
+            position: absolute;
+            margin: 0;
+            top: 9px;
+            width: 100%;
+            color: #000000a3;
+            font-size: 1em;
+            text-align: center;
+            bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="error">
+            <h1>500</h1>
+            <h2>error</h2>
+            <p>Oh no, algo ha fallado. Intentalo de nuevo más tarde, si el problema continua, por favor, ponte en
+                contacto
+                con el administrador</p>
+            <p class="subtitle">ERR_INTERNAL_SERVER_ERROR</p>
+        </div>
+        <div class="stack-container">
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist: 125px; --scaledist: .75; --vertdist: -25px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist: 100px; --scaledist: .8; --vertdist: -20px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist:75px; --scaledist: .85; --vertdist: -15px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist: 50px; --scaledist: .9; --vertdist: -10px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist: 25px; --scaledist: .95; --vertdist: -5px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-container">
+                <div class="perspec" style="--spreaddist: 0px; --scaledist: 1; --vertdist: 0px;">
+                    <div class="card">
+                        <div class="writing">
+                            <div class="topbar">
+                                <div class="red"></div>
+                                <div class="yellow"></div>
+                                <div class="green"></div>
+                            </div>
+                            <div class="code">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <p class="copyright">©2025 Group Multimedia Pakistan</p>
+        </footer>
+    </div>
+
+    <script>
+        const stackContainer = document.querySelector('.stack-container');
+        const cardNodes = document.querySelectorAll('.card-container');
+        const consoleNodes = document.querySelectorAll('.writing');
+        const perspecNodes = document.querySelectorAll('.perspec');
+        const perspec = document.querySelector('.perspec');
+        const card = document.querySelector('.card');
+
+        let counter = stackContainer.children.length;
+
+        //function to generate random number
+        function randomIntFromInterval(min, max) {
+            return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        //after tilt animation, fire the explode animation
+        card.addEventListener('animationend', function () {
+            perspecNodes.forEach(function (elem, index) {
+                elem.classList.add('explode');
+            });
+        });
+
+        //after explode animation do a bunch of stuff
+        perspec.addEventListener('animationend', function (e) {
+            if (e.animationName === 'explode') {
+                cardNodes.forEach(function (elem, index) {
+
+                    //add hover animation class
+                    elem.classList.add('pokeup');
+
+                    //add event listner to throw card on click
+                    elem.addEventListener('click', function () {
+                        let updown = [800, -800]
+                        let randomY = updown[Math.floor(Math.random() * updown.length)];
+                        let randomX = Math.floor(Math.random() * 1000) - 1000;
+                        elem.style.transform = `translate(${randomX}px, ${randomY}px) rotate(-540deg)`
+                        elem.style.transition = "transform 1s ease, opacity 2s";
+                        elem.style.opacity = "0";
+                        counter--;
+                        if (counter === 0) {
+                            stackContainer.style.width = "0";
+                            stackContainer.style.height = "0";
+                        }
+                    });
+
+                    //generate random number of lines of code between 4 and 10 and add to each card
+                    let numLines = randomIntFromInterval(5, 10);
+
+                    //loop through the lines and add them to the DOM
+                    for (let index = 0; index < numLines; index++) {
+                        let lineLength = randomIntFromInterval(25, 97);
+                        var node = document.createElement("li");
+                        node.classList.add('node-' + index);
+
+                        elem.querySelector('.code ul').appendChild(node).setAttribute('style', '--linelength: ' + lineLength + '%;');
+
+                        //draw lines of code 1 by 1
+                        if (index == 0) {
+                            elem.querySelector('.code ul .node-' + index).classList.add('writeLine');
+                        } else {
+                            elem.querySelector('.code ul .node-' + (index - 1)).addEventListener('animationend', function (e) {
+                                if (index == numLines - 1) {
+                                    node.classList.add('errorLine');
+                                    elem.querySelector('.code ul .node-' + index).classList.add('writeLine');
+                                    setTimeout(function () {
+                                        consoleNodes.forEach(function (elem, index) {
+                                            elem.classList.add('writing-error');
+                                        });
+                                    }, 2000);
+                                } else {
+                                    elem.querySelector('.code ul .node-' + index).classList.add('writeLine');
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>
