@@ -34,7 +34,7 @@ class CustomUserManager(BaseUserManager):
                 full_name="dummy_name",
                 age=18,
                 gender="Male",
-                phone_number=phone_number
+                phone_number=phone_number,
                 city="dummy",
                 country="PK",
                 postal_code="54400",
