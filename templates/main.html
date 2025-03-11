@@ -17,14 +17,24 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
 
-   {% compress css %}
+    {% compress css %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/main_star_rating.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/cart.css' %}" />
-   {% endcompress %}
+    {% endcompress %}
 
+    {% compress css inline %}
     <style>
+        html,
         body {
-            background-color: hsl(0, 0%, 98%);
+            overflow-y: scroll;
+            /* Allows scrolling */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
         }
 
         h1,
@@ -131,6 +141,9 @@
             display: none !important;
         }
     </style>
+    {% endcompress %}
+
+
 </head>
 
 <body>
