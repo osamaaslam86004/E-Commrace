@@ -49,7 +49,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = [
         "localhost",
@@ -101,6 +101,7 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
+    "iii.maintainance_middleware.MaintenanceModeMiddleware",
     "csp.middleware.CSPMiddleware",  # CSP header
     "django.middleware.security.SecurityMiddleware",
     # "django.middleware.gzip.GZipMiddleware",  # Add GZipMiddleware here
@@ -242,6 +243,7 @@ COMPRESS_JS_FILTERS = [
     "compressor.filters.jsmin.JSMinFilter",  # Minify JS
 ]
 
+MAINTENANCE_MODE = True
 
 if DEBUG:
     CELERY_TASK_ALWAYS_EAGER = True  # Runs tasks synchronously

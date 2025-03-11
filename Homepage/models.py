@@ -117,7 +117,7 @@ class UserProfile(models.Model):
     shipping_address = models.CharField(max_length=1000, blank=False)
 
     @staticmethod
-    def generate_unique_phone_number(user_id):
+    def generate_unique_phone_number():
         """
         Generate a unique phone number with the randomint as the last digits.
         If the number is already taken, retry with different variations.
