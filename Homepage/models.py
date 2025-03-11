@@ -11,14 +11,13 @@ from phonenumbers import carrier, parse, region_code_for_number, timezone
 from phonenumbers.geocoder import description_for_number
 
 
-def generate_unique_phone_number():
-    while True:
-        random_number = f"+92307{randint(1000000, 9999999)}"
-        if not UserProfile.objects.filter(phone_number=random_number).exists():
-            return random_number
-
-
 class CustomUserManager(BaseUserManager):
+    def generate_unique_phone_number():
+        while True:
+            random_number = f"+92307{randint(1000000, 9999999)}"
+            if not UserProfile.objects.filter(phone_number=random_number).exists():
+                return random_number
+
     def _create_user(self, email, password, **extra_fields):
         if not email:
             raise ValueError("The given email must be set")
@@ -34,7 +33,7 @@ class CustomUserManager(BaseUserManager):
 
         # Create a UserProfile for the user
         try:
-            phone_number = generate_unique_phone_number()
+            phone_number = self.generate_unique_phone_number()
 
             UserProfile.objects.create(
                 user=user,
@@ -106,7 +105,10 @@ class UserProfile(models.Model):
     age = models.IntegerField(blank=False, default=18)
     gender = models.CharField(max_length=15, blank=False, choices=GENDER_CHOICES)
     phone_number = PhoneNumberField(
-        blank=False, unique=True, null=False, default=generate_unique_phone_number()
+        blank=False,
+        unique=True,
+        null=False,
+        default=self.generate_unique_phone_number(),
     )
     city = models.CharField(max_length=100, blank=False)
     country = CountryField(
@@ -118,6 +120,27 @@ class UserProfile(models.Model):
     )
     postal_code = models.CharField(max_length=20, blank=False)
     shipping_address = models.CharField(max_length=1000, blank=False)
+
+    @staticmethod
+    def generate_unique_phone_number(user_id):
+        """
+        Generate a unique phone number with the randomint as the last digits.
+        If the number is already taken, retry with different variations.
+        """
+        base_number = "+92307"
+        attempts = 0
+        max_attempts = 10  # Avoid infinite loops
+
+        while attempts < max_attempts:
+            random_number = f"+92307{randint(1000000, 9999999)}"
+            if not UserProfile.objects.filter(phone_number=random_number).exists():
+                return random_number
+
+            attempts += 1
+
+        raise ValueError(
+            "Could not generate a unique phone number after multiple attempts."
+        )
 
     if settings.DEBUG == False:
 
@@ -159,9 +182,15 @@ class UserProfile(models.Model):
             carrier_name = carrier.name_for_number(parsed_number, "en")
             print(carrier_name)  # Example: "AT&T" or "Verizon"
 
-        def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):
+        if settings.DEBUG == False:
             self.clean()
-            super().save(*args, **kwargs)
+
+        """Assign a unique phone number if not provided."""
+        if not self.phone_number:
+            self.phone_number = UserProfile.generate_unique_phone_number()
+
+        super().save(*args, **kwargs)
 
 
 class CustomerProfile(models.Model):
