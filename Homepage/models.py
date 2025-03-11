@@ -1,5 +1,3 @@
-from random import randint
-
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -9,6 +7,8 @@ from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumbers import carrier, parse, region_code_for_number, timezone
 from phonenumbers.geocoder import description_for_number
+
+from Homepage.helper_functions import generate_unique_phone_number
 
 
 class CustomUserManager(BaseUserManager):
@@ -27,7 +27,7 @@ class CustomUserManager(BaseUserManager):
 
         # Create a UserProfile for the user
         try:
-            phone_number = self.generate_unique_phone_number()
+            phone_number = generate_unique_phone_number()
 
             UserProfile.objects.create(
                 user=user,
@@ -59,12 +59,6 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self._create_user(email, password, **extra_fields)
-
-    def generate_unique_phone_number():
-        while True:
-            random_number = f"+92307{randint(1000000, 9999999)}"
-            if not UserProfile.objects.filter(phone_number=random_number).exists():
-                return random_number
 
 
 class CustomUser(AbstractUser):
@@ -105,7 +99,7 @@ class UserProfile(models.Model):
     age = models.IntegerField(blank=False, default=18)
     gender = models.CharField(max_length=15, blank=False, choices=GENDER_CHOICES)
     phone_number = PhoneNumberField(
-        blank=False, unique=True, null=False, default="+923074649892"
+        blank=False, unique=True, null=False, default=generate_unique_phone_number()
     )
     city = models.CharField(max_length=100, blank=False)
     country = CountryField(
