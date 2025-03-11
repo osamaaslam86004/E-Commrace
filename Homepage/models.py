@@ -1,3 +1,5 @@
+from random import randint
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -25,12 +27,14 @@ class CustomUserManager(BaseUserManager):
 
         # Create a UserProfile for the user
         try:
+            phone_number = self.generate_unique_phone_number()
+
             UserProfile.objects.create(
                 user=user,
                 full_name="dummy_name",
                 age=18,
                 gender="Male",
-                phone_number="+923074649892",
+                phone_number=phone_number
                 city="dummy",
                 country="PK",
                 postal_code="54400",
@@ -55,6 +59,12 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self._create_user(email, password, **extra_fields)
+
+    def generate_unique_phone_number():
+        while True:
+            random_number = f"+92307{randint(1000000, 9999999)}"
+            if not UserProfile.objects.filter(phone_number=random_number).exists():
+                return random_number
 
 
 class CustomUser(AbstractUser):
