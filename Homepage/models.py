@@ -306,6 +306,9 @@ class CustomSocialAccount(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
     )
+    """
+        # access token Expirey 1 hour set by Google
+    """
     access_token = models.TextField(max_length=500, blank=True)
     user_info = models.TextField(max_length=1000)
     token_created_at = models.DateTimeField(auto_now_add=True)
