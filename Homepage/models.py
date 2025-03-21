@@ -189,13 +189,13 @@ class UserProfile(models.Model):
 
 class CustomerProfile(models.Model):
     customer_profile = models.OneToOneField(
-        UserProfile, on_delete=models.CASCADE, name="customer_profile", default=None
+        UserProfile, on_delete=models.CASCADE, name="customer_profile"
     )
     customuser_type_1 = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, name="customuser_type_1", default=None
+        CustomUser, on_delete=models.CASCADE, name="customuser_type_1"
     )
     shipping_address = models.CharField(max_length=255, blank=True)
-    wishlist = models.IntegerField(blank=True)
+    wishlist = models.IntegerField(blank=True, null=True)
 
     def clean(self):
         super().clean()
@@ -255,7 +255,7 @@ class CustomerServiceProfile(models.Model):
     )
     department = models.CharField(max_length=50, blank=True)
     bio = models.TextField(blank=True, max_length=500)
-    experience_years = models.PositiveIntegerField(blank=False)
+    experience_years = models.PositiveIntegerField(blank=False, null=True)
 
     def clean(self):
         super().clean()
@@ -285,7 +285,7 @@ class ManagerProfile(models.Model):
     team = models.CharField(max_length=50, blank=True)
     reports = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True, max_length=500)
-    experience_years = models.PositiveIntegerField(blank=False)
+    experience_years = models.PositiveIntegerField(blank=False, null=True)
 
     def clean(self):
         super().clean()
@@ -337,9 +337,7 @@ class AdministratorProfile(models.Model):
 
 
 class CustomSocialAccount(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
-    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     """
         # access token Expirey 1 hour set by Google
     """
@@ -347,7 +345,7 @@ class CustomSocialAccount(models.Model):
     user_info = models.TextField(max_length=1000)
     token_created_at = models.DateTimeField(auto_now_add=True)
     code = models.TextField(max_length=500)
-    refresh_token = models.TextField(max_length=500, blank=True, null=True)
+    refresh_token = models.TextField(max_length=500, blank=True)
 
     # def clean(self):
     #     super().clean()

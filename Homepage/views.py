@@ -117,11 +117,6 @@ class HomePageView(TemplateView):
         context["cart_url"] = cart_url
         context["zipped"] = zipped
 
-        if "user_id" in self.request.session:
-            logger.info("user id-----------: %s", self.request.session["user_id"])
-            logger.info(
-                "request.user-----------: %s", self.request.user.is_authenticated
-            )
         return context
 
 

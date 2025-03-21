@@ -20,7 +20,7 @@ class Post(models.Model):
         related_name="blog_posts",
     )
     updated_on = models.DateTimeField(auto_now=True, editable=True)
-    content = RichTextField(blank=True, null=True)
+    content = RichTextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now_add=True, null=True)
     status = models.IntegerField(choices=STATUS, default=0)
@@ -46,7 +46,7 @@ class Comment(models.Model):
     user_comment = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, name="comments_user"
     )
-    body = RichTextField(blank=True, null=True)
+    body = RichTextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now_add=True, null=True)
     active = models.BooleanField(default=True)

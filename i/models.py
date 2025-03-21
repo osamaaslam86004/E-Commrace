@@ -1,7 +1,7 @@
-from django.urls import reverse
 from ckeditor.fields import RichTextField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 
 from Homepage.models import CustomUser
 
@@ -202,6 +202,7 @@ class Monitors(models.Model):
         max_digits=10,
         decimal_places=2,
         blank=False,
+        default=0.00,
         validators=[
             MinValueValidator(
                 limit_value=1, message="Price must be greater than or equal to 1."
@@ -707,23 +708,21 @@ class PDUS(models.Model):
 
 class Review(models.Model):
     user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="user_review", null=True
+        CustomUser, on_delete=models.CASCADE, related_name="user_review"
     )
     product = models.ForeignKey(
         Monitors, on_delete=models.CASCADE, related_name="product_review"
     )
-    rating = models.DecimalField(max_digits=2, decimal_places=1)
-    status = models.BooleanField(default="1", null=True)
-    text = RichTextField()
+    rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
+    status = models.BooleanField(default=True)
+    text = RichTextField(blank=True, null=False)
     image_1 = models.ImageField(
         upload_to="images/",
-        null=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     image_2 = models.ImageField(
         upload_to="images/",
-        null=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     created_at = models.DateTimeField(auto_now_add=True)

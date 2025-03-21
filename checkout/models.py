@@ -46,7 +46,7 @@ class Refund(models.Model):
     cartitem = models.OneToOneField(
         CartItem, on_delete=models.CASCADE, related_name="cartitem_refund", null=True
     )
-    stripe_refund_id = models.CharField(max_length=150, null=True, default=0)
+    stripe_refund_id = models.CharField(max_length=150, default=0)
     refund_status = models.CharField(
         max_length=25, choices=REFUND_CHOICES, default="NO_REFUND"
     )

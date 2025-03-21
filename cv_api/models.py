@@ -8,16 +8,20 @@ from Homepage.models import CustomUser
 # Create your models here.
 class PersonalInfo(models.Model):
 
-    user_id_for_personal_info = models.ForeignKey(CustomUser, null = True, on_delete = models.CASCADE)
+    user_id_for_personal_info = models.ForeignKey(
+        CustomUser, null=True, on_delete=models.CASCADE
+    )
     api_user_id_for_cv = models.IntegerField(null=True, blank=False)
-    api_id_of_cv = models.IntegerField( blank=True, null = True)
-    status = models.CharField(max_length=25, null=True, blank=True)
+    api_id_of_cv = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=25, blank=True)
     id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=255)
     middle_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     suffix = models.CharField(max_length=255, blank=True, help_text="e.g. PhD")
-    locality = models.CharField(max_length=255, help_text="e.g. city such as Boston", blank=True)
+    locality = models.CharField(
+        max_length=255, help_text="e.g. city such as Boston", blank=True
+    )
     region = models.CharField(max_length=255, help_text="e.g. MA or Italy", blank=True)
     title = models.CharField(max_length=255, help_text="e.g. Developer", blank=True)
     email = models.EmailField(blank=True)
@@ -35,12 +39,11 @@ class PersonalInfo(models.Model):
 
 
 class TokensForUser(models.Model):
-    user = models.OneToOneField(CustomUser, null = True, on_delete = models.CASCADE,
-                                    related_name = "tokens_for_user")
-    access_token = models.CharField(max_length=1000, blank=False , null= True)
-    refresh_token = models.CharField(max_length=1000, blank=False , null= True)
-
-
+    user = models.OneToOneField(
+        CustomUser, null=True, on_delete=models.CASCADE, related_name="tokens_for_user"
+    )
+    access_token = models.CharField(max_length=1000, blank=False)
+    refresh_token = models.CharField(max_length=1000, blank=False)
 
 
 class Overview(models.Model):
@@ -64,7 +67,7 @@ class Education(models.Model):
     )
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=250)
-    location = models.CharField(max_length=250,blank=True)
+    location = models.CharField(max_length=250, blank=True)
     schoolurl = models.URLField("School URL", blank=True)
     education_start_date = models.DateField(null=True)
     education_end_date = models.DateField(null=True)
@@ -112,8 +115,8 @@ class Job(models.Model):
     location = models.CharField(max_length=250, blank=True)
     title = models.CharField(max_length=250, blank=True)
     description = models.TextField(blank=True)
-    job_start_date = models.DateField( null=True)
-    job_end_date = models.DateField( null=True)
+    job_start_date = models.DateField(null=True)
+    job_end_date = models.DateField(null=True)
     is_current = models.BooleanField(default=False)
     is_public = models.BooleanField(default=True)
     image = models.CharField(
@@ -186,9 +189,7 @@ class SkillAndSkillLevel(models.Model):
     )
     id = models.AutoField(primary_key=True)
     text = models.TextField()
-    skill_level = models.CharField(
-        max_length=25, null=True, choices=SKILL_LEVEL_CHOICES
-    )
+    skill_level = models.CharField(max_length=25, choices=SKILL_LEVEL_CHOICES)
 
     class Meta:
         verbose_name_plural = "07. Skills"
@@ -235,9 +236,9 @@ class ProgrammingArea(models.Model):
     )
     id = models.AutoField(primary_key=True)
     programming_area_name = models.CharField(
-        max_length=25, choices=PROGRAMMING_AREA_CHOICES, null=True
+        max_length=25, choices=PROGRAMMING_AREA_CHOICES
     )
-    programming_language_name = models.CharField(max_length=25, null=True)
+    programming_language_name = models.CharField(max_length=25)
 
     class Meta:
         verbose_name_plural = "08. Programming areas"
@@ -278,7 +279,6 @@ class Projects(models.Model):
         )
 
 
-
 class Publication(models.Model):
     personal_info = models.ForeignKey(
         PersonalInfo,
@@ -290,7 +290,7 @@ class Publication(models.Model):
     title = models.CharField(max_length=250)
     authors = models.TextField(blank=True)
     journal = models.CharField(max_length=150, blank=True)
-    year = models.IntegerField(default=date.today().year, blank= True)
+    year = models.IntegerField(default=date.today().year, blank=True)
     link = models.URLField("Publication URL", blank=True)
 
     class Meta:
@@ -301,4 +301,3 @@ class Publication(models.Model):
         return " - ".join(
             [str(self.id), str(self.year), str(self.order), self.journal[0:10] + "..."]
         )
-

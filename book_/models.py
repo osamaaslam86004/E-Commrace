@@ -46,11 +46,11 @@ class BookFormat(models.Model):
     format = models.CharField(max_length=20, choices=FORMAT_CHOICES)
     is_new_available = models.PositiveIntegerField(blank=False)
     is_used_available = models.PositiveIntegerField(blank=False)
-    publisher_name = models.CharField(max_length=100, blank=False, null=True)
+    publisher_name = models.CharField(max_length=100, blank=False)
     publishing_date = models.DateField(blank=True, null=True)
-    edition = models.CharField(max_length=50, blank=True, null=True)
-    length = models.PositiveIntegerField(blank=False, null=True)
-    narrator = models.CharField(max_length=20, blank=True, null=True)
+    edition = models.CharField(max_length=50, blank=True)
+    length = models.PositiveIntegerField(blank=False, null=False)
+    narrator = models.CharField(max_length=20, blank=True)
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -63,21 +63,21 @@ class BookFormat(models.Model):
             ),
         ],
     )
-    is_active = models.BooleanField(default=True, null=True)
-    restock_threshold = models.PositiveIntegerField(default=9)
+    is_active = models.BooleanField(default=True, blank=False)
+    restock_threshold = models.PositiveIntegerField(default=9, blank=False)
     image_1 = models.ImageField(
         upload_to="images/",
-        null=True,
+        blank=False,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     image_2 = models.ImageField(
         upload_to="images/",
-        null=True,
+        blank=False,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
     image_3 = models.ImageField(
         upload_to="images/",
-        null=True,
+        blank=False,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
@@ -96,19 +96,17 @@ class Review(models.Model):
         BookFormat, on_delete=models.CASCADE, related_name="book_review_format"
     )
     title = models.CharField(max_length=100, blank=True)
-    content = RichTextField()
+    content = RichTextField(blank=True, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    modified_on = models.DateTimeField(auto_now_add=True, null=True)
-    status = models.BooleanField(default=True, null=True)
+    modified_on = models.DateTimeField(auto_now_add=True)
+    status = models.BooleanField(default=True)
     image_1 = models.ImageField(
         upload_to="images/",
-        null=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
     image_2 = models.ImageField(
         upload_to="images/",
-        null=True,
         default="https://res.cloudinary.com/dh8vfw5u0/image/upload/v1702231959/rmpi4l8wsz4pdc6azeyr.ico",
     )
 
