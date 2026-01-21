@@ -1,10 +1,12 @@
 """"
 Key Optimizations for Your t3.micro (1 vCPU, 1GB RAM)
-Removed multiprocessing: Celery already handles task queuing. Running multiple image processes in parallel would consume too much memory.
+
 Downscaled images before processing (600px width): Reduces RAM and CPU usage before background removal.
-Removed quality=95 (PNG doesn't use this setting): Used optimize=True instead for better compression.
-Reduced final image size: Resized output to 800x800 instead of 1000x1000.
+Auto-Crop to reduce image size
 Sequential processing instead of batch: Processes one image at a time to prevent high RAM spikes.
+
+Removed multiprocessing: Celery already handles task queuing. Running multiple image processes in parallel would consume too much memory.
+Removed quality=95 (PNG doesn't use this setting): Used optimize=True instead for better compression.
 """
 
 import os
@@ -44,30 +46,25 @@ def autocrop_image(img, border=0):
     return cropped_image
 
 
-def resize_image(img, my_scale):
-    """Resize image while maintaining aspect ratio."""
-    img_width, img_height = img.size
-    if img_height > img_width:
-        hpercent = my_scale / float(img_height)
-        wsize = int((float(img_width) * float(hpercent)))
-        return img.resize((wsize, my_scale), Image.Resampling.LANCZOS)
-    else:
-        wpercent = my_scale / float(img_width)
-        hsize = int((float(img_height) * float(wpercent)))
-        return img.resize((my_scale, hsize), Image.Resampling.LANCZOS)
+# def autocrop_image(img, border=10):
+#     """
+#     Crop empty space around the product after background removal.
+#     Adds a border for a better visual appearance.
+#     """
+#     bbox = img.getbbox()
+#     if not bbox:
+#         return img
+#     cropped = img.crop(bbox)
 
+#     if border:
+#         return ImageOps.expand(cropped, border, DEFAULT_BACKGROUND_COLOR)
+#     else:
+#         """
+#         Crop empty space around the product after background removal.
+#         No border is added for a cleaner appearance.
+#         """
 
-def resize_canvas(img, canvas_width, canvas_height):
-    """Center image on a transparent canvas."""
-    old_width, old_height = img.size
-    img = img.convert("RGBA")
-    new_img = Image.new("RGBA", (canvas_width, canvas_height), (0, 0, 0, 0))
-    new_img.paste(
-        img,
-        ((canvas_width - old_width) // 2, (canvas_height - old_height) // 2),
-        mask=img,
-    )
-    return new_img
+#     return cropped
 
 
 def fast_resize_with_opencv(image_path, new_width=600):
@@ -101,15 +98,7 @@ def process_single_image(image_path):
         # Crop excess space
         cropped_img = autocrop_image(removed_bg_img, 0)
 
-        # Resize to target size
-        resized_img = resize_image(cropped_img, 500)
-
-        # Keep a transparent background instead of white
-        final_img = resize_canvas(resized_img, 800, 800)
-
-        # Save the final image with transparency
-        final_img.save(output_path, format="PNG", optimize=True)
-
+        cropped_img.save(output_path, format="PNG", optimize=True)
         print(f"✅ Processed: {output_path}")
 
     except Exception as e:

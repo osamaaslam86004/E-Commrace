@@ -10,7 +10,7 @@ GB = 1024 * 1024
 class StaticStorage(S3ManifestStaticStorage):
     location = "static"
     default_acl = None
-    file_overwrite = False  # Allows overwriting old static files
+    file_overwrite = True  # Allows overwriting old static files
     transfer_config = TransferConfig(use_threads=False, multipart_threshold=5 * GB)
 
 

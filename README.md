@@ -1,6 +1,8 @@
 
 # django-E-Cmmrace
 
+[Netweork Architecture of E-Commrace Store](Netweork_Architecture_E_Commrace.png)
+
 ## Authorizations and Authentications:
 
 1. used signed cookie based session (httponly cookie, named as sessionid)
