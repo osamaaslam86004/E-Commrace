@@ -1,7 +1,7 @@
 
 # django-E-Cmmrace
 
-![Netweork Architecture of E-Commrace Store](Netweork_Architecture_E_Commrace.png)
+![Network Architecture](assets/Netweork_Architecture_E_Commrace.png)
 
 ## Authorizations and Authentications:
 
